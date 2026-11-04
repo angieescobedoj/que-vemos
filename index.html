@@ -28,18 +28,16 @@ img{max-width:100%;display:block}
 :focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
 /* backdrop */
-.backdrop-layer{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.orbs{position:absolute;inset:-20%;filter:blur(40px);
-  background:radial-gradient(32% 26% at 62% 26%,var(--pink) 0%,rgba(243,139,201,0) 70%),
-             radial-gradient(42% 34% at 28% 48%,rgba(84,112,214,.9) 0%,rgba(84,112,214,0) 70%),
-             radial-gradient(38% 30% at 80% 84%,rgba(150,120,255,.5) 0%,rgba(150,120,255,0) 70%);
-  animation:drift 24s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translate(4%,-3%) scale(1.06)}}
-.bgp{position:absolute;inset:-12%;width:124%;height:124%;max-width:none;object-fit:cover;filter:blur(42px) saturate(1.3);opacity:0;transition:opacity .7s ease}
+.backdrop-layer{position:fixed;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;pointer-events:none}
+.orbs{position:absolute;top:-20%;right:-20%;bottom:-20%;left:-20%;
+  background:radial-gradient(40% 32% at 62% 26%,rgba(243,139,201,.85) 0%,rgba(243,139,201,0) 75%),
+             radial-gradient(50% 40% at 28% 48%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 75%),
+             radial-gradient(46% 36% at 80% 84%,rgba(150,120,255,.45) 0%,rgba(150,120,255,0) 75%)}
+.bgp{position:absolute;top:-12%;right:-12%;bottom:-12%;left:-12%;width:124%;height:124%;max-width:none;object-fit:cover;filter:blur(42px) saturate(1.3);opacity:0;transition:opacity .7s ease}
 .bgp.on{opacity:.95}
-.veil{position:absolute;inset:0;background:linear-gradient(160deg,rgba(84,112,214,.42) 0%,rgba(150,120,255,.22) 50%,rgba(243,139,201,.38) 100%);mix-blend-mode:soft-light}
-.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,18,.28) 0%,rgba(11,12,18,.5) 60%,rgba(11,12,18,.72) 100%)}
-.grain{position:absolute;inset:0;opacity:.16;mix-blend-mode:overlay;
+.veil{position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,rgba(84,112,214,.42) 0%,rgba(150,120,255,.22) 50%,rgba(243,139,201,.38) 100%);mix-blend-mode:soft-light}
+.shade{position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(180deg,rgba(11,12,18,.28) 0%,rgba(11,12,18,.5) 60%,rgba(11,12,18,.72) 100%)}
+.grain{position:absolute;top:0;right:0;bottom:0;left:0;opacity:.16;mix-blend-mode:overlay;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 .app{position:relative;z-index:1;height:100%;height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;
@@ -116,8 +114,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .play-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px}
 .play-head .pill{height:40px;font-size:14px}
 .deck-wrap{position:relative;flex:1;min-height:0;margin:8px 8px 0}
-.deck{position:absolute;inset:0}
-.card{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;will-change:transform;scrollbar-width:none}
+.deck{position:absolute;top:0;right:0;bottom:0;left:0}
+.card{position:absolute;top:0;right:0;bottom:0;left:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;will-change:transform;scrollbar-width:none}
 .card::-webkit-scrollbar{display:none}
 .card.under{transform:scale(.95) translateY(6px);pointer-events:none;transition:transform .3s}
 .card.under .cap,.card.under .more{visibility:hidden}
@@ -180,7 +178,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .section-label h3{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em}
 
 /* sheet + toast */
-.sheet-bg{position:fixed;inset:0;background:rgba(5,6,10,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;animation:fade .2s}
+.sheet-bg{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(5,6,10,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;animation:fade .2s}
 .sheet{width:100%;max-width:520px;background:rgba(24,25,36,.92);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);border:1px solid var(--line);border-bottom:0;border-radius:30px 30px 0 0;padding:28px max(20px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;animation:up .25s ease-out}
 .sheet h3{font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.12;margin:0 0 2px;text-wrap:balance}
 .sheet p{margin:0 0 10px;color:var(--ink-2);line-height:1.45}
@@ -189,6 +187,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 @keyframes rot{to{transform:rotate(360deg)}}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
+@supports not (aspect-ratio:2/3){.poster{width:66%}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -282,7 +281,16 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   </section>
 </div>
 
+<div id="bootFail" hidden style="position:fixed;left:16px;right:16px;bottom:24px;z-index:99;background:#fff;color:#111;padding:14px 16px;border-radius:16px;font:600 15px/1.4 system-ui,sans-serif"></div>
+<script>
+/* Plain script (runs even on old browsers): if the game never starts, say so instead of a blank page. */
+window.__qvFail = function(msg){ var b = document.getElementById('bootFail'); if (!b) return; b.textContent = msg; b.hidden = false; };
+window.addEventListener('error', function(e){ if (!window.__qvBooted) window.__qvFail('Tu navegador no pudo abrir el juego (' + (e.message || 'error') + '). Actualiza iOS/Android o prueba en otro celular.'); });
+setTimeout(function(){ if (!window.__qvBooted) window.__qvFail('El juego no terminó de cargar. Revisa tu internet o actualiza tu navegador.'); }, 8000);
+</script>
+<script nomodule>window.__qvFail('Tu navegador es muy antiguo para el juego. Actualiza iOS/Android o prueba en otro celular.');</script>
 <script type="module">
+window.__qvBooted = true;
 /* ---------- config ---------- */
 const TMDB_KEY = 'a7795e812c110c40515e414ceb379fac';
 const FIREBASE = {
