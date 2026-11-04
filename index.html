@@ -46,6 +46,8 @@ img{max-width:100%;display:block}
 .screen{flex:1;display:flex;flex-direction:column;min-height:0}
 .scroll{flex:1;overflow-y:auto;min-height:0;padding-block:16px 24px;display:flex;flex-direction:column;gap:18px;scrollbar-width:none}
 .scroll::-webkit-scrollbar{display:none}
+/* children keep their natural height so the column overflows and scrolls (an overflow:hidden child would otherwise shrink and clip) */
+.scroll > *{flex-shrink:0}
 
 /* type */
 .display{font-size:52px;font-weight:700;letter-spacing:-.05em;line-height:.98;margin:0;text-wrap:balance}
@@ -322,7 +324,25 @@ const ICON = {
   tv:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>'
 };
 const icon = k => `<svg class="i" viewBox="0 0 24 24">${ICON[k]}</svg>`;
-const img = (p, size) => !p ? '' : p.startsWith('data:') ? p : `https://image.tmdb.org/t/p/${size}${p}`;
+/* Posters: TMDB's image host can be unreachable on some networks/DNS (seen on Android). Any <img> that fails
+   is retried on TMDB's second host, then through the wsrv.nl image proxy; once a fallback works, new images use it. */
+const IMG_HOSTS = [
+  (s, p) => `https://image.tmdb.org/t/p/${s}${p}`,
+  (s, p) => `https://media.themoviedb.org/t/p/${s}${p}`,
+  (s, p) => `https://wsrv.nl/?url=image.tmdb.org/t/p/${s}${p}`
+];
+let imgHost = 0;
+const img = (p, size) => !p ? '' : p.startsWith('data:') ? p : IMG_HOSTS[imgHost](size, p);
+document.addEventListener('error', e => {
+  const el = e.target;
+  if (!el || el.tagName !== 'IMG') return;
+  const m = (el.getAttribute('src') || '').match(/\/t\/p\/(\w+)(\/[^?&#]+)/);
+  if (!m) return;
+  const next = Number(el.dataset.host || imgHost) + 1;
+  if (next >= IMG_HOSTS.length) return;
+  el.dataset.host = next; imgHost = Math.max(imgHost, next);
+  el.src = IMG_HOSTS[next](m[1], m[2]);
+}, true);
 
 let toastT;
 function toast(msg){

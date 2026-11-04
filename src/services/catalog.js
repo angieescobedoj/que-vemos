@@ -31,6 +31,19 @@
     }
   };
 
+  /* Same fallback chain as the phone: TMDB host → TMDB second host → wsrv.nl proxy. */
+  var HOSTS = ['https://image.tmdb.org/t/p/', 'https://media.themoviedb.org/t/p/', 'https://wsrv.nl/?url=image.tmdb.org/t/p/'];
+  var hostIdx = 0;
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG') return;
+    var m = (el.getAttribute('src') || '').match(/\/t\/p\/(\w+)(\/[^?&#]+)/);
+    if (!m) return;
+    var next = Number(el.getAttribute('data-host') || hostIdx) + 1;
+    if (next >= HOSTS.length) return;
+    el.setAttribute('data-host', next); if (next > hostIdx) hostIdx = next;
+    el.src = HOSTS[next] + m[1] + m[2];
+  }, true);
   QV.catalog = { real: real, demo: demo, providersOf: providersOf,
-    img: function (p, size) { return !p ? '' : (p.indexOf('data:') === 0 ? p : 'https://image.tmdb.org/t/p/' + size + p); } };
+    img: function (p, size) { return !p ? '' : (p.indexOf('data:') === 0 ? p : HOSTS[hostIdx] + size + p); } };
 })(window.QV = window.QV || {});
