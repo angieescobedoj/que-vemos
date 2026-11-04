@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3F3F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0C" media="(prefers-color-scheme: dark)">
+<title>¿Qué vemos?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Layout: one phone-width column; each screen owns its own scroll; the swipe deck fills the space between header and action buttons. */
+:root{
+  --bg:#F3F3F1; --surface:#FFFFFF; --ink:#111111; --ink-2:#6E6E6A; --line:#E3E3DF;
+  --inverse:#FFFFFF; --chip:#FFFFFF; --on-image:#FFFFFF; --scrim:rgba(0,0,0,.45);
+  --sans:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --serif:'Instrument Serif','Iowan Old Style',Georgia,serif;
+  --r:18px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0C0C0C; --surface:#181818; --ink:#F2F2EF; --ink-2:#9C9C97; --line:#2B2B2A;
+  --inverse:#0C0C0C; --chip:#181818; --scrim:rgba(0,0,0,.6); color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;-webkit-font-smoothing:antialiased;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input{font:inherit;color:inherit}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.app{height:100%;height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0}
+.scroll{flex:1;overflow-y:auto;min-height:0;padding-block:20px 24px;display:flex;flex-direction:column;gap:20px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* type */
+.wordmark{font-family:var(--serif);font-weight:400;font-size:64px;line-height:.95;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.serif-h{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.05;margin:0;text-wrap:balance}
+.lede{font-size:18px;line-height:1.45;color:var(--ink-2);margin:0;max-width:34ch}
+.muted{color:var(--ink-2);margin:0;line-height:1.45}
+.small{font-size:14px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0}
+
+/* controls */
+.btn{height:54px;border-radius:999px;background:var(--ink);color:var(--inverse);font-weight:600;font-size:17px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.link{font-weight:600;font-size:15px;padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:15px}
+.pill svg{width:18px;height:18px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label{font-size:14px;font-weight:600}
+.input{height:54px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);padding:0 16px;font-size:17px;width:100%;min-width:0}
+.input:focus{outline:none;border-color:var(--ink)}
+.actions{padding-block:12px 16px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg)}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* home */
+.home{justify-content:center;gap:24px}
+.brand{display:flex;flex-direction:column;gap:14px;margin-bottom:12px}
+.or{display:flex;align-items:center;gap:12px;color:var(--ink-2);font-size:14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.join{display:flex;gap:10px}
+.join .input{text-transform:uppercase;letter-spacing:.3em;font-weight:600;text-align:center;flex:1}
+.join .btn{width:auto;padding:0 24px;flex:none}
+.invite{border-radius:var(--r);background:var(--surface);border:1px solid var(--line);padding:16px 18px}
+.invite b{letter-spacing:.15em}
+
+/* lobby */
+.room-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.code{font-family:var(--serif);font-size:56px;line-height:1;letter-spacing:.08em;margin:4px 0 0}
+.list{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:14px 16px}
+.row + .row{border-top:1px solid var(--line)}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--inverse);display:grid;place-items:center;font-weight:600;flex:none}
+.row-main{flex:1;min-width:0}
+.row-name{margin:0;font-weight:600}
+.row-sub{margin:2px 0 0;color:var(--ink-2);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.you{font-weight:500;color:var(--ink-2);font-size:14px}
+.status{font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.status.on{background:var(--ink);color:var(--inverse);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--chip);font-weight:500;font-size:16px;transition:background .15s,color .15s,border-color .15s}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--inverse);border-color:var(--ink)}
+.chip:disabled{opacity:.5}
+
+/* play */
+.play-head{display:flex;align-items:center;justify-content:space-between;padding-block:10px;gap:12px}
+.code-chip{font-weight:700;letter-spacing:.18em;font-size:14px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line)}
+.progress{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:14px;font-weight:500}
+.deck-wrap{position:relative;flex:1;min-height:0;margin-bottom:12px}
+.deck{position:absolute;inset:0}
+.card{position:absolute;inset:0;border-radius:var(--r);background:var(--surface);overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;will-change:transform;scrollbar-width:none;box-shadow:0 1px 0 var(--line)}
+.card::-webkit-scrollbar{display:none}
+.card.under{transform:scale(.96) translateY(8px);pointer-events:none;transition:transform .3s}
+.poster{position:relative;height:100%;background:var(--line);overflow:hidden}
+.poster img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;pointer-events:none}
+.poster-meta{position:absolute;left:0;right:0;bottom:0;padding:90px 18px 96px;color:var(--on-image);background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.5) 55%,transparent)}
+.m-title{font-family:var(--sans);font-weight:700;font-size:26px;line-height:1.12;margin:0;text-wrap:balance}
+.m-en{font-weight:400;opacity:.85}
+.m-sub{margin:8px 0 0;font-size:15px;font-weight:500;opacity:.92}
+.hint{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:13px;opacity:.75}
+.hint svg{width:16px;height:16px}
+.stamp{position:absolute;top:22px;padding:6px 16px;border-radius:999px;font-weight:700;font-size:20px;letter-spacing:.06em;opacity:0;pointer-events:none}
+.stamp.yes{left:18px;background:var(--on-image);color:#111}
+.stamp.no{right:18px;border:2px solid var(--on-image);color:var(--on-image);background:var(--scrim)}
+.more{padding:12px 12px 110px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.block{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);padding:22px 20px}
+.block .eyebrow{margin-bottom:12px}
+.synopsis{font-family:var(--serif);font-size:24px;line-height:1.22;margin:0}
+.info .r{display:flex;align-items:center;gap:14px;padding:13px 0}
+.info .r + .r{border-top:1px solid var(--line)}
+.info .r span{min-width:0}
+.cast-row{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px;touch-action:pan-x pan-y}
+.cast-row::-webkit-scrollbar{display:none}
+.person{width:84px;flex:none;text-align:center}
+.person .ph{width:72px;height:72px;margin:0 auto 8px;border-radius:50%;background:var(--line);object-fit:cover;display:grid;place-items:center;font-weight:600;color:var(--ink-2)}
+.person b{display:block;font-size:13px;font-weight:600;line-height:1.25}
+.person i{display:block;font-size:12px;font-style:normal;color:var(--ink-2);line-height:1.25;margin-top:2px}
+.deck-actions{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:28px;pointer-events:none;z-index:5}
+.round{pointer-events:auto;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.22);transition:transform .12s}
+.round:active{transform:scale(.92)}
+.round svg{width:28px;height:28px;stroke-width:2.2}
+.round.no{background:var(--surface);color:var(--ink)}
+.round.yes{background:var(--ink);color:var(--inverse)}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--ink-2)}
+
+/* wait + results */
+.center{justify-content:center}
+.big{font-family:var(--serif);font-size:44px;line-height:1;margin:0;text-wrap:balance}
+.feature{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);overflow:hidden}
+.feature img{width:100%;aspect-ratio:2/3;object-fit:cover;max-height:62vh}
+.feature .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.f-title{font-weight:700;font-size:22px;line-height:1.15;margin:0}
+.f-sub{margin:0;color:var(--ink-2);font-size:15px}
+.res{display:flex;gap:14px;padding:14px 16px;align-items:flex-start}
+.res + .res{border-top:1px solid var(--line)}
+.res img{width:64px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;flex:none;background:var(--line)}
+.res .row-main{display:flex;flex-direction:column;gap:6px}
+.res-title{margin:0;font-weight:700;line-height:1.2}
+.tag{align-self:flex-start;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--ink);color:var(--inverse);letter-spacing:.02em}
+.tag.soft{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.prov{display:flex;flex-wrap:wrap;gap:6px}
+.prov span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
+.prov span.nologo{padding-left:10px}
+.prov img{width:22px;height:22px;border-radius:6px}
+.prov-note{font-size:13px;color:var(--ink-2);margin:0}
+.section-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+
+/* sheet + toast */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50;animation:fade .2s}
+.sheet{width:100%;max-width:520px;background:var(--surface);border-radius:24px 24px 0 0;padding:28px max(20px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;animation:up .25s ease-out}
+.sheet h3{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.08;margin:0 0 4px;text-wrap:balance}
+.sheet p{margin:0 0 8px;color:var(--ink-2);line-height:1.45}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--inverse);padding:12px 18px;border-radius:14px;font-weight:500;font-size:15px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.spin{width:18px;height:18px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HOME -->
+  <section class="screen" data-screen="home">
+    <div class="scroll home">
+      <div class="brand">
+        <h1 class="wordmark">¿Qué<br>vemos?</h1>
+        <p class="lede">Cada quien desliza películas en su celular. Al final ven en cuáles coincidieron y dónde verlas.</p>
+      </div>
+      <div class="invite" id="inviteBox" hidden>Te invitaron a la sala <b id="inviteCode"></b></div>
+      <div class="field">
+        <label for="nameInput">Tu nombre</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="given-name" placeholder="Cómo te verán los demás">
+      </div>
+      <button class="btn" id="createBtn">Crear sala</button>
+      <div class="or" id="orLine">o únete con un código</div>
+      <div class="join">
+        <input class="input" id="codeInput" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CÓDIGO" aria-label="Código de sala">
+        <button class="btn ghost" id="joinBtn">Unirme</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section class="screen" data-screen="lobby" hidden>
+    <div class="scroll">
+      <header class="room-head">
+        <div><p class="eyebrow">Código de sala</p><p class="code" id="lobbyCode"></p></div>
+        <button class="pill" id="shareBtn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>Invitar</button>
+      </header>
+      <div class="list" id="playerList"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h2 class="serif-h">¿Qué se te antoja ver?</h2>
+        <p class="muted">Elige uno o varios géneros. Las películas combinan los de todos: si tú eliges Suspenso y alguien más Romance, verán películas que son de suspenso <em>y</em> de romance.</p>
+      </div>
+      <div class="chips" id="chips"></div>
+      <p class="muted small" id="lobbyNote" hidden></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="readyBtn"></button>
+      <button class="link" id="changeBtn" hidden>Cambiar mis géneros</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" data-screen="play" hidden>
+    <header class="play-head">
+      <span class="code-chip" id="playCode"></span>
+      <span class="progress" id="progress"></span>
+      <button class="link" id="endBtn">Terminar</button>
+    </header>
+    <div class="deck-wrap">
+      <div class="deck" id="deck"></div>
+      <div class="deck-actions">
+        <button class="round no" id="noBtn" aria-label="No me interesa"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button class="round yes" id="yesBtn" aria-label="Sí la vería"><svg class="i" viewBox="0 0 24 24"><path d="M12 20.5s-7.4-4.5-9.3-8.9C1.3 8.2 3.4 4.5 7.1 4.5c2 0 3.5 1.1 4.9 3 1.4-1.9 2.9-3 4.9-3 3.7 0 5.8 3.7 4.4 7.1-1.9 4.4-9.3 8.9-9.3 8.9z"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- WAIT -->
+  <section class="screen" data-screen="wait" hidden>
+    <div class="scroll center">
+      <p class="eyebrow" id="waitCode"></p>
+      <h2 class="big">Listo, ya votaste.</h2>
+      <p class="lede" id="waitText"></p>
+      <div class="list" id="waitList"></div>
+      <button class="link" id="forceBtn" style="align-self:flex-start">Ver resultados ahora</button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" data-screen="results" hidden>
+    <div class="scroll" id="resultsBody"></div>
+    <div class="actions">
+      <button class="btn" id="againBtn">Jugar otra ronda</button>
+      <button class="link" id="leaveBtn">Salir de la sala</button>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+/* ---------- config ---------- */
+const TMDB_KEY = 'a7795e812c110c40515e414ceb379fac';
+const FIREBASE = {
+  apiKey: "AIzaSyB6FroqAF_jNE8Mr7fmMGbwClLfex2iM34",
+  authDomain: "peliculas-c5d08.firebaseapp.com",
+  projectId: "peliculas-c5d08",
+  storageBucket: "peliculas-c5d08.firebasestorage.app",
+  messagingSenderId: "170225023461",
+  appId: "1:170225023461:web:fa2409fa8fbfd59fa8570c"
+};
+const DECK_MAX = 80;
+const params = new URLSearchParams(location.search);
+const DEMO = params.has('demo');
+
+const GENRES = [[28,'Acción'],[12,'Aventura'],[16,'Animación'],[35,'Comedia'],[80,'Crimen'],[99,'Documental'],[18,'Drama'],[10751,'Familia'],[14,'Fantasía'],[36,'Historia'],[27,'Terror'],[10402,'Música'],[9648,'Misterio'],[10749,'Romance'],[878,'Ciencia ficción'],[53,'Suspenso'],[10752,'Bélica'],[37,'Western']];
+const GNAME = Object.fromEntries(GENRES);
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store_ = t => ({ get(k){try{return t().getItem(k)}catch{return null}}, set(k,v){try{t().setItem(k,v)}catch{}}, del(k){try{t().removeItem(k)}catch{}} });
+const ss = store_(() => sessionStorage), ls = store_(() => localStorage);
+const rid = (n=12) => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
+const ICON = {
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  cam:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
+  star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  tv:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  down:'<path d="M6 9l6 6 6-6"/>'
+};
+const icon = k => `<svg class="i" viewBox="0 0 24 24">${ICON[k]}</svg>`;
+const img = (p, size) => !p ? '' : p.startsWith('data:') ? p : `https://image.tmdb.org/t/p/${size}${p}`;
+
+let toastT;
+function toast(msg){
+  document.querySelector('.toast')?.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2800);
+}
+function sheet({title, text = '', buttons}){
+  return new Promise(res => {
+    const bd = document.createElement('div'); bd.className = 'backdrop';
+    bd.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><h3>${esc(title)}</h3>${text ? `<p>${esc(text)}</p>` : ''}</div>`;
+    const sh = bd.firstChild;
+    buttons.forEach(b => {
+      const el = document.createElement('button'); el.className = b.ghost ? 'btn ghost' : 'btn'; el.textContent = b.label;
+      el.onclick = () => { bd.remove(); res(b.value); }; sh.appendChild(el);
+    });
+    bd.addEventListener('click', e => { if (e.target === bd) { bd.remove(); res(null); } });
+    document.body.appendChild(bd); sh.querySelector('button')?.focus();
+  });
+}
+function show(name){
+  document.querySelectorAll('.screen').forEach(s => s.hidden = s.dataset.screen !== name);
+  S.screen = name;
+}
+
+/* ---------- data layer: Firestore (real) or local mock (?demo) ---------- */
+async function firestoreStore(){
+  const V = '10.12.2';
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
+  const db = fs.getFirestore(initializeApp(FIREBASE));
+  const R = c => fs.doc(db, 'rooms', c), P = (c, p) => fs.doc(db, 'rooms', c, 'players', p);
+  const err = e => { console.error(e); toast('No se pudo conectar con la sala. Revisa tu internet.'); };
+  return {
+    async getRoom(c){ const s = await fs.getDoc(R(c)); return s.exists() ? s.data() : null; },
+    async createRoom(c, d){ await fs.setDoc(R(c), d); },
+    async updateRoom(c, d){ await fs.updateDoc(R(c), d); },
+    onRoom(c, cb){ return fs.onSnapshot(R(c), s => cb(s.exists() ? s.data() : null), err); },
+    onPlayers(c, cb){ return fs.onSnapshot(fs.collection(db, 'rooms', c, 'players'), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), err); },
+    async getPlayer(c, p){ const s = await fs.getDoc(P(c, p)); return s.exists() ? s.data() : null; },
+    async setPlayer(c, p, d){ await fs.setDoc(P(c, p), d, { merge: true }); },
+    async removePlayer(c, p){ await fs.deleteDoc(P(c, p)); },
+    async vote(c, p, id, yes, idx){ await fs.updateDoc(P(c, p), { [yes ? 'likes' : 'passes']: fs.arrayUnion(id), idx }); },
+    async resetRound(c, ids, roomPatch){
+      const b = fs.writeBatch(db); b.update(R(c), roomPatch);
+      ids.forEach(id => b.update(P(c, id), { ready: false, done: false, likes: [], passes: [], idx: 0 }));
+      await b.commit();
+    }
+  };
+}
+function demoStore(){
+  const bc = new BroadcastChannel('qv-demo'), subs = new Set();
+  const K = c => 'qv-demo-' + c;
+  const read = c => { try { return JSON.parse(localStorage.getItem(K(c))); } catch { return null; } };
+  const write = (c, v) => { localStorage.setItem(K(c), JSON.stringify(v)); bc.postMessage(c); subs.forEach(f => f(c)); };
+  bc.onmessage = e => subs.forEach(f => f(e.data));
+  const watch = (c, fn) => { const f = x => x === c && fn(); subs.add(f); setTimeout(fn, 0); return () => subs.delete(f); };
+  const mut = (c, fn) => { const s = read(c); fn(s); write(c, s); };
+  return {
+    async getRoom(c){ return read(c)?.room ?? null; },
+    async createRoom(c, d){ write(c, { room: d, players: {} }); },
+    async updateRoom(c, d){ mut(c, s => Object.assign(s.room, d)); },
+    onRoom(c, cb){ return watch(c, () => cb(read(c)?.room ?? null)); },
+    onPlayers(c, cb){ return watch(c, () => { const s = read(c); cb(s ? Object.entries(s.players).map(([id, v]) => ({ id, ...v })) : []); }); },
+    async getPlayer(c, p){ return read(c)?.players[p] ?? null; },
+    async setPlayer(c, p, d){ mut(c, s => s.players[p] = { ...(s.players[p] || {}), ...d }); },
+    async removePlayer(c, p){ mut(c, s => delete s.players[p]); },
+    async vote(c, p, id, yes, idx){ mut(c, s => { const pl = s.players[p], k = yes ? 'likes' : 'passes'; pl[k] = [...new Set([...(pl[k] || []), id])]; pl.idx = idx; }); },
+    async resetRound(c, ids, d){ mut(c, s => { Object.assign(s.room, d); ids.forEach(id => Object.assign(s.players[id], { ready: false, done: false, likes: [], passes: [], idx: 0 })); }); }
+  };
+}
+
+/* ---------- catalog: TMDB (real) or generated (?demo) ---------- */
+async function tmdb(path, q = {}){
+  const u = new URL('https://api.themoviedb.org/3' + path);
+  u.searchParams.set('api_key', TMDB_KEY);
+  for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v);
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('TMDB ' + r.status);
+  return r.json();
+}
+const realCatalog = {
+  discover: q => tmdb('/discover/movie', q),
+  details: id => tmdb(`/movie/${id}`, { language: 'es-MX', append_to_response: 'credits,watch/providers' })
+};
+function demoCatalog(){
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const A = ['La última','El silencio de','Noches en','Lo que queda de','El club de','Sombras sobre','Un verano en','La casa de','Regreso a','Cartas para'];
+  const Ae = ['The Last','The Silence of','Nights in','What Remains of','The Club of','Shadows over','A Summer in','The House of','Return to','Letters for'];
+  const B = ['Valparaíso','la marea','octubre','los lobos','Marte','Coyoacán','la niebla','Lucía','los espejos','Tokio','la montaña','Elena'];
+  const Be = ['Valparaíso','the Tide','October','the Wolves','Mars','Coyoacán','the Fog','Lucía','the Mirrors','Tokyo','the Mountain','Elena'];
+  const ids = GENRES.map(g => g[0]);
+  const prov = [['Netflix'],['Prime Video'],['Max'],['Disney Plus'],['ViX'],['Apple TV Plus'],['Mercado Play']];
+  const movies = [];
+  for (let i = 0; i < 120; i++){
+    const a = i % A.length, b = Math.floor(i / A.length) % B.length;
+    const g = [...new Set([ids[Math.floor(rnd() * ids.length)], ids[Math.floor(rnd() * ids.length)], ...(rnd() > .6 ? [53, 10749][i % 2] ? [[53, 10749][i % 2]] : [] : [])])];
+    const h = Math.floor(rnd() * 360);
+    const t = `${A[a]} ${B[b]}`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${h},35%,55%)"/><stop offset="1" stop-color="hsl(${(h+40)%360},40%,18%)"/></linearGradient></defs><rect width="400" height="600" fill="url(#g)"/><circle cx="${100+rnd()*200}" cy="${150+rnd()*150}" r="${60+rnd()*80}" fill="hsla(${h},60%,85%,.35)"/><text x="30" y="90" font-family="Georgia" font-size="38" fill="#fff">${t}</text></svg>`;
+    movies.push({ id: 1000 + i, title: t, en: `${Ae[a]} ${Be[b]}`, original_title: `${Ae[a]} ${Be[b]}`, original_language: 'en',
+      release_date: `${1995 + Math.floor(rnd() * 30)}-05-01`, genre_ids: g, popularity: 1000 - i * 5 + rnd() * 20,
+      poster_path: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+      _prov: [prov[Math.floor(rnd() * prov.length)], ...(rnd() > .5 ? [prov[Math.floor(rnd() * prov.length)]] : [])].filter((v, k, s) => s.indexOf(v) === k),
+      _rt: 85 + Math.floor(rnd() * 70), _va: (5.5 + rnd() * 3).toFixed(1) });
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  return {
+    async discover(q){
+      await wait(120);
+      let list = movies;
+      if (q.with_genres){
+        const wg = String(q.with_genres);
+        list = wg.includes('|') ? list.filter(m => wg.split('|').some(g => m.genre_ids.includes(+g)))
+                                : list.filter(m => wg.split(',').every(g => m.genre_ids.includes(+g)));
+      }
+      const en = q.language === 'en-US', p = +q.page || 1;
+      return { total_results: list.length, results: list.slice((p - 1) * 20, p * 20).map(m => ({ ...m, title: en ? m.en : m.title })) };
+    },
+    async details(id){
+      await wait(200);
+      const m = movies.find(x => x.id === id);
+      const names = ['Sofía Reyes','Diego Luna','Mariana Treviño','Tenoch Huerta','Ilse Salas','Luis Gerardo Méndez','Ana de la Reguera','Gael García'];
+      return { overview: `Cuando ${m.title.toLowerCase()} se vuelve inevitable, tres amigos tienen que decidir qué están dispuestos a perder. Una historia de prueba generada para el modo demo.`,
+        runtime: m._rt, vote_average: +m._va, release_date: m.release_date,
+        credits: { cast: names.slice(0, 6).map((n, i) => ({ name: n, character: ['Elena','Tomás','Lucía','Andrés','Rosa','Iván'][i] })), crew: [{ job: 'Director', name: 'Natalia Beristáin' }] },
+        'watch/providers': { results: { MX: { flatrate: m._prov.map(p => ({ provider_name: p[0] })) } } } };
+    }
+  };
+}
+
+/* ---------- state ---------- */
+const S = { pid: ss.get('qv-pid') || rid(), code: null, room: null, players: [], my: new Set(), screen: 'home', deckKey: null, deck: [], idx: 0, busy: false, unsub: [], building: false };
+ss.set('qv-pid', S.pid);
+let store, catalog;
+const detailsCache = new Map();
+const details = id => { if (!detailsCache.has(id)) detailsCache.set(id, catalog.details(id).catch(e => { detailsCache.delete(id); throw e; })); return detailsCache.get(id); };
+const me = () => S.players.find(p => p.id === S.pid);
+const fullMatches = () => {
+  const n = S.players.length; if (!n || !S.room?.deck) return [];
+  return S.room.deck.filter(m => S.players.every(p => (p.likes || []).includes(m.id)));
+};
+
+/* ---------- home ---------- */
+const nameInput = $('#nameInput'), codeInput = $('#codeInput');
+nameInput.value = ls.get('qv-name') || '';
+codeInput.addEventListener('input', () => codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+const invited = (params.get('sala') || '').toUpperCase().slice(0, 4);
+if (invited){
+  codeInput.value = invited; $('#inviteBox').hidden = false; $('#inviteCode').textContent = invited;
+  $('#createBtn').hidden = true; $('#orLine').hidden = true; $('#joinBtn').classList.remove('ghost');
+}
+function needName(){
+  const n = nameInput.value.trim();
+  if (!n){ toast('Escribe tu nombre para que los demás sepan quién eres.'); nameInput.focus(); return null; }
+  ls.set('qv-name', n); return n;
+}
+function busyBtn(btn, on, label){ btn.disabled = on; if (on){ btn.dataset.l = btn.innerHTML; btn.innerHTML = `<span class="spin"></span>${label || ''}`; } else if (btn.dataset.l) btn.innerHTML = btn.dataset.l; }
+
+$('#createBtn').onclick = async () => {
+  const name = needName(); if (!name) return;
+  const btn = $('#createBtn'); busyBtn(btn, true);
+  try {
+    let code;
+    for (let i = 0; i < 6; i++){
+      code = Array.from(crypto.getRandomValues(new Uint8Array(4)), b => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 31]).join('');
+      if (!(await store.getRoom(code))) break;
+    }
+    await store.createRoom(code, { status: 'lobby', host: S.pid, round: 1, createdAt: Date.now(), deck: null });
+    await enter(code, name);
+  } catch (e){ console.error(e); toast('No se pudo crear la sala. Revisa tu internet.'); }
+  busyBtn(btn, false);
+};
+$('#joinBtn').onclick = async () => {
+  const name = needName(); if (!name) return;
+  const code = codeInput.value.trim().toUpperCase();
+  if (code.length !== 4){ toast('El código tiene 4 letras.'); codeInput.focus(); return; }
+  const btn = $('#joinBtn'); busyBtn(btn, true);
+  try {
+    if (!(await store.getRoom(code))) toast(`No encontramos la sala ${code}. Revisa el código.`);
+    else await enter(code, name);
+  } catch (e){ console.error(e); toast('No se pudo entrar a la sala. Revisa tu internet.'); }
+  busyBtn(btn, false);
+};
+
+async function enter(code, name){
+  const room = await store.getRoom(code);
+  const existing = await store.getPlayer(code, S.pid);
+  if (existing) await store.setPlayer(code, S.pid, { name });
+  else await store.setPlayer(code, S.pid, { name, genres: [], ready: room.status !== 'lobby', done: false, likes: [], passes: [], idx: 0, joinedAt: Date.now() });
+  S.my = new Set(existing?.genres || []);
+  S.code = code; ss.set('qv-room', code);
+  const q = new URLSearchParams(); q.set('sala', code); if (DEMO) q.set('demo', '1');
+  history.replaceState(null, '', '?' + q);
+  S.unsub.forEach(f => f()); S.unsub = [];
+  S.unsub.push(store.onRoom(code, r => { S.room = r; render(); }));
+  S.unsub.push(store.onPlayers(code, ps => { S.players = ps.sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0)); render(); }));
+}
+function leave(){
+  S.unsub.forEach(f => f()); S.unsub = [];
+  if (S.code) store.removePlayer(S.code, S.pid).catch(() => {});
+  ss.del('qv-room'); S.code = null; S.room = null; S.players = []; S.deckKey = null;
+  history.replaceState(null, '', DEMO ? '?demo=1' : location.pathname);
+  $('#inviteBox').hidden = true; $('#createBtn').hidden = false; $('#orLine').hidden = false; $('#joinBtn').classList.add('ghost'); codeInput.value = '';
+  show('home');
+}
+
+/* ---------- router ---------- */
+function render(){
+  if (!S.code) return;
+  if (!S.room){ toast('Esta sala ya no existe.'); leave(); return; }
+  const m = me();
+  if (!m) return; // our own doc not arrived yet
+  const st = S.room.status;
+  if (st === 'lobby') renderLobby();
+  else if (st === 'playing'){
+    if (S.players.length && S.players.every(p => p.done)){ store.updateRoom(S.code, { status: 'results' }); return; }
+    if (m.done) renderWait(); else renderPlay();
+  }
+  else if (st === 'results') renderResults();
+}
+
+/* ---------- lobby ---------- */
+const chipsEl = $('#chips');
+chipsEl.innerHTML = GENRES.map(([id, n]) => `<button class="chip" data-g="${id}" aria-pressed="false">${n}</button>`).join('');
+chipsEl.addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b || b.disabled) return;
+  const g = +b.dataset.g; S.my.has(g) ? S.my.delete(g) : S.my.add(g);
+  b.setAttribute('aria-pressed', S.my.has(g));
+  store.setPlayer(S.code, S.pid, { genres: [...S.my] });
+});
+function playerRows(ps, sub){
+  return ps.map(p => `<div class="row"><span class="avatar">${esc((p.name || '?')[0].toUpperCase())}</span>
+    <div class="row-main"><p class="row-name">${esc(p.name)} ${p.id === S.pid ? '<span class="you">(tú)</span>' : ''}</p><p class="row-sub">${sub(p).text}</p></div>
+    <span class="status ${sub(p).on ? 'on' : ''}">${sub(p).status}</span></div>`).join('');
+}
+function renderLobby(){
+  if (S.screen !== 'lobby'){ S.my = new Set(me().genres || []); S.deckKey = null; }
+  show('lobby');
+  $('#lobbyCode').textContent = S.code;
+  const m = me();
+  $('#playerList').innerHTML = playerRows(S.players, p => ({
+    text: p.genres?.length ? p.genres.map(g => GNAME[g]).join(' · ') : 'Cualquier género',
+    status: p.ready ? 'Listo' : 'Eligiendo', on: p.ready
+  }));
+  chipsEl.querySelectorAll('.chip').forEach(b => { b.setAttribute('aria-pressed', S.my.has(+b.dataset.g)); b.disabled = !!m.ready; });
+  const pending = S.players.filter(p => !p.ready);
+  const btn = $('#readyBtn'), note = $('#lobbyNote');
+  note.hidden = !S.room.building;
+  if (S.room.building) note.textContent = `${S.room.building} está buscando las películas…`;
+  $('#changeBtn').hidden = !m.ready;
+  if (S.building) return;
+  if (!m.ready){
+    btn.disabled = false; btn.textContent = S.my.size ? 'Estoy listo' : 'Listo, me da igual el género';
+    btn.onclick = () => store.setPlayer(S.code, S.pid, { genres: [...S.my], ready: true });
+  } else if (pending.length){
+    btn.disabled = true; btn.textContent = `Esperando a ${pending.map(p => p.name).join(', ')}`;
+  } else {
+    btn.disabled = !!S.room.building; btn.textContent = S.players.length > 1 ? `Empezar (${S.players.length} personas)` : 'Empezar';
+    btn.onclick = () => startGame('all');
+  }
+}
+$('#changeBtn').onclick = () => store.setPlayer(S.code, S.pid, { ready: false });
+$('#shareBtn').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?sala=${S.code}${DEMO ? '&demo=1' : ''}`;
+  try { if (navigator.share){ await navigator.share({ title: '¿Qué vemos?', text: `Únete a mi sala ${S.code} para elegir película`, url }); return; } } catch (e){ if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url); toast('Link copiado. Pégalo en el chat.'); } catch { toast(url); }
+};
+
+/* ---------- deck building ---------- */
+function minimalCombos(sets){
+  let combos = [[]];
+  for (const s of sets){
+    const next = []; for (const c of combos) for (const g of s) next.push([...new Set([...c, g])].sort((a, b) => a - b));
+    combos = [...new Map(next.map(c => [c.join(','), c])).values()];
+    if (combos.length > 300) break;
+  }
+  const min = combos.filter(c => !combos.some(o => o !== c && o.length < c.length && o.every(g => c.includes(g))));
+  return min.sort((a, b) => a.length - b.length).slice(0, 12);
+}
+const satisfies = (m, sets) => sets.every(s => s.some(g => m.genre_ids.includes(g)));
+async function fetchPool(withGenres, pages){
+  const base = { sort_by: 'popularity.desc', 'vote_count.gte': 150, include_adult: false, watch_region: 'MX', with_watch_monetization_types: 'flatrate' };
+  if (withGenres) base.with_genres = withGenres;
+  const jobs = [];
+  for (let p = 1; p <= pages; p++){
+    jobs.push(catalog.discover({ ...base, language: 'es-MX', page: p }), catalog.discover({ ...base, language: 'en-US', page: p }));
+  }
+  const res = await Promise.all(jobs.map(j => j.catch(() => ({ results: [] }))));
+  const en = new Map(); res.filter((_, i) => i % 2).forEach(r => r.results.forEach(m => en.set(m.id, m.title)));
+  const out = []; res.filter((_, i) => i % 2 === 0).forEach(r => r.results.forEach(m => out.push({ ...m, en_title: en.get(m.id) })));
+  return out;
+}
+async function buildDeck(sets, mode){
+  let pool;
+  if (!sets.length) pool = await fetchPool(null, 5);
+  else if (mode === 'all'){
+    const combos = minimalCombos(sets), pages = combos.length > 6 ? 1 : 2;
+    pool = (await Promise.all(combos.map(c => fetchPool(c.join(','), pages)))).flat().filter(m => satisfies(m, sets));
+  } else pool = await fetchPool([...new Set(sets.flat())].join('|'), 5);
+  const seen = new Set();
+  const list = pool.filter(m => m.poster_path && !seen.has(m.id) && seen.add(m.id))
+    .sort((a, b) => b.popularity - a.popularity).slice(0, DECK_MAX);
+  for (let i = 0; i < list.length; i += 8){ // shuffle lightly inside windows of 8 so it isn't strictly by popularity
+    const w = list.slice(i, i + 8).sort(() => Math.random() - .5); list.splice(i, w.length, ...w);
+  }
+  return list.map(m => {
+    const en = m.en_title || (m.original_language === 'en' ? m.original_title : null);
+    return { id: m.id, t: m.title, en: en && en.toLowerCase() !== m.title.toLowerCase() ? en : null,
+      o: m.original_title !== m.title && m.original_title !== en ? m.original_title : null,
+      y: (m.release_date || '').slice(0, 4), g: m.genre_ids, p: m.poster_path };
+  });
+}
+async function startGame(mode){
+  const btn = $('#readyBtn'); S.building = true; busyBtn(btn, true, ' Buscando películas…');
+  try {
+    await store.updateRoom(S.code, { building: me().name });
+    const sets = S.players.filter(p => p.genres?.length).map(p => p.genres);
+    let deck = await buildDeck(sets, mode);
+    if (mode === 'all' && sets.length > 1 && deck.length < 20){
+      const choice = await sheet(deck.length ? {
+        title: `Solo hay ${deck.length} películas que combinan los géneros de todos.`,
+        text: 'Pueden jugar con estas o ampliar a películas que tengan cualquiera de los géneros elegidos.',
+        buttons: [{ label: 'Ampliar géneros', value: 'any' }, { label: `Jugar con estas ${deck.length}`, value: 'keep', ghost: true }]
+      } : {
+        title: 'No hay películas que combinen los géneros de todos.',
+        text: 'Pueden ampliar a películas que tengan cualquiera de los géneros elegidos, o cambiar los géneros.',
+        buttons: [{ label: 'Ampliar géneros', value: 'any' }, { label: 'Cambiar géneros', value: null, ghost: true }]
+      });
+      if (choice === 'any') deck = await buildDeck(sets, 'any');
+      else if (choice !== 'keep'){ await store.updateRoom(S.code, { building: null }); return; }
+    }
+    if (!deck.length){ toast('No encontramos películas con esos géneros. Prueben con otros.'); await store.updateRoom(S.code, { building: null }); return; }
+    await store.updateRoom(S.code, { status: 'playing', deck, building: null, startedAt: Date.now() });
+  } catch (e){
+    console.error(e); toast('No pudimos cargar las películas. Intenta de nuevo.');
+    store.updateRoom(S.code, { building: null }).catch(() => {});
+  } finally { S.building = false; busyBtn(btn, false); render(); }
+}
+
+/* ---------- play ---------- */
+const deckEl = $('#deck'), cardEls = new Map();
+function renderPlay(){
+  const key = `${S.room.round}:${S.room.startedAt}`;
+  if (S.deckKey !== key){
+    S.deckKey = key; S.deck = S.room.deck || []; S.idx = Math.min(me().idx || 0, S.deck.length);
+    cardEls.clear(); deckEl.innerHTML = ''; S.busy = false;
+    show('play'); $('#playCode').textContent = S.code; drawDeck();
+  } else if (S.screen !== 'play'){ show('play'); }
+}
+function genresText(g){ return (g || []).map(x => GNAME[x]).filter(Boolean).slice(0, 3).join(', '); }
+function titleHTML(m){ return `${esc(m.t)}${m.en ? ` <span class="m-en">(${esc(m.en)})</span>` : m.o ? ` <span class="m-en">(${esc(m.o)})</span>` : ''}`; }
+function makeCard(m, first){
+  const el = document.createElement('article'); el.className = 'card';
+  el.innerHTML = `
+    <div class="poster">
+      <img src="${img(m.p, 'w780')}" alt="Póster de ${esc(m.t)}" draggable="false">
+      <span class="stamp yes">SÍ</span><span class="stamp no">NO</span>
+      <div class="poster-meta">
+        <h2 class="m-title">${titleHTML(m)}</h2>
+        <p class="m-sub">${esc(m.y)}${m.y && m.g?.length ? ' · ' : ''}${esc(genresText(m.g))}</p>
+        ${first ? `<p class="hint">${icon('down')}Desliza hacia arriba para ver sinopsis y reparto</p>` : ''}
+      </div>
+    </div>
+    <div class="more">
+      <section class="block"><p class="eyebrow">Sinopsis</p><p class="synopsis">Cargando…</p></section>
+      <section class="block info" hidden></section>
+      <section class="block cast" hidden><p class="eyebrow">Reparto</p><div class="cast-row"></div></section>
+    </div>`;
+  details(m.id).then(d => fillDetails(el, d)).catch(() => { el.querySelector('.synopsis').textContent = 'No pudimos cargar la información.'; });
+  attachSwipe(el);
+  return el;
+}
+function providersOf(d){
+  const mx = d?.['watch/providers']?.results?.MX || {};
+  return { flat: mx.flatrate || [], other: [...(mx.rent || []), ...(mx.buy || [])].filter((p, i, a) => a.findIndex(x => x.provider_name === p.provider_name) === i) };
+}
+function provHTML(list){ return `<div class="prov">${list.map(p => p.logo_path ? `<span><img src="${img(p.logo_path, 'w92')}" alt="">${esc(p.provider_name)}</span>` : `<span class="nologo">${esc(p.provider_name)}</span>`).join('')}</div>`; }
+function fillDetails(el, d){
+  el.querySelector('.synopsis').textContent = d.overview || 'Sin sinopsis en español.';
+  const dir = (d.credits?.crew || []).filter(c => c.job === 'Director').map(c => c.name).slice(0, 2).join(', ');
+  const rt = d.runtime ? `${Math.floor(d.runtime / 60)} h ${d.runtime % 60} min` : '';
+  const pv = providersOf(d);
+  const rows = [
+    rt && [icon('clock'), rt],
+    dir && [icon('cam'), `Dirigida por ${esc(dir)}`],
+    d.vote_average ? [icon('star'), `${d.vote_average.toFixed(1)} de 10 en TMDB`] : null,
+    pv.flat.length ? [icon('tv'), `<span style="display:flex;flex-direction:column;gap:8px">Disponible en ${provHTML(pv.flat)}</span>`] : [icon('tv'), 'No está en streaming por suscripción en México']
+  ].filter(Boolean);
+  const info = el.querySelector('.info'); info.hidden = false;
+  info.innerHTML = rows.map(([i, t]) => `<div class="r">${i}<span>${t}</span></div>`).join('');
+  const cast = (d.credits?.cast || []).slice(0, 10);
+  if (cast.length){
+    const c = el.querySelector('.cast'); c.hidden = false;
+    c.querySelector('.cast-row').innerHTML = cast.map(p => `<div class="person">${p.profile_path ? `<img class="ph" src="${img(p.profile_path, 'w185')}" alt="" loading="lazy">` : `<span class="ph">${esc(p.name[0])}</span>`}<b>${esc(p.name)}</b><i>${esc(p.character || '')}</i></div>`).join('');
+  }
+}
+function drawDeck(){
+  $('#progress').textContent = S.deck.length ? `${Math.min(S.idx + 1, S.deck.length)} de ${S.deck.length}` : '';
+  for (const [id, el] of cardEls) if (!S.deck.slice(S.idx, S.idx + 2).some(m => m.id === id)){ el.remove(); cardEls.delete(id); }
+  const want = S.deck.slice(S.idx, S.idx + 2);
+  want.slice().reverse().forEach((m, k) => {
+    let el = cardEls.get(m.id);
+    if (!el){ el = makeCard(m, S.idx === 0 && k === want.length - 1); cardEls.set(m.id, el); deckEl.prepend(el); }
+  });
+  want.forEach((m, k) => cardEls.get(m.id).classList.toggle('under', k > 0));
+  const top = want[0] && cardEls.get(want[0].id); if (top) deckEl.appendChild(top);
+  S.deck.slice(S.idx + 2, S.idx + 4).forEach(m => { details(m.id).catch(() => {}); new Image().src = img(m.p, 'w780'); });
+}
+function setStamp(el, dx){
+  const w = el.offsetWidth || 1, a = Math.min(1, Math.abs(dx) / (w * .25));
+  el.querySelector('.stamp.yes').style.opacity = dx > 0 ? a : 0;
+  el.querySelector('.stamp.no').style.opacity = dx < 0 ? a : 0;
+}
+function attachSwipe(el){
+  let sx, sy, st, dx = 0, lock = null, pid = null;
+  el.addEventListener('pointerdown', e => {
+    if (e.button > 0 || el.classList.contains('under') || S.busy) return;
+    sx = e.clientX; sy = e.clientY; st = performance.now(); dx = 0; lock = null; pid = e.pointerId; el.style.transition = 'none';
+  });
+  el.addEventListener('pointermove', e => {
+    if (e.pointerId !== pid) return;
+    const mx = e.clientX - sx, my = e.clientY - sy;
+    if (!lock){
+      if (Math.abs(mx) > 8 && Math.abs(mx) > Math.abs(my) * 1.1){ lock = 'x'; try { el.setPointerCapture(pid); } catch {} }
+      else if (Math.abs(my) > 8) lock = 'y';
+      if (lock !== 'x') return;
+    }
+    if (lock !== 'x') return;
+    dx = mx; el.style.transform = `translateX(${dx}px) rotate(${dx / 24}deg)`; setStamp(el, dx);
+  });
+  const end = e => {
+    if (e.pointerId !== pid) return; pid = null;
+    if (lock !== 'x') return;
+    const w = el.offsetWidth, v = Math.abs(dx) / Math.max(1, performance.now() - st);
+    if (Math.abs(dx) > w * .28 || (Math.abs(dx) > 60 && v > .6)) fling(el, dx > 0);
+    else { el.style.transition = 'transform .25s ease'; el.style.transform = ''; setStamp(el, 0); }
+  };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+}
+function fling(el, yes){
+  if (S.busy) return; S.busy = true;
+  const w = el.offsetWidth;
+  setStamp(el, yes ? w : -w);
+  el.style.transition = 'transform .3s ease-out';
+  el.style.transform = `translateX(${(yes ? 1 : -1) * w * 1.4}px) rotate(${yes ? 18 : -18}deg)`;
+  setTimeout(() => commitVote(yes), 260);
+}
+function topCard(){ const m = S.deck[S.idx]; return m && cardEls.get(m.id); }
+async function commitVote(yes){
+  const m = S.deck[S.idx]; if (!m){ S.busy = false; return; }
+  S.idx++;
+  store.vote(S.code, S.pid, m.id, yes, S.idx).catch(() => toast('Tu voto no se guardó. Revisa tu internet.'));
+  if (S.idx >= S.deck.length){ cardEls.get(m.id)?.remove(); cardEls.delete(m.id); await finish(); S.busy = false; return; }
+  drawDeck(); S.busy = false;
+}
+async function finish(){ await store.setPlayer(S.code, S.pid, { done: true, idx: S.idx }); }
+$('#yesBtn').onclick = () => { const c = topCard(); if (c) fling(c, true); };
+$('#noBtn').onclick = () => { const c = topCard(); if (c) fling(c, false); };
+document.addEventListener('keydown', e => {
+  if (S.screen !== 'play' || document.querySelector('.backdrop')) return;
+  if (e.key === 'ArrowRight') $('#yesBtn').click();
+  if (e.key === 'ArrowLeft') $('#noBtn').click();
+});
+$('#endBtn').onclick = async () => {
+  const none = fullMatches().length === 0;
+  const ok = await sheet({
+    title: none ? 'Aún no hay ninguna coincidencia entre todos.' : '¿Seguro que quieres terminar?',
+    text: none ? '¿Estás seguro de que quieres terminar?' : '',
+    buttons: [{ label: 'Sí, terminar', value: true }, { label: 'No, seguir deslizando', value: false, ghost: true }]
+  });
+  if (ok) finish();
+};
+
+/* ---------- wait ---------- */
+function renderWait(){
+  show('wait');
+  const left = S.players.filter(p => !p.done), total = S.room.deck?.length || 0;
+  $('#waitCode').textContent = `Sala ${S.code}`;
+  $('#waitText').textContent = left.length === 1 ? `Falta que ${left[0].name} termine. Verán los resultados al mismo tiempo.` : `Faltan ${left.length} personas por terminar. Verán los resultados al mismo tiempo.`;
+  $('#waitList').innerHTML = playerRows(S.players, p => ({
+    text: p.done ? `Votó ${p.idx || 0} películas` : `Va en ${Math.min((p.idx || 0) + 1, total)} de ${total}`,
+    status: p.done ? 'Terminó' : 'Deslizando', on: p.done
+  }));
+}
+$('#forceBtn').onclick = async () => {
+  const ok = await sheet({ title: 'Todavía hay quien sigue deslizando.', text: '¿Quieren ver los resultados ya? Lo que falte por votar no contará.',
+    buttons: [{ label: 'Ver resultados', value: true }, { label: 'Esperar', value: false, ghost: true }] });
+  if (ok) store.updateRoom(S.code, { status: 'results' });
+};
+
+/* ---------- results ---------- */
+function renderResults(){
+  const key = `res:${S.room.round}:${S.players.map(p => (p.likes || []).length).join(',')}`;
+  if (S.screen === 'results' && S.resKey === key) return;
+  S.resKey = key; show('results'); S.deckKey = null;
+  const deck = S.room.deck || [], n = S.players.length;
+  const scored = deck.map((m, i) => ({ m, i, yes: S.players.filter(p => (p.likes || []).includes(m.id)).length })).filter(x => x.yes > 0);
+  const full = scored.filter(x => x.yes === n).sort((a, b) => a.i - b.i);
+  const partial = n > 2 ? scored.filter(x => x.yes < n && x.yes >= 2).sort((a, b) => b.yes - a.yes || a.i - b.i).slice(0, 10) : [];
+  const meta = m => `${esc(m.y)}${m.y && m.g?.length ? ' · ' : ''}${esc(genresText(m.g))}`;
+  let h = `<p class="eyebrow">Sala ${esc(S.code)} · ${n} ${n === 1 ? 'persona' : 'personas'}</p>`;
+  if (full.length){
+    h += `<h2 class="big">${full.length === 1 ? 'Coincidieron en una película.' : `Coincidieron en ${full.length} películas.`}</h2>`;
+    const f = full[0].m;
+    h += `<article class="feature"><img src="${img(f.p, 'w780')}" alt="Póster de ${esc(f.t)}"><div class="body">
+      <span class="tag">${n > 1 ? 'Todos dijeron que sí' : 'Dijiste que sí'}</span>
+      <h3 class="f-title">${titleHTML(f)}</h3><p class="f-sub">${meta(f)}</p><div data-prov="${f.id}"><p class="prov-note">Buscando dónde verla…</p></div></div></article>`;
+    if (full.length > 1) h += `<div class="list">${full.slice(1).map(x => resRow(x, n, meta)).join('')}</div>`;
+  } else {
+    h += `<h2 class="big">No coincidieron en ninguna.</h2><p class="lede">${partial.length ? 'Estas fueron las que más votos tuvieron.' : 'Prueben otra ronda con otros géneros.'}</p>`;
+  }
+  if (partial.length){
+    h += `<div class="section-label"><h3 class="serif-h" style="font-size:28px">Casi</h3><span class="muted small">Las que más votos tuvieron</span></div>`;
+    h += `<div class="list">${partial.map(x => resRow(x, n, meta)).join('')}</div>`;
+  }
+  $('#resultsBody').innerHTML = h;
+  $('#resultsBody').scrollTop = 0;
+  [...full, ...partial].forEach(({ m }) => details(m.id).then(d => {
+    const slot = document.querySelector(`[data-prov="${m.id}"]`); if (!slot) return;
+    const pv = providersOf(d);
+    slot.innerHTML = pv.flat.length ? provHTML(pv.flat)
+      : pv.other.length ? `<p class="prov-note">Solo en renta o compra:</p>${provHTML(pv.other.slice(0, 4))}`
+      : '<p class="prov-note">No está en streaming en México.</p>';
+  }).catch(() => { const slot = document.querySelector(`[data-prov="${m.id}"]`); if (slot) slot.innerHTML = '<p class="prov-note">No pudimos ver dónde está disponible.</p>'; }));
+}
+function resRow({ m, yes }, n, meta){
+  return `<div class="res"><img src="${img(m.p, 'w185')}" alt="" loading="lazy"><div class="row-main">
+    <p class="res-title">${titleHTML(m)}</p><p class="row-sub" style="white-space:normal">${meta(m)}</p>
+    <span class="tag ${yes === n ? '' : 'soft'}">${yes === n ? 'Todos' : `${yes} de ${n} dijeron sí`}</span>
+    <div data-prov="${m.id}"><p class="prov-note">Buscando dónde verla…</p></div></div></div>`;
+}
+$('#againBtn').onclick = () => store.resetRound(S.code, S.players.map(p => p.id), { status: 'lobby', deck: null, building: null, round: (S.room.round || 1) + 1 });
+$('#leaveBtn').onclick = leave;
+
+/* ---------- boot ---------- */
+(async () => {
+  try {
+    store = DEMO ? demoStore() : await firestoreStore();
+    catalog = DEMO ? demoCatalog() : realCatalog;
+  } catch (e){ console.error(e); toast('No se pudo cargar el juego. Revisa tu internet y recarga.'); return; }
+  const saved = ss.get('qv-room');
+  if (saved && (!invited || invited === saved)){
+    try { const p = await store.getPlayer(saved, S.pid); if (p && await store.getRoom(saved)) await enter(saved, p.name); } catch {}
+  }
+})();
+</script>
+</body>
+</html>
