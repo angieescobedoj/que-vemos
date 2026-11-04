@@ -81,7 +81,8 @@
   }
   /* Call after any re-render: if focus is gone/hidden, land on the first meaningful element (§7 rule 10). */
   function ensure(preferredSelector) {
-    if (current && visible(current) && (!scope || scope.contains(current))) { reveal(current); return; }
+    /* Focus still valid: leave the scroll position alone (re-revealing here on every poll fought mouse-wheel scrolling). */
+    if (current && visible(current) && (!scope || scope.contains(current))) return;
     var root = scope || document, pref = preferredSelector ? root.querySelector(preferredSelector) : null;
     setFocus(pref && visible(pref) ? pref : (candidates()[0] || null));
   }
