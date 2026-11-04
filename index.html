@@ -359,27 +359,81 @@ function busyBtn(btn, on, label){
 function avatarHTML(p, i){ const [bg, fg] = AV[i % AV.length]; return `<span class="av" style="background:${bg};color:${fg}">${esc((p.name || '?')[0].toUpperCase())}</span>`; }
 
 /* ---------- data layer: Firestore (real) or local mock (?demo) ---------- */
+/* Firestore over plain HTTPS (REST) + polling — the same path the TV uses. No SDK, no WebSocket/WebChannel,
+   and every request has a timeout so the UI can never hang waiting on a connection. */
 async function firestoreStore(){
-  const V = '10.12.2';
-  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-  const db = fs.getFirestore(initializeApp(FIREBASE));
-  const R = c => fs.doc(db, 'rooms', c), P = (c, p) => fs.doc(db, 'rooms', c, 'players', p);
-  const err = e => { console.error(e); toast('No se pudo conectar con la sala. Revisa tu internet.'); };
+  const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents`;
+  const KEY = `key=${FIREBASE.apiKey}`;
+  const DOC = path => `projects/${FIREBASE.projectId}/databases/(default)/documents/${path}`;
+  const enc = v => {
+    if (v === null || v === undefined) return { nullValue: null };
+    if (typeof v === 'boolean') return { booleanValue: v };
+    if (typeof v === 'number') return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+    if (typeof v === 'string') return { stringValue: v };
+    if (Array.isArray(v)) return { arrayValue: { values: v.map(enc) } };
+    return { mapValue: { fields: encF(v) } };
+  };
+  const encF = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, enc(v)]));
+  const dec = v => {
+    if (!v || 'nullValue' in v) return null;
+    if ('booleanValue' in v) return v.booleanValue;
+    if ('integerValue' in v) return Number(v.integerValue);
+    if ('doubleValue' in v) return v.doubleValue;
+    if ('stringValue' in v) return v.stringValue;
+    if ('timestampValue' in v) return v.timestampValue;
+    if ('arrayValue' in v) return (v.arrayValue.values || []).map(dec);
+    if ('mapValue' in v) return decF(v.mapValue.fields || {});
+    return null;
+  };
+  const decF = f => Object.fromEntries(Object.entries(f || {}).map(([k, v]) => [k, dec(v)]));
+  async function call(method, url, body){
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(url, { method, signal: ctl.signal, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+      if (r.status === 404) return null;
+      const data = await r.json().catch(() => null);
+      if (!r.ok) throw new Error(`Firestore ${r.status}: ${data?.error?.message || ''}`);
+      return data;
+    } finally { clearTimeout(t); }
+  }
+  const mask = o => Object.keys(o).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
+  const commit = writes => call('POST', `${BASE}:commit?${KEY}`, { writes });
+  const getRoom = async c => { const d = await call('GET', `${BASE}/rooms/${c}?${KEY}`); return d ? decF(d.fields) : null; };
+  const getPlayers = async c => { const d = await call('GET', `${BASE}/rooms/${c}/players?pageSize=200&${KEY}`); return (d?.documents || []).map(x => ({ id: x.name.split('/').pop(), ...decF(x.fields) })); };
+  /* polling "listeners": fire on change; kick() refreshes right after our own writes */
+  const pollers = new Set();
+  const kick = () => pollers.forEach(f => f());
+  function watch(load, cb){
+    let last = null, stop = false, busy = false, fails = 0;
+    const tick = async () => {
+      if (stop || busy) return; busy = true;
+      try { const v = await load(); fails = 0; const j = JSON.stringify(v); if (j !== last){ last = j; cb(v); } }
+      catch (e){ console.error(e); if (++fails === 3) toast('Sin conexión con la sala. Reintentando…'); }
+      finally { busy = false; }
+    };
+    const iv = setInterval(tick, 1500); pollers.add(tick); tick();
+    return () => { stop = true; clearInterval(iv); pollers.delete(tick); };
+  }
+  const after = p => p.then(r => { setTimeout(kick, 50); return r; });
   return {
-    async getRoom(c){ const s = await fs.getDoc(R(c)); return s.exists() ? s.data() : null; },
-    async createRoom(c, d){ await fs.setDoc(R(c), d); },
-    async updateRoom(c, d){ await fs.updateDoc(R(c), d); },
-    onRoom(c, cb){ return fs.onSnapshot(R(c), s => cb(s.exists() ? s.data() : null), err); },
-    onPlayers(c, cb){ return fs.onSnapshot(fs.collection(db, 'rooms', c, 'players'), q => cb(q.docs.map(d => ({ id: d.id, ...d.data() }))), err); },
-    async getPlayer(c, p){ const s = await fs.getDoc(P(c, p)); return s.exists() ? s.data() : null; },
-    async setPlayer(c, p, d){ await fs.setDoc(P(c, p), d, { merge: true }); },
-    async removePlayer(c, p){ await fs.deleteDoc(P(c, p)); },
-    async vote(c, p, id, yes, idx){ await fs.updateDoc(P(c, p), { [yes ? 'likes' : 'passes']: fs.arrayUnion(id), idx }); },
+    getRoom,
+    async createRoom(c, d){ await after(call('PATCH', `${BASE}/rooms/${c}?${KEY}`, { fields: encF(d) })); },
+    async updateRoom(c, d){ await after(call('PATCH', `${BASE}/rooms/${c}?${mask(d)}&currentDocument.exists=true&${KEY}`, { fields: encF(d) })); },
+    onRoom(c, cb){ return watch(() => getRoom(c), cb); },
+    onPlayers(c, cb){ return watch(() => getPlayers(c), cb); },
+    async getPlayer(c, p){ const d = await call('GET', `${BASE}/rooms/${c}/players/${p}?${KEY}`); return d ? decF(d.fields) : null; },
+    async setPlayer(c, p, d){ await after(call('PATCH', `${BASE}/rooms/${c}/players/${p}?${mask(d)}&${KEY}`, { fields: encF(d) })); },
+    async removePlayer(c, p){ await after(call('DELETE', `${BASE}/rooms/${c}/players/${p}?${KEY}`)); },
+    async vote(c, p, id, yes, idx){
+      await after(commit([{ update: { name: DOC(`rooms/${c}/players/${p}`), fields: encF({ idx }) }, updateMask: { fieldPaths: ['idx'] },
+        updateTransforms: [{ fieldPath: yes ? 'likes' : 'passes', appendMissingElements: { values: [enc(id)] } }] }]));
+    },
     async resetRound(c, ids, roomPatch){
-      const b = fs.writeBatch(db); b.update(R(c), roomPatch);
-      ids.forEach(id => b.update(P(c, id), { ready: false, done: false, likes: [], passes: [], idx: 0 }));
-      await b.commit();
+      const blank = { ready: false, done: false, likes: [], passes: [], idx: 0 };
+      await after(commit([
+        ...ids.map(id => ({ update: { name: DOC(`rooms/${c}/players/${id}`), fields: encF(blank) }, updateMask: { fieldPaths: Object.keys(blank) } })),
+        { update: { name: DOC(`rooms/${c}`), fields: encF(roomPatch) }, updateMask: { fieldPaths: Object.keys(roomPatch) } }
+      ]));
     }
   };
 }
