@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>¿Qué vemos? · TV</title>
+<!-- R1: Montserrat self-hosted, preloaded per weight, font-display: optional (see tv/tv.css). No font CDN. -->
+<link rel="preload" href="fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tv/tv.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+
+<div class="net-banner" id="netBanner" hidden>Sin conexión con la sala. Reintentando…</div>
+
+<main class="app" id="app">
+
+  <!-- LOBBY: QR + who has joined -->
+  <section class="screen lobby" data-screen="lobby" hidden>
+    <div class="col left">
+      <p class="eyebrow">¿Qué vemos?</p>
+      <h1 class="display">Escanea y elige<br>qué ven hoy.</h1>
+      <div class="qr-card">
+        <div class="qr" id="qr"></div>
+        <p class="qr-url" id="qrUrl"></p>
+      </div>
+      <p class="code-label">Sala <b id="lobbyCode"></b></p>
+    </div>
+    <div class="col right">
+      <ol class="steps">
+        <li><span class="n">1</span>Escanea el código con tu celular</li>
+        <li><span class="n">2</span>Escribe tu nombre y elige géneros</li>
+        <li><span class="n">3</span>Desliza películas: todo pasa aquí en la TV</li>
+      </ol>
+      <div class="panel">
+        <div class="panel-head"><h2>En la sala</h2><span class="count" id="playerCount"></span></div>
+        <div class="list" id="lobbyList"></div>
+        <p class="empty" id="lobbyEmpty">Esperando a que alguien escanee el código…</p>
+      </div>
+      <div class="bar">
+        <button class="btn ghost" data-focusable data-action="newRoom">Nueva sala</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAYING: live progress -->
+  <section class="screen playing" data-screen="playing" hidden>
+    <div class="col left">
+      <p class="eyebrow">Sala <b id="playCode"></b></p>
+      <h1 class="display">Están deslizando…</h1>
+      <p class="lede">Cuando todos terminen, los resultados aparecen aquí solos.</p>
+      <div class="list" id="playList"></div>
+      <div class="bar">
+        <button class="btn ghost" data-focusable data-action="forceResults">Ver resultados ahora</button>
+      </div>
+    </div>
+    <div class="col right">
+      <div class="panel live">
+        <div class="panel-head"><h2>Coincidencias hasta ahora</h2><span class="count" id="liveCount">0</span></div>
+        <div class="poster-row" id="livePosters"></div>
+        <p class="empty" id="liveEmpty">Todavía ninguna. Sigan deslizando.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen results" data-screen="results" hidden>
+    <header class="res-head">
+      <div>
+        <p class="eyebrow">Sala <b id="resCode"></b> · <span id="resPeople"></span></p>
+        <h1 class="display" id="resTitle"></h1>
+      </div>
+      <div class="bar">
+        <button class="btn ghost" data-focusable data-action="newRound">Jugar otra ronda</button>
+        <button class="btn ghost" data-focusable data-action="newRoom">Nueva sala</button>
+      </div>
+    </header>
+    <div class="res-scroll" id="resScroll"></div>
+  </section>
+
+  <!-- ERROR / BOOT -->
+  <section class="screen boot" data-screen="boot">
+    <p class="eyebrow">¿Qué vemos?</p>
+    <h1 class="display" id="bootText">Creando la sala…</h1>
+  </section>
+</main>
+
+<!-- LAUNCH OVERLAY (simulated until Totalplay documents an app-launch API — see src/platform/totalplay/apps.js) -->
+<div class="overlay" id="launch" hidden role="dialog" aria-modal="true">
+  <div class="launch-card">
+    <img class="launch-poster" id="launchPoster" alt="">
+    <div class="launch-body">
+      <p class="eyebrow" id="launchEyebrow">Abriendo…</p>
+      <h2 class="launch-title" id="launchTitle"></h2>
+      <p class="launch-sub" id="launchSub"></p>
+      <div class="launch-progress" id="launchProgress"><i></i></div>
+      <p class="launch-note">Demo: la apertura real de la app queda pendiente de la API de Totalplay.</p>
+      <div class="bar">
+        <button class="btn" data-focusable data-action="closeLaunch">Volver a la lista</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Platform adapter (the only code allowed to touch sagem.*), then services, then the app. ES5, classic scripts. -->
+<script src="src/platform/totalplay/device.js"></script>
+<script src="src/platform/totalplay/debug.js"></script>
+<script src="src/platform/totalplay/keys.js"></script>
+<script src="src/platform/totalplay/lifecycle.js"></script>
+<script src="src/platform/totalplay/network.js"></script>
+<script src="src/platform/totalplay/focus.js"></script>
+<script src="src/platform/totalplay/apps.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="src/services/http.js"></script>
+<script src="src/services/firestore-rest.js"></script>
+<script src="src/services/demo-store.js"></script>
+<script src="src/services/catalog.js"></script>
+<script src="tv/app.js"></script>
+</body>
+</html>
