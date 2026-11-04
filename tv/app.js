@@ -152,11 +152,9 @@
         '<span class="status ' + (p.done ? 'on' : '') + '">' + (p.done ? 'Terminó' : 'Deslizando') + '</span></div>';
     }
     $('playList').innerHTML = h;
-    var live = liveMatches(), ph = '';
-    for (var k = 0; k < live.length && k < 12; k++) ph += '<img src="' + img(live[k].p, 'w154') + '" alt="' + esc(live[k].t) + '">';
-    $('livePosters').innerHTML = ph;
-    $('liveCount').textContent = live.length;
-    $('liveEmpty').hidden = live.length > 0;
+    var live = liveMatches().length;   /* count only — no titles until the results screen */
+    $('liveCount').textContent = live;
+    $('liveLabel').textContent = live === 1 ? 'coincidencia' : 'coincidencias';
   }
 
   /* ---------- results ---------- */

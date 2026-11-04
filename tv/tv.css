@@ -88,7 +88,6 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 /* progress (playing) */
 .prog{height:.35rem;border-radius:999px;background:var(--glass-2);overflow:hidden;margin-top:.35rem}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--pink));border-radius:999px}
-.poster-row{display:flex;gap:.6rem;flex-wrap:wrap;overflow:hidden}
 .poster-row img{width:6.4rem;height:9.6rem;border-radius:.7rem;object-fit:cover;background:var(--glass-2)}
 
 /* buttons */
@@ -107,8 +106,8 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .section-label{display:flex;align-items:baseline;gap:.8rem;margin-top:.6rem}
 .section-label small{color:var(--ink-3);font-size:.8rem}
 .res{display:flex;gap:1rem;align-items:center;padding:.8rem;border-radius:var(--r);background:var(--glass);border:1px solid var(--line)}
-.res img{width:4.6rem;height:6.9rem;border-radius:.6rem;object-fit:cover;flex:none;background:var(--glass-2)}
-.res.hero img{width:8.4rem;height:12.6rem;border-radius:.8rem}
+.res > img{width:4.6rem;height:6.9rem;border-radius:.6rem;object-fit:cover;flex:none;background:var(--glass-2)}
+.res.hero > img{width:8.4rem;height:12.6rem;border-radius:.8rem}
 .res .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.35rem}
 .res-title{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;line-height:1.15}
 .res.hero .res-title{font-size:1.8rem}
@@ -138,4 +137,11 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .launch-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--pink));transition:width 1.4s linear}
 .launch-progress.go i{width:100%}
 
+/* live matches: just the number — titles are a surprise until results */
+.panel.live{align-items:center;justify-content:center;text-align:center;gap:.6rem}
+.big-count{font-size:9rem;font-weight:700;letter-spacing:-.05em;line-height:.9;color:var(--pink)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .big-count{background:linear-gradient(135deg,var(--blue),var(--lilac) 50%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}}
+.live-label{font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
+.live-sub{color:var(--ink-2);font-size:.95rem;max-width:26ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}

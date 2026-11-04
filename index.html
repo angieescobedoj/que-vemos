@@ -745,10 +745,19 @@ const deckEl = $('#deck'), cardEls = new Map();
 function renderPlay(){
   const key = `${S.room.round}:${S.room.startedAt}`;
   if (S.deckKey !== key){
-    S.deckKey = key; S.deck = S.room.deck || []; S.idx = Math.min(me().idx || 0, S.deck.length);
+    S.deckKey = key; S.deck = personalOrder(S.room.deck || []); S.idx = Math.min(me().idx || 0, S.deck.length);
     cardEls.clear(); deckEl.innerHTML = ''; S.busy = false;
     show('play'); $('#playCode').textContent = S.code; drawDeck();
   } else if (S.screen !== 'play'){ show('play'); }
+}
+/* Each person gets the same movies, but nobody in exactly the same order: by join order, players get
+   phase 0 (as built), 1 (swap pairs 0-1, 2-3…) or 2 (swap pairs 1-2, 3-4…). A movie is never more than
+   one position away from where others see it, so matches still happen — just not in the same instant. */
+function personalOrder(deck){
+  const phase = Math.max(0, S.players.findIndex(p => p.id === S.pid)) % 3;
+  const out = deck.slice();
+  if (phase) for (let i = phase - 1; i + 1 < out.length; i += 2){ const t = out[i]; out[i] = out[i + 1]; out[i + 1] = t; }
+  return out;
 }
 function genresText(g){ return (g || []).map(x => GNAME[x]).filter(Boolean).slice(0, 3).join(', '); }
 function altTitle(m){ return m.en || m.o || ''; }
