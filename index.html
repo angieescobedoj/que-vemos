@@ -121,6 +121,10 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .card::-webkit-scrollbar{display:none}
 .card.under{transform:scale(.95) translateY(6px);pointer-events:none;transition:transform .3s}
 .card.under .cap,.card.under .more{visibility:hidden}
+/* reading details: hide the next movie and give this one its own solid panel */
+.card.under{transition:transform .3s,opacity .2s}
+.deck.reading .card.under{opacity:0}
+.deck.reading .card:not(.under){background:rgba(13,14,22,.86);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-radius:30px}
 .poster{position:relative;height:calc(100% - 104px);aspect-ratio:2/3;max-width:100%;margin:0 auto;border-radius:30px;overflow:hidden;background:var(--glass);box-shadow:0 24px 50px rgba(0,0,0,.45)}
 .poster img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;pointer-events:none}
 .cap{height:104px;text-align:center;padding:16px 8px 0}
@@ -129,7 +133,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .stamp{position:absolute;top:18px;padding:6px 16px;border-radius:999px;font-weight:700;font-size:18px;letter-spacing:.06em;opacity:0;pointer-events:none}
 .stamp.yes{left:18px;background:#fff;color:var(--on-white)}
 .stamp.no{right:18px;background:rgba(11,12,18,.45);border:1.5px solid #fff;color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-.more{padding:6px 0 24px;display:flex;flex-direction:column;gap:10px}
+.more{padding:6px 10px 14px;display:flex;flex-direction:column;gap:10px}
 .block{border-radius:var(--r);padding:20px}
 .block .eyebrow{margin-bottom:10px}
 .synopsis{font-size:17px;line-height:1.45;margin:0;color:rgba(255,255,255,.88)}
@@ -705,6 +709,7 @@ function makeCard(m){
       <section class="block glass cast" hidden><p class="eyebrow">Reparto</p><div class="cast-row"></div></section>
     </div>`;
   details(m.id).then(d => fillDetails(el, d)).catch(() => { el.querySelector('.synopsis').textContent = 'No pudimos cargar la información.'; });
+  el.addEventListener('scroll', () => { if (!el.classList.contains('under')) deckEl.classList.toggle('reading', el.scrollTop > 24); }, { passive: true });
   attachSwipe(el);
   return el;
 }
@@ -740,6 +745,7 @@ function drawDeck(){
     if (!cardEls.has(m.id)){ const el = makeCard(m); cardEls.set(m.id, el); deckEl.prepend(el); }
   });
   want.forEach((m, k) => cardEls.get(m.id).classList.toggle('under', k > 0));
+  deckEl.classList.remove('reading');
   const top = want[0] && cardEls.get(want[0].id); if (top){ deckEl.appendChild(top); top.scrollTop = 0; }
   $('#hint').hidden = S.idx > 2;
   if (want[0]) setBackdrop(img(want[0].p, 'w185'));
