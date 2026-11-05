@@ -302,7 +302,14 @@
   /* Puente con el Companion: el celular vinculado a la Sala TV sigue funcionando como control dentro del juego.
      Lee rooms/{cp}/players (mismo esquema que companion/tv.js) y aplica solo los comandos nuevos. */
   (function companionBridge() {
-    if (!FROM_COMPANION || !CP_CODE) return;
+    if (!FROM_COMPANION) return;
+    /* Indicador visible del puente (ayuda a saber si el celular del Companion está escuchándose) */
+    var tag = document.createElement('div');
+    tag.style.cssText = 'position:fixed;right:1.2rem;top:1rem;z-index:70;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.62rem;font-weight:600;padding:.35rem .7rem;border-radius:999px';
+    document.body.appendChild(tag);
+    function status(t) { tag.textContent = t; }
+    if (!CP_CODE) { status('Control del celular: sin sala del Companion · v5'); return; }
+    status('Control del celular · sala ' + CP_CODE + ' · conectando… · v5');
     var lastSeq = {}, primed = false, busy = false;
     function listDemo(cb) {
       var out = [], pre = 'cp-demo-' + CP_CODE + '-p-';
@@ -316,7 +323,9 @@
     function tick() {
       if (busy || S.standby) return; busy = true;
       (DEMO ? listDemo : function (cb) { QV.firestoreStore.listPlayers(CP_CODE, cb); })(function (err, ps) {
-        busy = false; if (err || !ps) return;
+        busy = false;
+        if (err || !ps) { status('Control del celular · sala ' + CP_CODE + ' · sin conexión (' + (err ? err.message : '?') + ') · v5'); return; }
+        status('Control del celular · sala ' + CP_CODE + ' · ' + ps.length + ' vinculado(s) · v5');
         for (var i = 0; i < ps.length; i++) {
           var cmds = ps[i].cmds || [], id = ps[i].id;
           for (var j = 0; j < cmds.length; j++) {
