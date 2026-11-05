@@ -136,7 +136,7 @@
     if (!S.room && !S.fake) return;
     var st = tvState();
     $('decName').textContent = S.fake ? S.fake.name : (S.room.tvName || 'Sala');
-    $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : ''));
+    $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : '') + (!S.fake && S.room.sleepLeft && st === 'on' ? ' · 🌙 se apaga en ' + S.room.sleepLeft + ' min' : ''));
     $('dot').className = 'dot' + (st === 'off' ? ' off' : st === 'sleep' ? ' sleep' : '');
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
@@ -209,6 +209,11 @@
     var r = S.room; if (!r) return;
     if (S.fake) { renderHeader(); renderNow(); return; }
     renderHeader(); renderNow(); renderGame();
+    /* si el tiempo de apagado se eligió en la TV, la hoja del celular se cierra sola */
+    if (S.sheet === 'sleep' && S.sleepAsk) {
+      if (r.dialog === 'sleep') S.sleepAsk.seen = true;
+      else if (S.sleepAsk.seen) { S.sleepAsk = null; closeSheet(); toast(r.sleepLeft ? '🌙 Elegido en la TV: se apaga en ' + r.sleepLeft + ' min' : 'Elegido en la TV: sin apagado'); }
+    }
     if (S.tab === 'ahora') renderAhora();
     if (S.tab === 'seguir') renderSeguir();
     /* A4 · aviso de "Está sonando" */
@@ -478,14 +483,15 @@
     if ($('vText')) $('vText').textContent = '«' + text + '»';
     if ($('vReply')) $('vReply').textContent = reply;
     if (r && r.sheet === 'find') openFind(true);
+    if (r && r.exp === 'night') setTimeout(openSleepSheet, 1200);
   }
 
   /* ---------- experiencias: ajustes de la TV en un toque (volumen, brillo, pantalla) ---------- */
   var PRESETS = [
     { id: 'movies', ic: '🍿', name: 'Noche de películas', vol: 60, bright: 65, desc: 'Películas recomendadas con tus gustos · luz baja' },
-    { id: 'night', ic: '🌙', name: 'Modo noche', vol: 20, bright: 35, sleep: 30, desc: 'Volumen y brillo bajos · la TV se apaga en 30 min' },
+    { id: 'night', ic: '🌙', name: 'Modo noche', vol: 20, bright: 35, sleep: -1, desc: 'Volumen y brillo bajos · tú eliges en cuánto se apaga' },
     { id: 'gaming', ic: '🎮', name: 'Modo gaming', vol: 70, bright: 100, desc: 'Te lleva a los juegos · volumen alto' },
-    { id: 'listen', ic: '🎧', name: 'Solo escuchar', vol: 45, bright: 100, audio: true, desc: 'Apaga la pantalla, sigue el sonido' }
+    { id: 'listen', ic: '🎧', name: 'Solo escuchar', vol: 45, bright: 100, audio: true, desc: 'Apaga la pantalla y sigue sonando la música' }
   ];
   function customs() { return lsJSON('cp-exps', []); }
   function expById(id) {
@@ -548,36 +554,98 @@
   }
 
   /* ---------- diagnóstico de conexión ---------- */
+  /* Revisa paso a paso la cadena celular → internet → nube → TV y dice qué falla y cómo arreglarlo. */
+  var DG = null;
+  function dgRow(id, label) { return '<div class="chk" id="dg-' + id + '"><span class="ck wait">…</span><div class="grow"><div class="t">' + label + '</div><div class="s">Revisando…</div></div></div>'; }
+  function dgSet(id, st, detail, fix) {
+    var el = $('dg-' + id); if (!el) return;
+    el.querySelector('.ck').className = 'ck ' + st; el.querySelector('.ck').textContent = st === 'ok' ? '✓' : st === 'warn' ? '!' : st === 'bad' ? '✕' : '–';
+    el.querySelector('.s').innerHTML = esc(detail) + (fix ? '<span class="fix">Qué hacer: ' + esc(fix) + '</span>' : '');
+    DG.results.push({ id: id, st: st, label: el.querySelector('.t').textContent, detail: detail, fix: fix });
+  }
   function openDiag() {
-    openSheet('diag', '<h2>Diagnóstico de conexión</h2><p class="sub">Probando la conexión entre tu celular, la nube y la TV…</p><div class="diag" id="dg"><div><span>Midiendo…</span><b></b></div></div><div id="dgV"></div>' +
-      '<button class="btn ghost" data-act="diag" style="margin-top:6px">Probar de nuevo</button>');
-    if (S.fake) { $('dg').innerHTML = '<div><span>Decodificador</span><b>' + esc(S.fake.name) + ' (simulado)</b></div><div><span>Estado</span><b>' + STATE_TXT[S.fake.state] + '</b></div>'; $('dgV').innerHTML = '<div class="verdict" style="background:#FBF0DC;color:#7A5A1E">Es un decodificador simulado: no hay red real que medir.</div>'; return; }
-    var times = [], code = S.code, room = null;
-    (function ping(i) {
-      if (i >= 3 || S.sheet !== 'diag') return done();
-      var t0 = Date.now();
-      store.getRoom(code, function (err, r) { if (!err) { times.push(Date.now() - t0); room = r; } ping(i + 1); });
-    })(0);
-    function done() {
-      if (S.sheet !== 'diag') return;
-      var sub = document.querySelector('#sheet .sub'); if (sub) sub.textContent = 'Resultado de la prueba';
-      var avg = times.length ? Math.round(times.reduce(function (a, b) { return a + b; }, 0) / times.length) : null;
-      var age = room && room.aliveAt ? Math.round((Date.now() - room.aliveAt) / 1000) : null;
-      var conn = navigator.connection || navigator.webkitConnection, net = conn ? ((conn.type && conn.type !== 'unknown' ? conn.type : '') || conn.effectiveType || '').toUpperCase() : '';
-      var tvOk = room && age !== null && age < 60 && !room.off;
-      $('dg').innerHTML =
-        '<div><span>Decodificador</span><b>' + esc((room && room.tvName) || 'Sala') + '</b></div>' +
-        '<div><span>Celular → nube</span><b>' + (avg === null ? 'Sin respuesta' : avg + ' ms') + '</b></div>' +
-        '<div><span>TV → nube</span><b>' + (room && room.tvLat ? room.tvLat + ' ms' : '—') + '</b></div>' +
-        '<div><span>Último contacto de la TV</span><b>' + (age === null ? '—' : age < 5 ? 'ahora' : 'hace ' + age + ' s') + '</b></div>' +
-        '<div><span>Estado de la TV</span><b>' + (!room ? 'No encontrada' : room.off ? 'En reposo' : (age !== null && age < 60) ? 'Encendida' : 'Sin señal') + '</b></div>' +
-        '<div><span>Red de tu celular</span><b>' + (net || 'No disponible') + '</b></div>' +
-        '<div><span>Nombre del Wi-Fi</span><b>No visible desde el navegador</b></div>';
-      var good = avg !== null && avg < 600 && tvOk, ok = avg !== null && tvOk;
-      $('dgV').innerHTML = '<div class="verdict" style="background:' + (good ? '#E3F4EA;color:#1F6B43' : ok ? '#FBF0DC;color:#7A5A1E' : '#FBE3E7;color:#9A2236') + '">' +
-        (good ? 'Todo bien: tu celular y la TV se comunican rápido.' : ok ? 'Funciona, pero la conexión está lenta. Acércate al módem o usa Wi-Fi.' : !room ? 'No encontramos la TV. Vuelve a escanear su QR.' : room.off ? 'La TV está en reposo: enciéndela con ⏻.' : 'La TV no responde. Revisa que siga encendida y con internet.') + '</div>';
-      send({ t: 'diag' });
+    openSheet('diag', '<h2>Diagnóstico de conexión</h2><p class="sub" id="dgSub">Revisando cada paso entre tu celular y la TV…</p><div id="dgV"></div>' +
+      dgRow('net', 'Internet de tu celular') + dgRow('cloud', 'Servidor de Sala TV') + dgRow('room', 'Tu TV en el servidor') + dgRow('tv', 'TV encendida y conectada') +
+      dgRow('link', 'Tu celular vinculado') + dgRow('e2e', 'Los comandos llegan a la TV') +
+      '<div class="diag" id="dgInfo"></div><button class="btn ghost" data-act="diag" style="margin-top:12px">Probar de nuevo</button>');
+    DG = { results: [], run: Date.now() };
+    var run = DG.run, alive = function () { return S.sheet === 'diag' && DG && DG.run === run; };
+    if (S.fake) {
+      var names = ['net', 'cloud', 'room', 'tv', 'link', 'e2e'];
+      for (var i = 0; i < names.length; i++) dgSet(names[i], 'skip', 'No aplica: ' + S.fake.name + ' es un decodificador simulado.');
+      return verdict();
     }
+    var conn = navigator.connection || navigator.webkitConnection, net = conn ? ((conn.type && conn.type !== 'unknown' ? conn.type : '') || conn.effectiveType || '').toUpperCase() : '';
+    $('dgInfo').innerHTML = '<div><span>Red de tu celular</span><b>' + (net || 'No disponible') + '</b></div><div><span>Nombre del Wi-Fi</span><b>No visible desde el navegador</b></div>';
+    /* 1 · internet del celular */
+    if (navigator.onLine === false) { dgSet('net', 'bad', 'Tu celular no tiene conexión a internet.', 'activa el Wi-Fi o los datos móviles.'); return skipRest('cloud'); }
+    dgSet('net', 'ok', 'Conectado' + (net ? ' por ' + net : '') + '.');
+    /* 2 · servidor (3 mediciones) */
+    var times = [], room = null, gotRoom = false;
+    (function ping(i) {
+      if (!alive()) return;
+      if (i >= 3) return afterCloud();
+      var t0 = Date.now();
+      store.getRoom(S.code, function (err, r) { if (!err) { times.push(Date.now() - t0); room = r; gotRoom = true; } ping(i + 1); });
+    })(0);
+    function afterCloud() {
+      if (!times.length) { dgSet('cloud', 'bad', 'No pudimos llegar al servidor.', 'revisa tu red; algunas redes de oficina lo bloquean. Prueba con datos móviles.'); return skipRest('room'); }
+      var avg = Math.round(times.reduce(function (a, b) { return a + b; }, 0) / times.length);
+      if (avg < 500) dgSet('cloud', 'ok', 'Responde en ' + avg + ' ms.');
+      else dgSet('cloud', 'warn', 'Responde lento: ' + avg + ' ms.', 'acércate al módem o cambia a una red más rápida.');
+      /* 3 · la sala de la TV existe */
+      if (!room) { dgSet('room', 'bad', 'La TV ya no tiene esta sala abierta.', 'vuelve a escanear el código QR que aparece en la TV.'); return skipRest('tv'); }
+      dgSet('room', 'ok', 'Encontramos a ' + (room.tvName || 'Sala') + '.');
+      /* 4 · la TV está viva */
+      var age = room.aliveAt ? Math.round((Date.now() - room.aliveAt) / 1000) : 999;
+      if (room.off) dgSet('tv', 'warn', 'La TV está en reposo.', 'enciéndela con el botón ⏻ de arriba.');
+      else if (age > 60) { dgSet('tv', 'bad', 'La TV no se reporta desde hace ' + (age > 900 ? 'más de 15 min' : age + ' s') + '.', 'revisa que el decodificador tenga internet y que Sala TV siga abierta en la pantalla.'); return skipRest('link'); }
+      else dgSet('tv', room.tvLat > 1200 ? 'warn' : 'ok', 'Se reportó hace ' + (age < 5 ? 'un momento' : age + ' s') + (room.tvLat ? ' · su conexión responde en ' + room.tvLat + ' ms' : '') + '.', room.tvLat > 1200 ? 'la red de la TV está lenta; revisa el cable o el Wi-Fi del decodificador.' : '');
+      /* 5 · este celular puede escribir comandos */
+      store.updatePlayer(S.code, S.pid, { seen: Date.now() }, function (err) {
+        if (!alive()) return;
+        if (err) { dgSet('link', 'bad', 'Tu celular no puede mandar comandos.', 'recarga esta página para volver a vincularte.'); return skipRest('e2e'); }
+        dgSet('link', 'ok', 'Vinculado como «' + S.name + '».');
+        /* 6 · prueba de punta a punta: la TV debe contestar */
+        var id = 'k' + Date.now().toString(36), t0 = Date.now();
+        send({ t: 'ping', id: id });
+        (function wait() {
+          if (!alive()) return;
+          store.getRoom(S.code, function (e2, r2) {
+            if (!alive()) return;
+            if (!e2 && r2 && r2.pong === id) { var ms = Date.now() - t0; dgSet('e2e', ms < 4000 ? 'ok' : 'warn', 'La TV respondió en ' + (ms / 1000).toFixed(1) + ' s.', ms < 4000 ? '' : 'los comandos tardan; revisa la red de la TV.'); return verdict(); }
+            if (Date.now() - t0 > 8000) { dgSet('e2e', 'bad', 'La TV no respondió a la prueba.', room.off ? 'enciéndela con ⏻ y vuelve a probar.' : 'recarga Sala TV en la TV o reinicia el decodificador.'); return verdict(); }
+            setTimeout(wait, 500);
+          });
+        })();
+      });
+    }
+    function skipRest(from) {
+      var order = ['net', 'cloud', 'room', 'tv', 'link', 'e2e'], go = false;
+      for (var i = 0; i < order.length; i++) { if (order[i] === from) go = true; if (go) dgSet(order[i], 'skip', 'No se pudo revisar por la falla anterior.'); }
+      verdict();
+    }
+    function verdict() {
+      if (!alive()) return;
+      var bad = null, warn = null;
+      for (var i = 0; i < DG.results.length; i++) { if (DG.results[i].st === 'bad' && !bad) bad = DG.results[i]; if (DG.results[i].st === 'warn' && !warn) warn = DG.results[i]; }
+      var html;
+      if (S.fake) html = '<div class="verdict" style="background:#FBF0DC;color:#7A5A1E">' + esc(S.fake.name) + ' es simulado: no hay una conexión real que revisar.</div>';
+      else if (bad) html = '<div class="verdict" style="background:#FBE3E7;color:#9A2236">✕ Falla: ' + esc(bad.label) + '<span>' + esc(bad.detail) + ' Qué hacer: ' + esc(bad.fix) + '</span></div>';
+      else if (warn) html = '<div class="verdict" style="background:#FBF0DC;color:#7A5A1E">! Funciona, con un detalle: ' + esc(warn.label) + '<span>' + esc(warn.detail) + ' Qué hacer: ' + esc(warn.fix) + '</span></div>';
+      else html = '<div class="verdict" style="background:#E3F4EA;color:#1F6B43">✓ Todo en orden<span>Tu celular y la TV están conectados y los comandos llegan.</span></div>';
+      $('dgV').innerHTML = html; $('dgSub').textContent = 'Resultado de la revisión';
+      if (!S.fake) send({ t: 'diag' });
+    }
+  }
+
+  /* Modo noche: ¿en cuánto se apaga? Se puede elegir aquí o en la TV con el control (lo que pase primero). */
+  function openSleepSheet() {
+    var html = '<h2>🌙 Modo noche</h2><p class="sub">¿En cuánto se apaga la TV? También puedes elegirlo en la TV con el control.</p><div class="chips">';
+    var opts = [15, 30, 45, 60, 90, 0];
+    for (var i = 0; i < opts.length; i++) html += '<button data-sleep="' + opts[i] + '">' + (opts[i] ? opts[i] + ' min' : 'No apagar') + '</button>';
+    openSheet('sleep', html + '</div>');
+    S.sleepAsk = { seen: false };
   }
 
   /* ---------- eventos (delegación) ---------- */
@@ -594,7 +662,8 @@
     else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
     else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
     else if (g('data-say')) runVoice(g('data-say'));
-    else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex && ex.id === 'movies') openTastes(); else if (ex) applyExp(ex); }
+    else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex && ex.id === 'movies') openTastes(); else if (ex && ex.id === 'night') { applyExp(ex); openSleepSheet(); } else if (ex) applyExp(ex); }
+    else if (g('data-sleep') !== null && el.hasAttribute('data-sleep')) { var mn = Number(g('data-sleep')); send({ t: 'sleep', min: mn }); S.sleepAsk = null; closeSheet(); toast(mn ? '🌙 La TV se apagará en ' + mn + ' min' : 'Sin apagado automático'); }
     else if (g('data-gen')) {
       if (!el.classList.contains('on') && document.querySelectorAll('[data-gen].on').length >= 3) toast('Máximo 3: quita uno primero');
       else el.classList.toggle('on');

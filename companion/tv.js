@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null
+    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, pong: ''
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -57,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
-      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app, dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now()
+      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app, dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), pong: S.pong, sleepLeft: S.sleepAt ? Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) : 0
     };
   }
   function pushState() {
@@ -67,7 +67,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.pong, snap.sleepLeft]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -281,11 +281,11 @@
     $('volBar').style.width = (S.muted ? 0 : S.vol) + '%'; $('volN').textContent = S.muted ? 'Silencio' : S.vol;
     $('volHud').hidden = false; clearTimeout(volTimer); volTimer = setTimeout(function () { $('volHud').hidden = true; }, 2600);
   }
-  function setVol(v) { S.vol = Math.max(0, Math.min(100, Math.round(v))); S.muted = false; showVol(); pushState(); }
+  function setVol(v) { S.vol = Math.max(0, Math.min(100, Math.round(v))); S.muted = false; showVol(); musicVol(); pushState(); }
   function applyLook() {
     $('dim').style.opacity = String(Math.round((100 - S.bright) * 0.0075 * 100) / 100);
     $('audioOnly').hidden = !S.audioOnly;
-    if (S.audioOnly) $('audioWhat').textContent = S.screen === 'player' ? ($('pTitle').textContent + ' sigue sonando') : 'Pulsa cualquier botón para encender la pantalla';
+    if (S.audioOnly && !S.off) startMusic(); else stopMusic();
     var chip = $('expChip'); chip.hidden = !S.exp; chip.textContent = S.exp ? '✨ ' + S.exp + sleepTxt() : '';
     if ($('xChip')) $('xChip').textContent = S.exp ? '✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt() : '';
   }
@@ -295,13 +295,73 @@
     if (typeof c.vol === 'number') setVol(c.vol);
     S.bright = Math.max(10, Math.min(100, c.bright || 100));
     S.audioOnly = !!c.audio;
-    S.sleepAt = c.sleep ? now() + c.sleep * 60000 : 0;
+    S.sleepAt = c.sleep > 0 ? now() + c.sleep * 60000 : 0;
     applyLook();
+    if (c.sleep === -1) openSleep();
     if (c.id === 'movies') openExpScreen('movies', c, c.who);
     else if (c.id === 'gaming') openExpScreen('gaming', c, c.who);
-    else toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt(), 4200);
+    else if (c.sleep !== -1) toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt(), 4200);
     pushState();
   }
+  /* --- Modo noche: el apagado se elige en la TV (este diálogo) o en el celular, lo que pase primero --- */
+  var SLEEP_OPTS = [15, 30, 45, 60, 90, 0];
+  function openSleep() {
+    var html = '';
+    for (var i = 0; i < SLEEP_OPTS.length; i++) html += '<button class="btn ghost" data-focusable data-action="sleep" data-min="' + SLEEP_OPTS[i] + '">' + (SLEEP_OPTS[i] ? SLEEP_OPTS[i] + ' min' : 'No apagar') + '</button>';
+    $('sleepOpts').innerHTML = html; closeMenu(); closeGuide();
+    S.dialog = 'sleep'; $('sleepDlg').hidden = false;
+    TP.focus.setFocus(null); TP.focus.setScope($('sleepDlg'), '[data-min="30"]');
+    pushState();
+  }
+  function setSleep(min, who) {
+    S.sleepAt = min > 0 ? now() + min * 60000 : 0;
+    if (S.dialog === 'sleep') closeDialog();
+    applyLook();
+    toast(min > 0 ? '🌙 La TV se apagará en ' + min + ' min' + (who ? ' · lo eligió ' + who : '') : 'Sin apagado automático', 3500);
+    pushState();
+  }
+
+  /* --- Solo escuchar: música de fondo generada aquí mismo (sin archivos ni derechos), para mostrar que el audio sigue --- */
+  var MUS = { on: false, timer: null, step: 0, next: 0, master: null };
+  var CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], ARP = [0, 1, 2, 1, 0, 2, 1, 2], BEAT = 0.42;
+  function audioCtx() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+      actx = actx || new AC();
+      if (actx.state === 'suspended' && actx.resume) actx.resume();
+      return actx;
+    } catch (e) { return null; }
+  }
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function tone(ctx, t, f, len, type, peak) {
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g); g.connect(MUS.master); o.start(t); o.stop(t + len + 0.05);
+  }
+  function musicVol() { if (MUS.master) MUS.master.gain.value = S.muted ? 0 : (S.vol / 100) * 0.7; }
+  function startMusic() {
+    if (MUS.on) { musicVol(); return; }
+    var ctx = audioCtx(); if (!ctx) return;
+    MUS.on = true; MUS.master = ctx.createGain(); MUS.master.connect(ctx.destination); musicVol();
+    MUS.step = 0; MUS.next = ctx.currentTime + 0.1;
+    MUS.timer = setInterval(function () {
+      while (MUS.on && MUS.next < ctx.currentTime + 0.35) {
+        var bar = Math.floor(MUS.step / 8) % CHORDS.length, ch = CHORDS[bar], s8 = MUS.step % 8, t = MUS.next;
+        if (s8 === 0) { for (var i = 0; i < 3; i++) tone(ctx, t, hz(ch[i]), BEAT * 8, 'sine', 0.05); }
+        if (s8 === 0 || s8 === 4) tone(ctx, t, hz(ch[0] - 12), BEAT * 3.6, 'sine', 0.12);
+        tone(ctx, t, hz(ch[ARP[s8]] + 12), BEAT * 1.4, 'triangle', 0.07);
+        MUS.next += BEAT; MUS.step++;
+      }
+    }, 100);
+  }
+  function stopMusic() {
+    if (!MUS.on) return;
+    MUS.on = false; clearInterval(MUS.timer);
+    try { MUS.master.gain.setTargetAtTime(0, actx.currentTime, 0.15); } catch (e) { /* ignore */ }
+    var m = MUS.master; setTimeout(function () { try { m.disconnect(); } catch (e) { /* ignore */ } }, 800);
+  }
+
   function sleepTxt() { return S.sleepAt ? ' · se apaga en ' + Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) + ' min' : ''; }
 
   /* --- Experiencias que cambian la pantalla ---
@@ -404,6 +464,7 @@
     S.off = off;
     if (off) { closeOverlays(); stopFind(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
     $('standby').hidden = !off;
+    applyLook();
     pushState();
   }
   var findTimer = null, beepTimer = null, actx = null;
@@ -411,6 +472,7 @@
     try {
       var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
       actx = actx || new AC();
+      if (actx.state === 'suspended' && actx.resume) actx.resume();
       var o = actx.createOscillator(), g = actx.createGain();
       o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(actx.destination);
       o.start(); setTimeout(function () { try { o.stop(); } catch (e) { /* ignore */ } }, 220);
@@ -542,7 +604,7 @@
   }
   function closeDialog() {
     if (!S.dialog) return;
-    S.dialog = null; $('resumeDlg').hidden = true; $('movieDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
+    S.dialog = null; $('resumeDlg').hidden = true; $('movieDlg').hidden = true; $('sleepDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
   }
 
   /* --- C2 · juego: atrapa estrellas --- */
@@ -670,6 +732,7 @@
     else if (a === 'closeMovie') closeDialog();
     else if (a === 'prov') openProvider(el);
     else if (a === 'expOff') applyExperience({ id: 'none' }, 'Se');
+    else if (a === 'sleep') setSleep(Number(el.getAttribute('data-min')), '');
   });
 
   /* ---------------- comandos de los celulares ---------------- */
@@ -689,10 +752,12 @@
     else if (c.t === 'home') goHome();
     else if (c.t === 'menu') { if (S.menu) closeMenu(); else openMenu(); }
     else if (c.t === 'vol') { if (typeof c.v === 'number') setVol(c.v); else setVol((S.muted ? S.vol : S.vol) + (c.d || 0)); }
-    else if (c.t === 'mute') { S.muted = typeof c.on === 'boolean' ? c.on : !S.muted; showVol(); pushState(); }
+    else if (c.t === 'mute') { S.muted = typeof c.on === 'boolean' ? c.on : !S.muted; showVol(); musicVol(); pushState(); }
     else if (c.t === 'exp') applyExperience(c, name);
     else if (c.t === 'find') { if (c.on === false) stopFind(); else startFind(); }
     else if (c.t === 'say') showSay(c.text || '', c.reply || '');
+    else if (c.t === 'sleep') setSleep(Number(c.min) || 0, name);
+    else if (c.t === 'ping') { S.pong = c.id || ''; pushState(); }
     else if (c.t === 'diag') toast(name + ' revisó la conexión · la TV responde en ' + (S.lat || '—') + ' ms', 4200);
     else if (c.t === 'pad') { var b = S.game.baskets[p.id]; if (b) b.dir = c.dir || 0; }
     else if (c.t === 'game') startGame();
@@ -812,6 +877,7 @@
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */
   window.addEventListener('keydown', function (e) {
     if (TP.lifecycle.handlePlatformEvent(e)) return;
+    if (actx && actx.state === 'suspended' && actx.resume) { try { actx.resume(); } catch (err) { /* ignore */ } }   /* una tecla del control desbloquea el audio */
     var k = TP.keys.normalizeKey(e);
     if (!k) return;
     if (k === 'MENU' || k === 'EXIT') { TP.lifecycle.handleMenu(e); return; }
