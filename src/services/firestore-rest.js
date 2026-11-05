@@ -3,7 +3,7 @@
    so the phones keep using the realtime SDK while the TV reads the same data every couple of seconds. */
 (function (QV) {
   'use strict';
-  var CFG = { projectId: 'match-de-peliculas', apiKey: 'AIzaSyBCyeQBD8MjYf6QQjOnkxkHA7nYNIOzeoQ' };
+  var CFG = { projectId: 'peliculas-c5d08', apiKey: 'AIzaSyB6FroqAF_jNE8Mr7fmMGbwClLfex2iM34' };  /* Blaze plan: no daily cap */
   var BASE = 'https://firestore.googleapis.com/v1/projects/' + CFG.projectId + '/databases/(default)/documents';
 
   /* --- value encoding (JS <-> Firestore REST) --- */
