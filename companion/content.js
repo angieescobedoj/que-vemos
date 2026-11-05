@@ -42,6 +42,8 @@
 
   var GAME = { id: 'game', kind: 'game', title: 'Atrapa estrellas', sub: 'Juego · 1 a 4 jugadores con tu celular', tag: 'Juego', seconds: 45 };
 
+  var SWIPE = { id: 'swipe', kind: 'game', title: '¿Qué vemos?', sub: 'Match de películas · 2 o más', tag: 'Juego' };
+
   var EXTRA = [
     { id: 'x1', kind: 'vod', title: 'Cielo de cobre', sub: 'Película · Drama', tag: 'Estreno', art: ['#C792C9', '#4A2E7A'] },
     { id: 'x2', kind: 'vod', title: 'Ecos del norte', sub: 'Documental', tag: 'Estreno', art: ['#9AD1B9', '#1F5A48'] },
@@ -58,11 +60,11 @@
     return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (s < 10 ? '0' : '') + s;
   }
   function byId(id) {
-    if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME;
+    if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME; if (id === 'swipe') return SWIPE;
     for (var i = 0; i < EXTRA.length; i++) if (EXTRA[i].id === id) return EXTRA[i];
     return null;
   }
-  function all() { return [MATCH, SERIES, GAME].concat(EXTRA); }
+  function all() { return [MATCH, SERIES, GAME, SWIPE].concat(EXTRA); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, EXTRA: EXTRA, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, EXTRA: EXTRA, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

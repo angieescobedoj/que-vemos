@@ -45,8 +45,8 @@
     $('jCodeIn').hidden = !!S.code;
     $('jName').value = ls.get('cp-name') || '';
   }
-  $('jGo').onclick = function () {
-    var name = $('jName').value.trim() || 'Invitado';
+  $('jGo').onclick = function () { connect($('jName').value.trim() || 'Invitado'); };
+  function connect(name) {
     if (!S.code) S.code = $('jCodeIn').value.trim().toUpperCase();
     if (S.code.length !== 4) { $('jErr').hidden = false; $('jErr').textContent = 'Escribe el código de 4 letras que aparece en la TV.'; return; }
     $('jGo').textContent = 'Vinculando…';
@@ -59,7 +59,7 @@
       var idStore = CP.DEMO ? { get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } } } : ls;
       S.pid = idStore.get('cp-pid-' + S.code) || ('p' + Math.random().toString(36).slice(2, 10));
       idStore.set('cp-pid-' + S.code, S.pid);
-      store.updatePlayer(S.code, S.pid, { name: name, joinedAt: Date.now(), seen: Date.now(), kind: 'companion', cmds: [] }, function (err2) {
+      store.updatePlayer(S.code, S.pid, { name: name, joinedAt: Date.now(), seen: Date.now(), kind: 'companion', cmds: S.cmds }, function (err2) {
         if (err2) { $('jErr').hidden = false; $('jErr').textContent = 'No pudimos vincularte. Intenta de nuevo.'; return; }
         S.room = room; S.songSeen = room.songSeq || 0;
         $('join').hidden = true; $('main').hidden = false; $('tabs').hidden = false;
@@ -68,7 +68,7 @@
         setInterval(function () { store.updatePlayer(S.code, S.pid, { seen: Date.now() }, function (e) { setOffline(!!e); }); }, HEARTBEAT_MS);
       });
     });
-  };
+  }
 
   /* ---------- polling del estado de la TV ---------- */
   function startPolling() {
@@ -266,5 +266,10 @@
     render(); window.scrollTo(0, 0);
   }
 
-  showJoin();
+  /* Si este celular ya estaba vinculado a esta sala (p. ej. regresa del juego de películas), reconecta solo. */
+  (function autoResume() {
+    var name = ls.get('cp-name'), pid = CP.DEMO ? (function () { try { return sessionStorage.getItem('cp-pid-' + S.code); } catch (e) { return null; } })() : ls.get('cp-pid-' + S.code);
+    if (S.code && name && pid) { showJoin(); $('join').hidden = true; connect(name); }
+    else showJoin();
+  })();
 })(window.CP);

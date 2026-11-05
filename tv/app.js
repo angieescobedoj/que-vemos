@@ -45,6 +45,9 @@
     for (var i = 0; i < 4; i++) s += A.charAt(Math.floor(Math.random() * A.length));
     return s;
   }
+  /* Abierto desde Companion (companion/tv.html): permite volver a la Sala TV. */
+  var FROM_COMPANION = /[?&]back=companion(&|$)/.test(location.search);
+  function backToCompanion() { location.href = 'companion/tv.html' + (DEMO ? '?demo=1' : ''); }
   function createRoom(cb) {
     var tries = 0;
     (function attempt() {
@@ -264,6 +267,7 @@
       store.resetRound(S.code, playerIds(), { status: 'lobby', deck: null, building: null, round: (S.room.round || 1) + 1 }, function () { poll(); });
     },
     closeLaunch: closeLaunch,
+    backToCompanion: backToCompanion,
     open: function (el) { openLaunch(el.getAttribute('data-provider'), Number(el.getAttribute('data-movie'))); }
   };
   TP.focus.onActivate(function (el) {
@@ -280,6 +284,7 @@
     if (k === 'OK') { e.preventDefault(); TP.focus.activate(); return; }
     if (k === 'BACK') {
       if (S.launchOpen) { e.preventDefault(); closeLaunch(); return; }   /* one level back inside the app */
+      if (FROM_COMPANION) { e.preventDefault(); backToCompanion(); return; } /* navegación interna de la demo, no salida de la app */
       TP.lifecycle.handleRootBack(e);                                     /* root: isolated, empty (R6) */
       return;
     }
@@ -290,6 +295,8 @@
   /* ---------- lifecycle ---------- */
   TP.lifecycle.on('standby', function () { S.standby = true; stopPolling(); TP.debug.log('standby: polling paused'); });
   TP.lifecycle.on('wakeup', function () { S.standby = false; startPolling(); poll(); TP.debug.log('wakeup: polling resumed'); });
+
+  if (FROM_COMPANION) { var bb = document.querySelectorAll('[data-action="backToCompanion"]'); for (var bi = 0; bi < bb.length; bi++) bb[bi].hidden = false; }
 
   /* ---------- boot ---------- */
   TP.debug.log('boot on ' + TP.device.getModel() + ' @ ' + TP.device.getHdmiResolution() + (DEMO ? ' (demo)' : ''));

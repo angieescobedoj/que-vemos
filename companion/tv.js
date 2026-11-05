@@ -80,6 +80,7 @@
   function artFor(item) {
     if (item.id === 'match') return 'background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
     if (item.id === 'series') { var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
+    if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
     if (item.id === 'game') return 'background:radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
     return 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')';
   }
@@ -95,7 +96,7 @@
   }
   function renderHome() {
     var r1 = '<div><p class="row-h">Para ti</p><div class="row-tiles">' + tileHtml(C.SERIES, true) + tileHtml(C.MATCH, true) + '</div></div>';
-    var r2 = '<div><p class="row-h">Juegos y estrenos</p><div class="row-tiles">' + tileHtml(C.GAME) + tileHtml(C.EXTRA[0]) + tileHtml(C.EXTRA[1]) + tileHtml(C.EXTRA[2]) + '</div></div>';
+    var r2 = '<div><p class="row-h">Juegos y estrenos</p><div class="row-tiles">' + tileHtml(C.SWIPE) + tileHtml(C.GAME) + tileHtml(C.EXTRA[0]) + tileHtml(C.EXTRA[1]) + '</div></div>';
     var keep = TP.focus.current(), keepId = keep ? keep.getAttribute('data-id') : null;
     $('rows').innerHTML = r1 + r2;
     if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '[data-id="' + keepId + '"]' : '[data-id="series"]'); }
@@ -127,6 +128,7 @@
     var item = C.byId(id);
     if (!item) return;
     if (id === 'game') { startGame(); return; }
+    if (id === 'swipe') { launchSwipe(); return; }
     if (item !== C.MATCH && item !== C.SERIES) { toast('Demo: «' + item.title + '» no está disponible en el prototipo'); return; }
     closeDialog();
     if (id === 'series') {
@@ -204,6 +206,14 @@
       toast('♪ Está sonando «' + sc.song.t + '» · ' + sc.song.a + ' — míralo en tu celular', 6000);
       pushState();
     }
+  }
+
+  /* --- ¿Qué vemos? (juego de match de películas, tv.html del mismo repo) ---
+     La TV abre el juego; el juego muestra su propio QR y ahí se unen los demás jugadores. */
+  function launchSwipe() {
+    closeDialog();
+    show('boot'); $('bootText').textContent = 'Abriendo ¿Qué vemos?…';
+    setTimeout(function () { location.href = '../tv.html?back=companion' + (CP.DEMO ? '&demo=1' : ''); }, 600);
   }
 
   /* --- B3 · continuar donde lo dejaste --- */
