@@ -69,7 +69,7 @@
     stopPolling(); S.code = null; S.room = null; S.players = []; S.resKey = null;
     show('boot'); $('bootText').textContent = 'Creando la sala…';
     createRoom(function (err, code) {
-      if (err) { $('bootText').textContent = 'No se pudo crear la sala. Revisa la conexión.'; TP.debug.log('createRoom failed: ' + err.message); setTimeout(startRoom, 4000); return; }
+      if (err) { $('bootText').innerHTML = 'No se pudo crear la sala.<small class="boot-why">' + esc(err.message || 'error desconocido') + ' · reintentando…</small>'; TP.debug.log('createRoom failed: ' + err.message); setTimeout(startRoom, 4000); return; }
       S.code = code; TP.debug.log('room ' + code + ' created');
       renderQR(code);
       startPolling(); poll();

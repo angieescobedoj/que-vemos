@@ -14,7 +14,11 @@
         var text = xhr.responseText, data = null;
         if (text) { try { data = JSON.parse(text); } catch (e) { data = null; } }
         if (xhr.status >= 200 && xhr.status < 300) finish(null, data);
-        else finish(new Error('HTTP ' + xhr.status), data);
+        else {
+          /* keep the server's reason (e.g. Firestore "PERMISSION_DENIED", "RESOURCE_EXHAUSTED") so the UI can show it */
+          var why = data && data.error ? (data.error.status || '') + (data.error.message ? ' ' + data.error.message : '') : '';
+          finish(new Error(xhr.status === 0 ? 'sin respuesta del servidor (red o bloqueo)' : 'HTTP ' + xhr.status + (why ? ' · ' + why : '')), data);
+        }
       };
       xhr.ontimeout = function () { finish(new Error('timeout')); };
       xhr.onerror = function () { finish(new Error('network')); };

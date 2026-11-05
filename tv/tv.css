@@ -179,4 +179,5 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .slot.filled{animation:slotFlip .8s cubic-bezier(.2,.8,.2,1) both}
 @keyframes slotFlip{0%{opacity:0;-webkit-transform:perspective(60rem) rotateY(-100deg);transform:perspective(60rem) rotateY(-100deg)}
   100%{opacity:1;-webkit-transform:none;transform:none}}
+.boot-why{display:block;margin-top:1rem;font-size:.8rem;font-weight:500;letter-spacing:0;color:var(--ink-2);max-width:48rem;margin-left:auto;margin-right:auto}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
