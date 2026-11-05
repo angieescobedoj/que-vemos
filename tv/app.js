@@ -26,7 +26,7 @@
   }
 
   /* ---------- state ---------- */
-  var S = { code: null, room: null, players: [], screen: 'boot', resKey: null, timer: null, standby: false, launchOpen: false, lastFocus: null, offline: false };
+  var S = { provs: {}, provsOpen: false, provsReturn: null, code: null, room: null, players: [], screen: 'boot', resKey: null, timer: null, standby: false, launchOpen: false, lastFocus: null, offline: false };
 
   function show(name) {
     var screens = document.querySelectorAll('.screen');
@@ -212,17 +212,44 @@
     for (var d = 0; d < R.picks.length; d++) loadProviders(R.picks[d].m);
     TP.focus.ensure('[data-action="newRound"]');
   }
+  function provBtn(pr, movieId, short) {
+    var desc = TP.apps.describe(pr.provider_name);
+    return '<button class="pbtn" data-focusable data-action="open" data-provider="' + esc(pr.provider_name) + '" data-movie="' + movieId + '">' +
+      (pr.logo_path ? '<img src="' + img(pr.logo_path, 'w92') + '" alt="">' : '<span class="nologo">' + esc(desc.label.charAt(0)) + '</span>') +
+      '<span class="pl">' + (short ? '' : 'Ver en ') + esc(desc.label) + '</span></button>';
+  }
+  /* "+N": every platform for that movie in one dialog, no scroll (3 columns when there are many). */
+  function openProvs(movieId) {
+    var m = findMovie(movieId), list = S.provs[movieId] || [], h = '';
+    if (!m || !list.length) return;
+    for (var i = 0; i < list.length; i++) h += provBtn(list[i], movieId, true);  /* the dialog title already says 'Dónde verla' */
+    $('provsGrid').innerHTML = h;
+    $('provsGrid').className = 'provs-grid';   /* always 2 columns: long names stay readable */
+    $('provsPoster').src = img(m.p, 'w342');
+    $('provsTitle').textContent = m.t;
+    $('provsSub').textContent = list.length + (list.length === 1 ? ' plataforma' : ' plataformas') + ' en México';
+    S.provsReturn = TP.focus.current(); S.provsOpen = true;
+    $('provs').hidden = false;
+    TP.focus.setScope($('provs'), '#provsGrid .pbtn');
+  }
+  function closeProvs() {
+    if (!S.provsOpen) return;
+    S.provsOpen = false; $('provs').hidden = true;
+    TP.focus.setScope(null);
+    if (S.provsReturn && document.body.contains(S.provsReturn)) TP.focus.setFocus(S.provsReturn); else TP.focus.ensure();
+  }
   function loadProviders(m) {
     catalog.details(m.id, function (err, d) {
       var slot = document.querySelector('[data-prov="' + m.id + '"]'); if (!slot) return;
       if (err) { slot.innerHTML = '<p class="prov-note">Sin información de plataformas</p>'; return; }
       var pv = QV.catalog.providersOf(d), h = '';
       if (pv.flat.length) {
-        for (var i = 0; i < pv.flat.length && i < 2; i++) {
-          var pr = pv.flat[i], desc = TP.apps.describe(pr.provider_name);
-          h += '<button class="pbtn" data-focusable data-action="open" data-provider="' + esc(pr.provider_name) + '" data-movie="' + m.id + '">' +
-            (pr.logo_path ? '<img src="' + img(pr.logo_path, 'w92') + '" alt="">' : '<span class="nologo">' + esc(desc.label.charAt(0)) + '</span>') +
-            '<span class="pl">Ver en ' + esc(desc.label) + '</span></button>';
+        S.provs[m.id] = pv.flat;
+        /* Row 1: first platform. Row 2: second platform, plus "+N" when there are more (opens them all). */
+        h += provBtn(pv.flat[0], m.id);
+        if (pv.flat.length > 1) {
+          h += '<div class="prov-row">' + provBtn(pv.flat[1], m.id) +
+            (pv.flat.length > 2 ? '<button class="pbtn more" data-focusable data-action="moreProvs" data-movie="' + m.id + '">+' + (pv.flat.length - 2) + '</button>' : '') + '</div>';
         }
       } else if (pv.other.length) {
         h += '<p class="prov-note">Solo en renta o compra: ' + esc(pv.other[0].provider_name) + '</p>';
@@ -262,7 +289,7 @@
     if (!S.launchOpen) return;
     S.launchOpen = false; $('launch').hidden = true;
     if (launchTimer) { clearTimeout(launchTimer); launchTimer = null; }
-    TP.focus.setScope(null);
+    TP.focus.setScope(S.provsOpen ? $('provs') : null);   /* back to the platforms dialog if it was open */
     if (S.lastFocus) TP.focus.setFocus(S.lastFocus); else TP.focus.ensure();
   }
 
@@ -280,12 +307,14 @@
   }
   function playerIds() { var ids = []; for (var i = 0; i < S.players.length; i++) ids.push(S.players[i].id); return ids; }
   var actions = {
-    newRoom: function () { closeLaunch(); startRoom(); },
+    newRoom: function () { closeLaunch(); closeProvs(); startRoom(); },
     forceResults: function () { store.updateRoom(S.code, { status: 'results' }, function () { poll(); }); },
     newRound: function () {
       store.resetRound(S.code, playerIds(), { status: 'lobby', deck: null, building: null, seen: seenSoFar(), round: (S.room.round || 1) + 1 }, function () { poll(); });
     },
     closeLaunch: closeLaunch,
+    moreProvs: function (el) { openProvs(Number(el.getAttribute('data-movie'))); },
+    closeProvs: closeProvs,
     backToCompanion: backToCompanion,
     open: function (el) { openLaunch(el.getAttribute('data-provider'), Number(el.getAttribute('data-movie'))); }
   };
@@ -302,6 +331,7 @@
     if (k === 'OK') { stop(); TP.focus.activate(); return; }
     if (k === 'BACK') {
       if (S.launchOpen) { stop(); closeLaunch(); return; }   /* one level back inside the app */
+      if (S.provsOpen) { stop(); closeProvs(); return; }
       if (FROM_COMPANION) { stop(); backToCompanion(); return; } /* navegación interna de la demo, no salida de la app */
       if (e) TP.lifecycle.handleRootBack(e);                  /* root: isolated, empty (R6) */
       return;

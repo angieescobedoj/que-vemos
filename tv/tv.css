@@ -164,7 +164,7 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .person.done em{color:#666}
 .slots{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;gap:2.6rem;padding-top:.4rem}
 .slot{width:17rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.6rem}
-.slot-poster{position:relative;width:10.2rem;height:15.3rem;border-radius:1rem;overflow:visible;flex:none}
+.slot-poster{position:relative;width:9.2rem;height:13.8rem;border-radius:1rem;overflow:visible;flex:none}
 .slot-poster img{width:100%;height:100%;object-fit:cover;border-radius:1rem;display:block;box-shadow:0 .9rem 2rem rgba(0,0,0,.45)}
 .slot-num{position:absolute;top:-.6rem;left:-.6rem;z-index:2;width:1.8rem;height:1.8rem;border-radius:50%;background:#fff;color:var(--on-white);font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
 .slot.empty .slot-poster{border:.12rem dashed rgba(255,255,255,.32);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center}
@@ -184,4 +184,45 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 @keyframes slotFlip{0%{opacity:0;-webkit-transform:perspective(60rem) rotateY(-100deg);transform:perspective(60rem) rotateY(-100deg)}
   100%{opacity:1;-webkit-transform:none;transform:none}}
 .boot-why{display:block;margin-top:1rem;font-size:.8rem;font-weight:500;letter-spacing:0;color:var(--ink-2);max-width:48rem;margin-left:auto;margin-right:auto}
+/* ---------- 3-meter (10-foot) type scale ----------
+   At 1080p 1rem = 28px. Nothing readable goes below .9rem (~25px); body and buttons ≥ 1rem (28px);
+   titles ≥ 1.4rem. Later rules here win over the sizes declared above. */
+.eyebrow{font-size:.9rem}
+.lede{font-size:1.1rem}
+.qr-url{font-size:.8rem}
+.count,.row-sub,.empty,.status,.section-label small,.prov-note,.slot-wait,.boot-why,.launch-note{font-size:.9rem}
+.steps .n,.slot-num{font-size:.95rem}
+.av{font-size:.9rem}
+.row-name{font-size:1.1rem}
+.btn{font-size:1.05rem;height:2.7rem;padding:0 1.5rem}
+.tag{font-size:.85rem;padding:.3rem .8rem}
+.person{font-size:1rem;height:2.7rem}
+.person em{font-size:.9rem}
+.slot-title{font-size:1.4rem}
+.slot-sub{font-size:.95rem}
+.launch-sub{font-size:1.1rem}
+.pbtn{font-size:1rem;height:2.6rem;padding:0 1rem 0 .4rem;gap:.55rem}
+.pbtn img,.pbtn .nologo{width:1.8rem;height:1.8rem;border-radius:.45rem}
+.pbtn .nologo{font-size:.9rem}
+
+/* results: row 2 = second platform + "+N" */
+.slot .prov{gap:.5rem}
+.prov-row{display:flex;gap:.5rem;justify-content:center;max-width:100%}
+.prov-row .pbtn{min-width:0}
+.pbtn.more{flex:none;padding:0 1rem;font-weight:700}
+
+/* all-platforms dialog (opaque card: no backdrop-filter, R3) */
+.provs-card{width:76vw;max-width:72rem;background:#15172a;border:1px solid var(--line);border-radius:1.5rem;padding:1.6rem;display:flex;gap:1.6rem;align-items:flex-start}
+.provs-poster{width:9.5rem;height:14.25rem;border-radius:.9rem;object-fit:cover;flex:none;background:var(--glass-2)}
+.provs-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem}
+.provs-title{font-size:1.9rem;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+.provs-sub{color:var(--ink-2);font-size:1rem}
+.provs-grid{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem}
+.provs-grid .pbtn{width:calc(50% - .3rem);min-width:0}
+/* every platform button keeps its label on one line inside the pill */
+.pbtn{overflow:hidden;max-width:100%}
+.pbtn .pl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pbtn img,.pbtn .nologo{flex:none}
+.provs-body .bar{margin-top:1rem}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}

@@ -184,6 +184,9 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .prov span.nologo{padding-left:10px}
 .prov img{width:22px;height:22px;border-radius:6px}
 .prov-note{font-size:13px;color:var(--ink-2);margin:0}
+.prov .more-chips{display:contents}
+.prov .more-chips[hidden]{display:none}
+.more-btn{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:5px 12px;cursor:pointer}
 .section-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:6px}
 .section-label h3{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em}
 
@@ -865,6 +868,13 @@ function providersOf(d){
   const mx = d?.['watch/providers']?.results?.MX || {};
   return { flat: mx.flatrate || [], other: [...(mx.rent || []), ...(mx.buy || [])].filter((p, i, a) => a.findIndex(x => x.provider_name === p.provider_name) === i) };
 }
+/* Results: the first 3 platforms, the rest behind "Ver N más" (same rule as the TV). */
+function provListHTML(list, max = 3){
+  const chip = p => p.logo_path ? `<span><img src="${img(p.logo_path, 'w92')}" alt="">${esc(p.provider_name)}</span>` : `<span class="nologo">${esc(p.provider_name)}</span>`;
+  const extra = list.length - max;
+  return `<div class="prov">${list.slice(0, max).map(chip).join('')}${extra > 0
+    ? `<span class="more-chips" hidden>${list.slice(max).map(chip).join('')}</span><button class="more-btn" onclick="this.previousElementSibling.hidden=false;this.remove()">Ver ${extra} más</button>` : ''}</div>`;
+}
 function provHTML(list){ return `<div class="prov">${list.map(p => p.logo_path ? `<span><img src="${img(p.logo_path, 'w92')}" alt="">${esc(p.provider_name)}</span>` : `<span class="nologo">${esc(p.provider_name)}</span>`).join('')}</div>`; }
 function fillDetails(el, d){
   el.querySelector('.synopsis').textContent = d.overview || 'Sin sinopsis en español.';
@@ -1017,7 +1027,7 @@ function renderResults(){
   picks.forEach(({ m }) => details(m.id).then(d => {
     const slot = document.querySelector(`[data-prov="${m.id}"]`); if (!slot) return;
     const pv = providersOf(d); m._prov = pv.flat.map(p => p.provider_name);
-    slot.innerHTML = pv.flat.length ? provHTML(pv.flat)
+    slot.innerHTML = pv.flat.length ? provListHTML(pv.flat)
       : pv.other.length ? `<p class="prov-note">Solo en renta o compra:</p>${provHTML(pv.other.slice(0, 3))}`
       : '<p class="prov-note">No está en streaming en México.</p>';
   }).catch(() => { const slot = document.querySelector(`[data-prov="${m.id}"]`); if (slot) slot.textContent = 'Sin información de plataformas'; }));

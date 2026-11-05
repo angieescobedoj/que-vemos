@@ -86,6 +86,20 @@
   </section>
 </main>
 
+<!-- ALL PLATFORMS for one movie (opened from "+N" on a result) -->
+<div class="overlay" id="provs" hidden role="dialog" aria-modal="true">
+  <div class="provs-card">
+    <img class="provs-poster" id="provsPoster" alt="">
+    <div class="provs-body">
+      <p class="eyebrow">Dónde verla</p>
+      <h2 class="provs-title" id="provsTitle"></h2>
+      <p class="provs-sub" id="provsSub"></p>
+      <div class="provs-grid" id="provsGrid"></div>
+      <div class="bar"><button class="btn ghost" data-focusable data-action="closeProvs">Volver a los resultados</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- LAUNCH OVERLAY (simulated until Totalplay documents an app-launch API — see src/platform/totalplay/apps.js) -->
 <div class="overlay" id="launch" hidden role="dialog" aria-modal="true">
   <div class="launch-card">

@@ -50,7 +50,7 @@ b{font-weight:700}
 /* home */
 .home-body{flex:1;min-height:0;display:flex;gap:2rem}
 .rows{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.1rem;overflow:hidden;
-  padding:.9rem;margin:-.9rem}  /* room for the focused tile's scale + ring, so the clip never cuts them; the negative margin keeps the layout in place */
+  padding:1.3rem;margin:-1.3rem}  /* room for the focused tile's scale + ring, so the clip never cuts them; the negative margin keeps the layout in place */
 .row-h{font-size:.85rem;font-weight:700;margin-bottom:.55rem;color:var(--ink-2)}
 .row-tiles{display:flex;gap:1rem}
 .tile{position:relative;flex:0 0 auto;width:9.6rem;height:7rem;border-radius:1rem;overflow:hidden;text-align:left;
@@ -152,3 +152,38 @@ b{font-weight:700}
 .g-over{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(10,7,16,.8);display:flex;align-items:center;justify-content:center;z-index:5}
 .g-over-card{background:#1E1630;border:1px solid var(--line);border-radius:1.5rem;padding:2rem 2.4rem;text-align:center}
 .g-over-card .bar-btns{justify-content:center}
+
+/* ---------- 3-meter (10-foot) type scale ----------
+   At 1080p 1rem = 28px. Nothing readable below .8rem (~22px) for tiny caps labels, .9rem (~25px) for text;
+   titles ≥ 1.15rem. Tiles grow a little so the larger text still fits. Later rules win over the ones above. */
+.eyebrow{font-size:.85rem}
+.net-banner{font-size:1rem}
+.chip{font-size:.9rem}
+.hint{font-size:.85rem}
+.row-h{font-size:1.1rem}
+.row-tiles{gap:1rem}
+.tile{width:10.6rem;height:9.4rem}
+.tile.wide{width:21.8rem;height:10rem}
+.tile .t-tag{font-size:.8rem}
+.tile .t-title{font-size:1.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .t-sub{font-size:.9rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.live{font-size:.8rem;padding:.25rem .55rem}
+.pair{flex-basis:16rem}
+.pair-title{font-size:1.25rem}
+.pair-code{font-size:1rem}
+.pair-code b{font-size:1.6rem}
+.pair-url{font-size:.8rem}
+.pair-list li{font-size:.95rem}
+.av{width:1.8rem;height:1.8rem;font-size:.85rem}
+.p-sub{font-size:1rem}
+.scorebug .min{font-size:.9rem}
+.p-state{font-size:1rem}
+.p-times{font-size:.9rem}
+.live-strip{font-size:1rem}
+.pp-h{font-size:.85rem}
+.pp-item{font-size:1rem}
+.pp-item small{font-size:.9rem}
+.pp-more{font-size:.9rem}
+.toast{font-size:1rem}
+.basket{font-size:.85rem}
+.g-join{font-size:.9rem}

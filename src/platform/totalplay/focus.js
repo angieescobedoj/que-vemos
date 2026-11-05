@@ -64,6 +64,21 @@
     }
   }
 
+  /* Older STB runtimes ignore focus({preventScroll}) and scroll the page — or a clipped (overflow:hidden) box —
+     to show the element, which shifts the whole screen sideways. Put every such box back at 0; real scroll
+     areas (overflow auto/scroll) are left alone because reveal() manages them. */
+  function undoFocusScroll(el) {
+    if (window.scrollX || window.scrollY || window.pageXOffset || window.pageYOffset) window.scrollTo(0, 0);
+    var de = document.documentElement, b = document.body;
+    if (de.scrollLeft || de.scrollTop) { de.scrollLeft = 0; de.scrollTop = 0; }
+    if (b.scrollLeft || b.scrollTop) { b.scrollLeft = 0; b.scrollTop = 0; }
+    var n = el.parentNode;
+    while (n && n !== document.body && n.nodeType === 1) {
+      var cs = window.getComputedStyle(n);
+      if (cs.overflowY !== 'auto' && cs.overflowY !== 'scroll' && (n.scrollLeft || n.scrollTop)) { n.scrollLeft = 0; n.scrollTop = 0; }
+      n = n.parentNode;
+    }
+  }
   function setFocus(el) {
     if (current && current !== el) current.classList.remove(FOCUS_CLASS);
     current = el || null;
@@ -71,6 +86,7 @@
       current.classList.add(FOCUS_CLASS);
       reveal(current);
       try { current.focus({ preventScroll: true }); } catch (e) { try { current.focus(); } catch (e2) { /* ignore */ } }
+      undoFocusScroll(current);
     }
   }
   function move(dir) { var next = pick(dir); if (next) setFocus(next); return !!next; }
