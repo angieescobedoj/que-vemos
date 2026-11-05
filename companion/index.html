@@ -120,6 +120,8 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .game .me{display:flex;align-items:center;gap:10px;font-weight:700}
 .game .me .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .game .pts{font-size:34px;font-weight:700}
+.game .gr{display:flex;align-items:center;gap:14px}
+.game .gx{width:44px;height:44px;border-radius:50%;background:var(--card-2);border:1px solid var(--line);font-size:18px;color:#fff}
 .game .gb{flex:1;display:flex;gap:14px;margin-top:16px}
 .game .gb button{flex:1;border-radius:28px;background:var(--card);border:1px solid var(--line);font-size:56px;color:var(--lilac);touch-action:none}
 .game .gb button.on{background:var(--violet);color:#fff}
@@ -182,7 +184,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 <div class="sheet" id="sheet" hidden></div>
 
 <section class="game" id="game" hidden>
-  <div class="gh"><div class="me" id="gMe"></div><div class="pts" id="gPts">0</div></div>
+  <div class="gh"><div class="me" id="gMe"></div><div class="gr"><div class="pts" id="gPts">0</div><button class="gx" data-act="exitGame" aria-label="Salir del juego">✕</button></div></div>
   <p class="muted" id="gInfo" style="margin-top:6px"></p>
   <div class="gb" id="gPad">
     <button data-dir="-1" aria-label="Izquierda">◀</button>

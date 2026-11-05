@@ -250,6 +250,12 @@
     else if (act === 'saveBanner') { saveSong($('banner')._song); $('banner').hidden = true; }
     else if (act === 'closeBanner') $('banner').hidden = true;
     else if (act === 'closeSheet') { $('sheet').hidden = true; $('scrim').hidden = true; }
+    else if (act === 'exitGame') {
+      if (S.padDir) setDir(0);
+      $('sheet').innerHTML = '<h2 style="margin-bottom:6px">¿Salir del juego?</h2><p style="color:#555;margin-bottom:18px">La partida termina para todos y la TV regresa al inicio.</p><div class="stack"><button class="btn" data-act="confirmExit">Salir del juego</button><button class="btn ghost" style="background:#EFE8F7;color:#7A4CC4" data-act="closeSheet">Seguir jugando</button></div>';
+      $('sheet').hidden = false; $('scrim').hidden = false;
+    }
+    else if (act === 'confirmExit') { send({ t: 'home' }); $('sheet').hidden = true; $('scrim').hidden = true; toast('Saliendo del juego…'); }
   });
   $('scrim').onclick = function () { $('sheet').hidden = true; $('scrim').hidden = true; };
 
