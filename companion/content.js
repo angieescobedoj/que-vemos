@@ -4,7 +4,7 @@
   'use strict';
 
   var MATCH = {
-    id: 'match', kind: 'live', title: 'Halcones vs. Toros', sub: 'Liga de la Ciudad · Jornada 12', tag: 'En vivo',
+    id: 'match', kind: 'live', title: 'Halcones vs. Toros', sub: 'Deportes 7 · Liga de la Ciudad', tag: 'En vivo',
     home: { name: 'Halcones', short: 'HAL', color: '#2F6FE0' },
     away: { name: 'Toros', short: 'TOR', color: '#D9364F' },
     score: [1, 0], startMinute: 12,
@@ -44,11 +44,25 @@
 
   var SWIPE = { id: 'swipe', kind: 'game', title: '¿Qué vemos?', sub: 'Match de películas · 2 o más', tag: 'Juego' };
 
-  var EXTRA = [
-    { id: 'x1', kind: 'vod', title: 'Cielo de cobre', sub: 'Película · Drama', tag: 'Estreno', art: ['#C792C9', '#4A2E7A'] },
-    { id: 'x2', kind: 'vod', title: 'Ecos del norte', sub: 'Documental', tag: 'Estreno', art: ['#9AD1B9', '#1F5A48'] },
-    { id: 'x3', kind: 'vod', title: 'Pequeños gigantes', sub: 'Serie infantil', tag: 'Familia', art: ['#FFD27A', '#C2582E'] }
+  /* Canales en vivo (ficticios). Se llega a ellos con el control de la TV (arriba/abajo) o por voz, nunca con una lista en el celular.
+     El canal 7 transmite el partido, así que el contenido "En vivo" del inicio es ese canal. */
+  var CHANNELS = [
+    { n: 2, name: 'Noticias 2', show: 'Noticiero de la mañana', next: 'Clima y tráfico', art: ['#3D7BE8', '#0E1A3A'] },
+    { n: 5, name: 'Kids 5', show: 'Las aventuras de Pipo', next: 'Caricaturas clásicas', art: ['#FFB547', '#C2582E'] },
+    { n: 7, name: 'Deportes 7', show: 'Halcones vs. Toros', next: 'Resumen de la jornada', match: true, art: ['#2E7D49', '#123A22'] },
+    { n: 9, name: 'Cine 9', show: 'Ciclo de cine de oro', next: 'Función de medianoche', art: ['#C792C9', '#3A2160'] },
+    { n: 11, name: 'Cultura 11', show: 'Documental: ríos y montañas', next: 'Concierto en vivo', art: ['#7CC7A8', '#174536'] }
   ];
+  function channel(n) { for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].n === n) return CHANNELS[i]; return null; }
+
+  /* Apps de streaming instaladas en el decodificador. Abrirlas se simula (la API de Totalplay para lanzar apps está pendiente). */
+  var APPS = [
+    { id: 'netflix', kind: 'app', title: 'Netflix', sub: 'App', tag: 'App', color: '#E50914' },
+    { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
+    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' },
+    { id: 'ondemand', kind: 'app', title: 'On Demand', sub: 'Series y películas', tag: 'App', color: '#7A4CC4' }
+  ];
+  var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9 · 11', tag: 'Canales' };
 
   function sceneAt(pos) {
     var s = SERIES.scenes;
@@ -61,10 +75,11 @@
   }
   function byId(id) {
     if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME; if (id === 'swipe') return SWIPE;
-    for (var i = 0; i < EXTRA.length; i++) if (EXTRA[i].id === id) return EXTRA[i];
+    if (id === 'tv') return LIVE;
+    for (var i = 0; i < APPS.length; i++) if (APPS[i].id === id) return APPS[i];
     return null;
   }
-  function all() { return [MATCH, SERIES, GAME, SWIPE].concat(EXTRA); }
+  function all() { return [SERIES, MATCH, LIVE].concat(APPS).concat([GAME, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, EXTRA: EXTRA, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

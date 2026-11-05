@@ -187,3 +187,78 @@ b{font-weight:700}
 .toast{font-size:1rem}
 .basket{font-size:.85rem}
 .g-join{font-size:.9rem}
+
+/* ---------- v6 · control renovado ---------- */
+.pair{flex-basis:13.5rem;gap:.6rem}
+.pair-sub{font-size:.9rem;color:var(--ink-2)}
+.chip.exp{background:rgba(229,138,195,.22);border-color:rgba(229,138,195,.5)}
+.rows{gap:1rem}
+.row-h{margin-bottom:.45rem}
+.tile.wide{width:20.6rem;height:8.6rem}
+.tile.sm{width:7rem;height:6rem}
+.tile.sm .t-title{font-size:1.05rem}
+.tile.sm .t-body{left:.65rem;right:.6rem;bottom:.55rem}
+.tile .t-num{position:absolute;left:.65rem;top:.5rem;font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+.tile.app{background:#15111F;border-color:rgba(255,255,255,.08)}
+.tile.app .t-bar{position:absolute;left:0;right:0;top:0;height:.4rem}
+.tile.app .t-title{font-size:1.15rem}
+.tile.is-focused{border-color:#fff}
+
+/* TV en vivo */
+.ch-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
+.ch-logo .n{font-size:7rem;font-weight:700;letter-spacing:-.04em;line-height:1;opacity:.9}
+.ch-logo .nm{font-size:1.6rem;font-weight:700;margin-top:.4rem}
+.ch-logo .sh{font-size:1.1rem;color:var(--ink-2);margin-top:.2rem}
+.ch-keys{color:var(--ink-2);margin-left:.6rem;font-size:.9rem}
+.ch-banner{position:absolute;left:4vw;top:14vh;display:flex;gap:1rem;align-items:center;background:rgba(14,10,22,.88);border:1px solid var(--line);border-radius:1.1rem;padding:.8rem 1.2rem}
+.ch-banner .n{font-size:2.2rem;font-weight:700;min-width:2.6rem;text-align:center}
+.ch-banner .nm{font-size:1.05rem;font-weight:700}
+.ch-banner .sh{font-size:.95rem;color:var(--ink-2)}
+.guide-wrap{justify-content:flex-start;background:rgba(10,7,16,.55)}
+.guide{margin-left:4vw;width:30rem;background:#1A1328;border:1px solid var(--line);border-radius:1.4rem;padding:1.2rem}
+.g-row{display:flex;align-items:center;gap:1rem;width:100%;text-align:left;padding:.6rem .8rem;border-radius:.9rem;border:2px solid transparent;margin-top:.45rem}
+.g-row .n{font-size:1.5rem;font-weight:700;width:2.4rem;text-align:center}
+.g-row .nm{font-size:1.05rem;font-weight:700}
+.g-row .sh{font-size:.9rem;color:var(--ink-2)}
+.g-row.cur{background:var(--glass-2)}
+.g-row.is-focused{border-color:#fff;box-shadow:var(--ring)}
+
+/* App de streaming simulada */
+.screen.appscr{margin:-4vh -4vw;position:relative;background:#0B0910;align-items:center;justify-content:center}
+.app-accent{position:absolute;left:0;right:0;top:0;height:.6rem}
+.app-center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:.8rem;max-width:40rem}
+.app-name{font-size:4rem;font-weight:700;letter-spacing:-.03em}
+.app-progress{width:16rem;height:.35rem;background:rgba(255,255,255,.18);border-radius:1rem;overflow:hidden}
+.app-progress i{display:block;height:100%;width:0;background:#fff;transition:width 1.2s linear}
+.app-progress.go i{width:100%}
+.app-note{font-size:1.05rem;color:var(--ink-2);line-height:1.4}
+
+/* Menú lateral */
+.menu{position:fixed;left:0;top:0;bottom:0;width:20rem;z-index:52;background:#1A1328;border-right:1px solid var(--line);padding:2rem 1.2rem;display:flex;flex-direction:column;gap:.5rem}
+.menu-list{display:flex;flex-direction:column;gap:.3rem;margin-top:.3rem}
+.m-h{font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:.6rem 0 .1rem .8rem}
+.m-item{display:flex;align-items:center;gap:.8rem;width:100%;text-align:left;font-size:1.1rem;font-weight:600;padding:.55rem .8rem;border-radius:.8rem;border:2px solid transparent}
+.m-item .sw{width:1rem;height:1rem;border-radius:.3rem;flex:none}
+.m-item.is-focused{background:var(--glass-2);border-color:#fff}
+
+/* Volumen, voz, encontrar control */
+.vol-hud{position:fixed;z-index:58;right:4vw;top:6vh;display:flex;align-items:center;gap:.8rem;background:rgba(14,10,22,.92);border:1px solid var(--line);border-radius:999px;padding:.6rem 1.1rem}
+.vol-ic{font-size:1.3rem}
+.vol-bar{width:12rem;height:.4rem;background:rgba(255,255,255,.2);border-radius:1rem;overflow:hidden}
+.vol-bar i{display:block;height:100%;background:#fff}
+.vol-n{font-size:1.1rem;font-weight:700;min-width:2rem;text-align:right}
+.voice-bubble{position:fixed;z-index:58;left:50%;bottom:7vh;transform:translateX(-50%);background:#fff;color:#1E1A1A;border-radius:1.2rem;padding:.8rem 1.3rem;display:flex;align-items:center;gap:.9rem;max-width:44rem}
+.voice-bubble .mic{width:2.4rem;height:2.4rem;border-radius:50%;background:var(--violet);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:none}
+.voice-bubble .q{font-size:1.15rem;font-weight:700}
+.voice-bubble .a{font-size:.95rem;color:#555}
+.dlg.center{text-align:center;display:flex;flex-direction:column;align-items:center}
+.find-ring{width:6rem;height:6rem;border-radius:50%;border:.3rem solid var(--lilac);display:flex;align-items:center;justify-content:center;font-size:2.4rem;margin-bottom:.6rem;animation:ring 1s steps(2) infinite}
+@keyframes ring{50%{border-color:var(--pink)}}
+
+/* Brillo (capa oscura, sin filter: R3), solo audio y reposo simulado */
+.dim{position:fixed;left:0;top:0;right:0;bottom:0;z-index:70;background:#000;opacity:0;pointer-events:none}
+.blackout{position:fixed;left:0;top:0;right:0;bottom:0;z-index:80;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8vh;gap:.3rem;color:rgba(255,255,255,.35)}
+.blackout p{font-size:1rem;font-weight:700}
+.blackout small{font-size:.85rem}
+.blackout.off{z-index:90}
+.tile .t-tag.t-red{color:#FF8A9B}

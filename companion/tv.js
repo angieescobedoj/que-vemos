@@ -18,8 +18,17 @@
     screen: 'boot', content: null, playing: false, pos: 0, posAt: 0, saved: C.SERIES.saved,
     sceneIdx: -1, songSeq: 0, songAt: 0, query: '', dialog: null, matchStart: 0,
     game: { state: 'idle', endsAt: 0, scores: {}, baskets: {}, stars: [], timer: null, lastSpawn: 0 },
-    timer: null, standby: false, lastCmdAt: 0
+    timer: null, standby: false, lastCmdAt: 0,
+    /* v6 · control renovado */
+    tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
+    exp: null, menu: false, guide: false, finding: false, lat: 0
   };
+  function tvNameParam() {
+    var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
+    if (m) { try { v = decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch (e) { v = ''; } }
+    v = v.replace(/[<>]/g, '').substring(0, 18);
+    return v || 'Sala';
+  }
 
   function curPos() { return S.playing ? S.pos + (now() - S.posAt) / 1000 : S.pos; }
   function setPos(p, playing) { S.pos = Math.max(0, Math.min(C.SERIES.duration - 1, p)); S.posAt = now(); S.playing = playing; }
@@ -44,7 +53,9 @@
     return {
       kind: 'companion', screen: S.screen, content: S.content, playing: S.playing, pos: Math.round(curPos()), posAt: now(),
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
-      matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() }
+      matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
+      tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
+      audioOnly: S.audioOnly, exp: S.exp || '', menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now()
     };
   }
   function pushState() {
@@ -53,7 +64,8 @@
     if (pushTimer) return;
     pushTimer = setTimeout(function () {
       pushTimer = null;
-      var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game]);
+      var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
+        snap.vol, snap.muted, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -69,6 +81,7 @@
     var list = document.querySelectorAll('.screen');
     for (var i = 0; i < list.length; i++) list[i].hidden = list[i].getAttribute('data-screen') !== name;
     S.screen = name;
+    if (name !== 'app') S.app = null;
     TP.focus.setScope(null);
     TP.focus.setFocus(null);
     if (name === 'home') TP.focus.ensure('[data-id="series"]');
@@ -81,10 +94,20 @@
     if (item.id === 'match') return 'background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
     if (item.id === 'series') { var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
     if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
+    if (item.id === 'tv') return 'background:linear-gradient(150deg,#3D7BE8,#2E7D49 55%,#3A2160)';
     if (item.id === 'game') return 'background:radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
-    return 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')';
+    return item.art ? 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')' : '';
   }
   function tileHtml(item, wide) {
+    if (item.kind === 'app') {
+      return '<button class="tile sm app" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-bar" style="background:' + item.color + '"></span>' +
+        '<span class="t-body"><span class="t-tag">App</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
+    }
+    if (item.n) {
+      return '<button class="tile sm" data-focusable data-action="channel" data-id="ch' + item.n + '" data-n="' + item.n + '"><span class="t-art" style="background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')"></span><span class="t-shade"></span>' +
+        '<span class="t-num">' + item.n + '</span>' +
+        '<span class="t-body"><span class="t-tag t-red">● En vivo</span><span class="t-title" style="display:block">' + esc(item.name.replace(/ \d+$/, '')) + '</span></span></button>';
+    }
     var extra = '';
     if (item.id === 'series') extra = '<div class="t-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></div>';
     var sub = item.id === 'series' ? 'T1 E3 · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.sub;
@@ -96,10 +119,17 @@
   }
   function renderHome() {
     var r1 = '<div><p class="row-h">Para ti</p><div class="row-tiles">' + tileHtml(C.SERIES, true) + tileHtml(C.MATCH, true) + '</div></div>';
-    var r2 = '<div><p class="row-h">Juegos y estrenos</p><div class="row-tiles">' + tileHtml(C.SWIPE) + tileHtml(C.GAME) + tileHtml(C.EXTRA[0]) + tileHtml(C.EXTRA[1]) + '</div></div>';
+    var chs = ''; for (var i = 0; i < C.CHANNELS.length; i++) chs += tileHtml(C.CHANNELS[i]);
+    var r2 = '<div><p class="row-h">Canales en vivo</p><div class="row-tiles">' + chs + '</div></div>';
+    var apps = ''; for (var j = 0; j < C.APPS.length; j++) apps += tileHtml(C.APPS[j]);
+    var r3 = '<div><p class="row-h">Apps y juegos</p><div class="row-tiles">' + apps + gameTile(C.GAME) + gameTile(C.SWIPE) + '</div></div>';
     var keep = TP.focus.current(), keepId = keep ? keep.getAttribute('data-id') : null;
-    $('rows').innerHTML = r1 + r2;
+    $('rows').innerHTML = r1 + r2 + r3;
     if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '[data-id="' + keepId + '"]' : '[data-id="series"]'); }
+  }
+  function gameTile(item) {
+    return '<button class="tile sm" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
+      '<span class="t-body"><span class="t-tag">Juego</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
   }
   function renderPairing() {
     var on = connected(), chip = $('phonesChip');
@@ -118,6 +148,10 @@
       var hay = (items[i].title + ' ' + items[i].sub + ' ' + items[i].tag).toLowerCase();
       if (!q || hay.indexOf(q) >= 0) { html += tileHtml(items[i]); n++; }
     }
+    for (var c = 0; c < C.CHANNELS.length; c++) {
+      var ch = C.CHANNELS[c], hc = ('canal ' + ch.n + ' ' + ch.name + ' ' + ch.show).toLowerCase();
+      if (q && hc.indexOf(q) >= 0) { html += tileHtml(ch); n++; }
+    }
     $('searchResults').innerHTML = html;
     $('searchEmpty').hidden = n > 0;
     if (S.screen === 'search') { TP.focus.setFocus(null); TP.focus.ensure(); }
@@ -129,15 +163,14 @@
     if (!item) return;
     if (id === 'game') { startGame(); return; }
     if (id === 'swipe') { launchSwipe(); return; }
-    if (item !== C.MATCH && item !== C.SERIES) { toast('Demo: «' + item.title + '» no está disponible en el prototipo'); return; }
-    closeDialog();
+    if (item.kind === 'app') { openApp(id); return; }
+    if (id === 'tv') { tune(S.channel); return; }
+    if (id === 'match') { tune(7); return; }
+    closeOverlays();
     if (id === 'series') {
       if (!from && S.saved > 60) { openResume(); return; }
       setPos(from === 'start' ? 0 : (from === 'resume' ? S.saved : 0), true);
       S.sceneIdx = -1;
-    } else {
-      S.matchStart = now();
-      S.playing = true;
     }
     S.content = id;
     $('pausePanel').hidden = true;
@@ -145,6 +178,157 @@
     paintPlayer();
     if (from === 'resume') toast('Continuando donde lo dejaste · ' + C.fmt(S.saved));
   }
+  /* --- TV en vivo: los canales se recorren con ▲▼ del control (o del celular) y OK abre la guía --- */
+  var chTimer = null;
+  function tune(n) {
+    var ch = C.channel(n); if (!ch) return;
+    closeOverlays();
+    if (S.screen === 'game') stopGame();
+    if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
+    S.channel = n; S.content = ch.match ? 'match' : 'live'; S.playing = true;
+    if (ch.match && !S.matchStart) S.matchStart = now();
+    $('pausePanel').hidden = true;
+    if (S.screen !== 'player') show('player'); else pushState();
+    paintPlayer(); showChBanner();
+  }
+  function stepChannel(d) {
+    var list = C.CHANNELS, i = 0;
+    for (var k = 0; k < list.length; k++) if (list[k].n === S.channel) i = k;
+    tune(list[(i + d + list.length) % list.length].n);
+  }
+  function showChBanner() {
+    var ch = C.channel(S.channel), b = $('chBanner'); if (!ch) return;
+    b.innerHTML = '<span class="n">' + ch.n + '</span><div><div class="nm">' + esc(ch.name) + '</div><div class="sh">Ahora: ' + esc(ch.show) + ' · Después: ' + esc(ch.next) + '</div></div>';
+    b.hidden = false; clearTimeout(chTimer); chTimer = setTimeout(function () { b.hidden = true; }, 4000);
+  }
+  function openGuide() {
+    var html = '';
+    for (var i = 0; i < C.CHANNELS.length; i++) {
+      var ch = C.CHANNELS[i];
+      html += '<button class="g-row' + (ch.n === S.channel ? ' cur' : '') + '" data-focusable data-action="tune" data-n="' + ch.n + '"><span class="n">' + ch.n + '</span><span><span class="nm" style="display:block">' + esc(ch.name) + '</span><span class="sh" style="display:block">' + esc(ch.show) + '</span></span></button>';
+    }
+    $('guideList').innerHTML = html; $('guide').hidden = false; S.guide = true; $('chBanner').hidden = true;
+    TP.focus.setFocus(null); TP.focus.setScope($('guide'), '.g-row.cur');
+  }
+  function closeGuide() { if (!S.guide) return; S.guide = false; $('guide').hidden = true; TP.focus.setScope(null); }
+
+  /* --- Apps de streaming: la apertura se simula (API de Totalplay pendiente, ver src/platform/totalplay/apps.js) --- */
+  var appTimer = null;
+  function openApp(id) {
+    var a = C.byId(id); if (!a) return;
+    closeOverlays();
+    if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
+    if (S.screen === 'game') stopGame();
+    show('app'); S.app = id; pushState();
+    $('appAccent').style.background = a.color; $('appName').textContent = a.title; $('appEyebrow').textContent = 'Abriendo…';
+    $('appNote').hidden = true; $('appBtns').hidden = true;
+    var pr = $('appProgress'); pr.hidden = false; pr.className = 'app-progress'; setTimeout(function () { pr.className = 'app-progress go'; }, 30);
+    clearTimeout(appTimer);
+    appTimer = setTimeout(function () {
+      if (S.screen !== 'app' || S.app !== id) return;
+      pr.hidden = true; $('appEyebrow').textContent = 'Simulación';
+      $('appNote').textContent = 'En el decodificador real aquí se abre la app de ' + a.title + ' que ya está instalada. Regresar te trae de vuelta.';
+      $('appNote').hidden = false;
+      $('appBtns').innerHTML = (id === 'ondemand' ? '<button class="btn" data-focusable data-action="open" data-id="series">Seguir viendo Marea Alta</button>' : '') +
+        '<button class="btn ghost" data-focusable data-action="home">Volver al inicio</button>';
+      $('appBtns').hidden = false;
+      TP.focus.setFocus(null); TP.focus.ensure();
+    }, 1300);
+  }
+
+  /* --- Menú lateral (☰ en el celular) --- */
+  function menuItem(id, label, color) {
+    return '<button class="m-item" data-focusable data-action="menuGo" data-id="' + id + '">' + (color ? '<span class="sw" style="background:' + color + '"></span>' : '') + esc(label) + '</button>';
+  }
+  function openMenu() {
+    closeGuide(); closeDialog();
+    var html = menuItem('home', 'Inicio') + menuItem('search', 'Buscar') + menuItem('tv', 'TV en vivo') + menuItem('series', 'Seguir viendo') + '<p class="m-h">Apps</p>';
+    for (var i = 0; i < C.APPS.length; i++) html += menuItem(C.APPS[i].id, C.APPS[i].title, C.APPS[i].color);
+    html += '<p class="m-h">Juegos</p>' + menuItem('game', 'Atrapa estrellas') + menuItem('swipe', '¿Qué vemos?');
+    $('menuList').innerHTML = html; $('menu').hidden = false; S.menu = true;
+    TP.focus.setFocus(null); TP.focus.setScope($('menu'));
+    pushState();
+  }
+  function closeMenu() { if (!S.menu) return; S.menu = false; $('menu').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState(); }
+  function menuGo(id) {
+    closeMenu();
+    if (id === 'home') goHome();
+    else if (id === 'search') openSearch('');
+    else openContent(id);
+  }
+  function closeOverlays() { closeDialog(); closeMenu(); closeGuide(); }
+  function openSearch(q) {
+    closeOverlays();
+    if (S.screen === 'player') leavePlayer();
+    if (S.screen === 'game') stopGame();
+    S.query = q || ''; if (S.screen !== 'search') show('search'); renderSearch(); pushState();
+  }
+  function goHome() {
+    closeOverlays();
+    if (S.screen === 'player') { leavePlayer(); return; }
+    if (S.screen === 'game') { exitGame(); return; }
+    S.query = ''; show('home'); renderHome();
+  }
+
+  /* --- Volumen, brillo, experiencias, reposo, encontrar el control --- */
+  var volTimer = null;
+  function showVol() {
+    $('volIc').textContent = S.muted || !S.vol ? '🔇' : '🔊';
+    $('volBar').style.width = (S.muted ? 0 : S.vol) + '%'; $('volN').textContent = S.muted ? 'Silencio' : S.vol;
+    $('volHud').hidden = false; clearTimeout(volTimer); volTimer = setTimeout(function () { $('volHud').hidden = true; }, 2600);
+  }
+  function setVol(v) { S.vol = Math.max(0, Math.min(100, Math.round(v))); S.muted = false; showVol(); pushState(); }
+  function applyLook() {
+    $('dim').style.opacity = String(Math.round((100 - S.bright) * 0.0075 * 100) / 100);
+    $('audioOnly').hidden = !S.audioOnly;
+    if (S.audioOnly) $('audioWhat').textContent = S.screen === 'player' ? ($('pTitle').textContent + ' sigue sonando') : 'Pulsa cualquier botón para encender la pantalla';
+    var chip = $('expChip'); chip.hidden = !S.exp; chip.textContent = S.exp ? '✨ ' + S.exp : '';
+  }
+  function applyExperience(c, who) {
+    if (c.id === 'none') { S.exp = null; S.bright = 100; S.audioOnly = false; applyLook(); toast(who + ' quitó la experiencia'); pushState(); return; }
+    S.exp = c.name || 'Experiencia';
+    if (typeof c.vol === 'number') setVol(c.vol);
+    S.bright = Math.max(10, Math.min(100, c.bright || 100));
+    S.audioOnly = !!c.audio;
+    if (c.open === 'game') startGame();
+    applyLook();
+    toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%', 4200);
+    pushState();
+  }
+  function setOff(off) {
+    if (off === S.off) return;
+    S.off = off;
+    if (off) { closeOverlays(); stopFind(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
+    $('standby').hidden = !off;
+    pushState();
+  }
+  var findTimer = null, beepTimer = null, actx = null;
+  function beep() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      actx = actx || new AC();
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(actx.destination);
+      o.start(); setTimeout(function () { try { o.stop(); } catch (e) { /* ignore */ } }, 220);
+    } catch (e) { /* sin audio en este navegador */ }
+  }
+  function startFind() {
+    S.finding = true; $('findDlg').hidden = false; beep();
+    clearInterval(beepTimer); beepTimer = setInterval(beep, 900);
+    clearTimeout(findTimer); findTimer = setTimeout(stopFind, 15000);
+    pushState();
+  }
+  function stopFind() {
+    if (!S.finding) return;
+    S.finding = false; $('findDlg').hidden = true; clearInterval(beepTimer); clearTimeout(findTimer); pushState();
+  }
+  var sayTimer = null;
+  function showSay(text, reply) {
+    var b = $('voiceBubble');
+    b.innerHTML = '<span class="mic">🎤</span><div><div class="q">«' + esc(text) + '»</div>' + (reply ? '<div class="a">' + esc(reply) + '</div>' : '') + '</div>';
+    b.hidden = false; clearTimeout(sayTimer); sayTimer = setTimeout(function () { b.hidden = true; }, 4500);
+  }
+
   function leavePlayer() {
     if (S.content === 'series') { S.saved = curPos(); S.playing = false; }
     S.content = null; S.sceneIdx = -1;
@@ -154,24 +338,35 @@
     if (S.content === 'series') setPos(curPos(), !S.playing);
     else S.playing = !S.playing;
     paintPlayer(); pushState();
+    toast(S.playing ? '▶ Reproduciendo' : '❚❚ En pausa', 1500);
   }
   function seek(delta) {
-    if (S.content !== 'series') return;
+    if (S.content !== 'series') { toast(S.screen === 'player' ? 'En vivo no se puede adelantar' : 'No hay nada reproduciéndose', 1800); return; }
     setPos(curPos() + delta, S.playing); paintPlayer(); pushState();
     toast((delta > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(delta) + ' s', 1500);
   }
   function matchMinute() { return C.MATCH.startMinute + Math.floor((now() - S.matchStart) / 10000); }
   function paintPlayer() {
     var scene = $('scene');
+    $('chLogo').hidden = true;
+    if (S.content === 'live') {
+      var ch = C.channel(S.channel);
+      scene.className = 'scene'; scene.style.background = 'linear-gradient(160deg,' + ch.art[0] + ' 0%,' + ch.art[1] + ' 100%)';
+      $('pTag').textContent = 'Canal ' + ch.n + ' · ' + ch.name; $('pTitle').textContent = ch.show; $('pSub').textContent = 'A continuación: ' + ch.next;
+      $('scorebug').hidden = true; $('pBottom').hidden = true; $('liveStrip').hidden = false; $('pausePanel').hidden = true;
+      $('liveMin').textContent = S.playing ? 'Canal ' + ch.n : 'Pausado';
+      $('chLogo').innerHTML = '<div class="n">' + ch.n + '</div><div class="nm">' + esc(ch.name) + '</div>'; $('chLogo').hidden = false;
+      return;
+    }
     if (S.content === 'match') {
       var m = C.MATCH;
       scene.className = 'scene pitch'; scene.style.background = '';
-      $('pTag').textContent = m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
+      $('pTag').textContent = 'Canal 7 · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
       $('scorebug').hidden = false;
       $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + m.score[0] + ' – ' + m.score[1] +
         '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + matchMinute() + '\'</span>';
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
-      $('liveMin').textContent = S.playing ? 'Minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
+      $('liveMin').textContent = S.playing ? 'Canal 7 · minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
       $('pausePanel').hidden = true;
       return;
     }
@@ -239,7 +434,8 @@
     return out;
   }
   function startGame() {
-    closeDialog();
+    closeOverlays();
+    if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
     var g = S.game;
     if (g.timer) clearInterval(g.timer);
     g.state = 'running'; g.endsAt = now() + C.GAME.seconds * 1000; g.scores = {}; g.baskets = {}; g.stars = []; g.lastSpawn = 0;
@@ -291,26 +487,39 @@
     TP.focus.setScope($('gOver'), '[data-action="gameAgain"]');
     pushState();
   }
-  function exitGame() {
-    var g = S.game; if (g.timer) clearInterval(g.timer); g.timer = null; g.state = 'idle';
-    $('gOver').hidden = true; show('home'); renderHome();
-  }
+  function stopGame() { var g = S.game; if (g.timer) clearInterval(g.timer); g.timer = null; g.state = 'idle'; $('gOver').hidden = true; }
+  function exitGame() { stopGame(); show('home'); renderHome(); }
 
   /* ---------------- control remoto (teclado del STB o del celular) ---------------- */
   function handleKey(k) {
-    if (S.dialog === 'resume') {
-      if (k === 'BACK') { closeDialog(); return; }
-      if (k === 'LEFT' || k === 'RIGHT') { TP.focus.move(k.toLowerCase()); return; }
+    if (S.off) { if (k === 'OK' || k === 'POWER') setOff(false); return; }
+    if (S.finding) { stopFind(); return; }
+    if (S.audioOnly && k !== 'PLAY' && k !== 'REW' && k !== 'FF') { S.audioOnly = false; applyLook(); pushState(); toast('Pantalla encendida', 1500); return; }
+    if (S.menu || S.guide || S.dialog === 'resume') {
+      if (k === 'BACK') { if (S.menu) closeMenu(); else if (S.guide) closeGuide(); else closeDialog(); return; }
+      if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') { TP.focus.move(k.toLowerCase()); return; }
       if (k === 'OK') { TP.focus.activate(); return; }
       return;
     }
+    if (k === 'REW') { seek(-30); return; }
+    if (k === 'FF') { seek(30); return; }
     if (S.screen === 'player') {
-      if (k === 'OK' || k === 'PLAY') togglePause();
-      else if (k === 'LEFT') seek(-30);
-      else if (k === 'RIGHT') seek(30);
+      if (S.content === 'series') {
+        if (k === 'OK' || k === 'PLAY') togglePause();
+        else if (k === 'LEFT') seek(-30);
+        else if (k === 'RIGHT') seek(30);
+        else if (k === 'BACK') leavePlayer();
+        return;
+      }
+      if (k === 'UP') stepChannel(1);
+      else if (k === 'DOWN') stepChannel(-1);
+      else if (k === 'OK') openGuide();
+      else if (k === 'PLAY') togglePause();
+      else if (k === 'LEFT' || k === 'RIGHT' || k === 'INFO') showChBanner();
       else if (k === 'BACK') leavePlayer();
       return;
     }
+    if (k === 'PLAY') { toast('No hay nada reproduciéndose', 1800); return; }
     if (S.screen === 'game') {
       var g = S.game;
       if (g.state === 'running') {
@@ -320,11 +529,13 @@
       }
       if (k === 'BACK') { exitGame(); return; }
     }
+    if (S.screen === 'app' && k === 'BACK') { goHome(); return; }
     if (S.screen === 'search' && k === 'BACK') { S.query = ''; show('home'); renderHome(); return; }
     if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') TP.focus.move(k.toLowerCase());
     else if (k === 'OK') TP.focus.activate();
     /* BACK en la raíz (inicio): vacío a propósito (R6) */
   }
+  function atRoot() { return S.screen === 'home' && !S.dialog && !S.menu && !S.guide && !S.finding && !S.off && !S.audioOnly; }
 
   TP.focus.onActivate(function (el) {
     var a = el.getAttribute('data-action');
@@ -333,23 +544,33 @@
     else if (a === 'restart') { closeDialog(); openContent('series', 'start'); }
     else if (a === 'gameAgain') startGame();
     else if (a === 'goHome') exitGame();
+    else if (a === 'home') goHome();
+    else if (a === 'channel' || a === 'tune') tune(Number(el.getAttribute('data-n')));
+    else if (a === 'menuGo') menuGo(el.getAttribute('data-id'));
   });
 
   /* ---------------- comandos de los celulares ---------------- */
   function applyCommand(p, c) {
     var name = p.name || 'Alguien';
     S.lastCmdAt = now();
+    if (c.t === 'power') { setOff(typeof c.on === 'boolean' ? !c.on : !S.off); return; }
+    if (S.off) { if (c.t === 'key' && c.k === 'OK') setOff(false); return; }   /* en reposo solo se puede encender */
     if (c.t === 'key') handleKey(c.k);
-    else if (c.t === 'search') {
-      closeDialog();
-      if (S.screen === 'player') leavePlayer();
-      if (S.screen === 'game') exitGame();
-      S.query = c.q || ''; if (S.screen !== 'search') show('search'); renderSearch(); pushState();
-    }
+    else if (c.t === 'search') openSearch(c.q || '');
     else if (c.t === 'open') openContent(c.id, c.from || null);
+    else if (c.t === 'app') openContent(c.id);
+    else if (c.t === 'channel') tune(Number(c.n));
+    else if (c.t === 'chstep') { if (S.screen === 'player' && S.content !== 'series') stepChannel(c.d); else tune(S.channel); }
     else if (c.t === 'pause') { if (S.screen === 'player' && S.playing) togglePause(); }
     else if (c.t === 'play') { if (S.screen === 'player' && !S.playing) togglePause(); }
-    else if (c.t === 'home') { closeDialog(); if (S.screen === 'player') leavePlayer(); else if (S.screen === 'game') exitGame(); else { S.query = ''; show('home'); renderHome(); } }
+    else if (c.t === 'home') goHome();
+    else if (c.t === 'menu') { if (S.menu) closeMenu(); else openMenu(); }
+    else if (c.t === 'vol') { if (typeof c.v === 'number') setVol(c.v); else setVol((S.muted ? S.vol : S.vol) + (c.d || 0)); }
+    else if (c.t === 'mute') { S.muted = typeof c.on === 'boolean' ? c.on : !S.muted; showVol(); pushState(); }
+    else if (c.t === 'exp') applyExperience(c, name);
+    else if (c.t === 'find') { if (c.on === false) stopFind(); else startFind(); }
+    else if (c.t === 'say') showSay(c.text || '', c.reply || '');
+    else if (c.t === 'diag') toast(name + ' revisó la conexión · la TV responde en ' + (S.lat || '—') + ' ms', 4200);
     else if (c.t === 'pad') { var b = S.game.baskets[p.id]; if (b) b.dir = c.dir || 0; }
     else if (c.t === 'game') startGame();
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
@@ -387,8 +608,10 @@
   function poll() {
     if (!S.code || S.standby || polling) return;
     polling = true;
+    var t0 = now();
     store.listPlayers(S.code, function (err, ps) {
       polling = false;
+      if (!err) S.lat = S.lat ? Math.round(S.lat * 0.7 + (now() - t0) * 0.3) : now() - t0;
       if (err) {
         S.fails = (S.fails || 0) + 1;
         /* one blip doesn't count: show the banner after 2 failed checks in a row, with the reason */
@@ -422,27 +645,25 @@
   }
   function renderQR() {
     var url = phoneUrl(S.code);
-    $('qr').innerHTML = qrHtml(url, 11);
+    $('qr').innerHTML = qrHtml(url, 10);
     $('qr2').innerHTML = qrHtml(url, 7);
-    $('pairCode').textContent = S.code;
-    $('pairUrl').textContent = url.replace(/^https?:\/\//, '');
   }
   function newCode() {
     var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = '';
     for (var i = 0; i < 4; i++) s += A.charAt(Math.floor(Math.random() * A.length));
     return s;
   }
-  function savedCode() { try { return localStorage.getItem('cp-tv-code' + (CP.DEMO ? '-demo' : '')); } catch (e) { return null; } }
-  function keepCode(c) { try { localStorage.setItem('cp-tv-code' + (CP.DEMO ? '-demo' : ''), c); } catch (e) { /* R4: sin localStorage, sala nueva en cada carga */ } }
+  function savedCode() { try { return localStorage.getItem('cp-tv-code' + (CP.DEMO ? '-demo' : '') + (S.tvName !== 'Sala' ? '-' + S.tvName : '')); } catch (e) { return null; } }
+  function keepCode(c) { try { localStorage.setItem('cp-tv-code' + (CP.DEMO ? '-demo' : '') + (S.tvName !== 'Sala' ? '-' + S.tvName : ''), c); } catch (e) { /* R4: sin localStorage, sala nueva en cada carga */ } }
   function boot() {
-    show('boot'); $('bootText').textContent = 'Preparando la sala…';
+    show('boot'); $('bootText').textContent = 'Preparando la sala…'; $('tvName').textContent = S.tvName;
     var prev = savedCode();
     function create(tries) {
       var code = newCode();
       store.getRoom(code, function (err, existing) {
         if (err) { $('bootText').textContent = 'No se pudo crear la sala. Revisa la conexión.'; setTimeout(boot, 4000); return; }
         if (existing && tries < 6) return create(tries + 1);
-        store.createRoom(code, { kind: 'companion', status: 'companion', createdAt: now(), screen: 'home' }, function (err2) {
+        store.createRoom(code, { kind: 'companion', status: 'companion', createdAt: now(), screen: 'home', tvName: S.tvName, aliveAt: now() }, function (err2) {
           if (err2) { $('bootText').textContent = 'No se pudo crear la sala. Revisa la conexión.'; setTimeout(boot, 4000); return; }
           ready(code);
         });
@@ -450,6 +671,8 @@
     }
     function ready(code) {
       S.code = code; keepCode(code); renderQR(); show('home'); renderHome(); renderPairing(); startPolling(); poll(); pushState();
+      /* latido: los celulares ven si esta TV está encendida, en reposo o desconectada */
+      setInterval(function () { if (!S.standby) store.updateRoom(S.code, { aliveAt: now(), tvLat: S.lat, off: S.off, tvName: S.tvName }, function () {}); }, 20000);
     }
     if (prev) store.getRoom(prev, function (err, room) { if (!err && room && room.kind === 'companion') ready(prev); else create(0); });
     else create(0);
@@ -469,7 +692,7 @@
     if (!k) return;
     if (k === 'MENU' || k === 'EXIT') { TP.lifecycle.handleMenu(e); return; }
     if (e.preventDefault) e.preventDefault();
-    if (k === 'BACK' && S.screen === 'home' && !S.dialog) { TP.lifecycle.handleRootBack(e); return; }
+    if (k === 'BACK' && atRoot()) { TP.lifecycle.handleRootBack(e); return; }
     handleKey(k);
   });
   TP.focus.enablePointer();

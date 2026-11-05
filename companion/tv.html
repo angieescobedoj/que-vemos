@@ -18,8 +18,9 @@
   <!-- INICIO -->
   <section class="screen home" data-screen="home">
     <header class="topbar">
-      <div class="brand"><span class="brand-dot"></span>Sala TV</div>
+      <div class="brand"><span class="brand-dot"></span><span id="tvName">Sala</span></div>
       <div class="top-right">
+        <span class="chip exp" id="expChip" hidden></span>
         <span class="chip" id="phonesChip">Sin celulares vinculados</span>
         <span class="clock" id="clock"></span>
       </div>
@@ -29,15 +30,14 @@
       <div class="rows" id="rows"></div>
 
       <aside class="pair" id="pairPanel">
-        <p class="eyebrow">Companion</p>
-        <h2 class="pair-title">Usa tu celular con la TV</h2>
+        <p class="eyebrow">Tu celular es el control</p>
+        <h2 class="pair-title">Escanea y listo</h2>
         <div class="qr-card"><div class="qr" id="qr"></div></div>
-        <p class="pair-code">Sala <b id="pairCode">····</b></p>
-        <p class="pair-url" id="pairUrl"></p>
+        <p class="pair-sub">Se vincula solo, sin códigos.</p>
         <ul class="pair-list" id="pairList"></ul>
       </aside>
     </div>
-    <p class="hint">Control: flechas, Enter (OK) y Retroceso (BACK) del teclado, o tu celular. · v5</p>
+    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v6</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -48,7 +48,7 @@
     </header>
     <div class="search-box"><span class="search-q" id="searchQ"></span><span class="caret"></span></div>
     <div class="row-tiles search-results" id="searchResults"></div>
-    <p class="empty" id="searchEmpty" hidden>Sin resultados. Prueba con “marea”, “toros” o “estrellas”.</p>
+    <p class="empty" id="searchEmpty" hidden>Sin resultados. Prueba con “marea”, “netflix”, “canales” o “estrellas”.</p>
   </section>
 
   <!-- REPRODUCTOR -->
@@ -67,7 +67,9 @@
       <div class="bar"><i id="pBar"></i></div>
       <div class="p-times"><span id="pPos"></span><span id="pDur"></span></div>
     </div>
-    <div class="live-strip" id="liveStrip" hidden><span class="live">EN VIVO</span><span id="liveMin"></span></div>
+    <div class="live-strip" id="liveStrip" hidden><span class="live">EN VIVO</span><span id="liveMin"></span><span class="ch-keys">▲▼ cambiar canal · OK guía</span></div>
+    <div class="ch-logo" id="chLogo" hidden></div>
+    <div class="ch-banner" id="chBanner" hidden></div>
 
     <!-- A2 · Pausa enriquecida -->
     <aside class="pause-panel" id="pausePanel" hidden>
@@ -109,6 +111,18 @@
     </div>
   </section>
 
+  <!-- APP DE STREAMING (apertura simulada) -->
+  <section class="screen appscr" data-screen="app" hidden>
+    <div class="app-accent" id="appAccent"></div>
+    <div class="app-center">
+      <p class="eyebrow" id="appEyebrow">Abriendo…</p>
+      <h1 class="app-name" id="appName"></h1>
+      <div class="app-progress" id="appProgress"><i></i></div>
+      <p class="app-note" id="appNote" hidden></p>
+      <div class="bar-btns" id="appBtns" hidden></div>
+    </div>
+  </section>
+
   <section class="screen boot" data-screen="boot" hidden>
     <p class="eyebrow">Companion</p>
     <h1 class="display" id="bootText">Preparando la sala…</h1>
@@ -130,6 +144,35 @@
     </div>
   </div>
 </div>
+
+<!-- Menú lateral (se abre desde el celular con ☰) -->
+<aside class="menu" id="menu" hidden>
+  <p class="eyebrow">Menú</p>
+  <div class="menu-list" id="menuList"></div>
+</aside>
+
+<!-- Guía de canales (OK mientras ves TV en vivo) -->
+<div class="overlay guide-wrap" id="guide" hidden>
+  <div class="guide">
+    <p class="eyebrow">Guía de canales</p>
+    <div id="guideList"></div>
+  </div>
+</div>
+
+<!-- Encontrar mi control -->
+<div class="overlay" id="findDlg" hidden>
+  <div class="dlg center">
+    <div class="find-ring"><span>🔊</span></div>
+    <h2 class="dlg-title">Tu control está sonando</h2>
+    <p class="dlg-sub">Búscalo cerca del sillón. Pulsa cualquier botón para detenerlo.</p>
+  </div>
+</div>
+
+<div class="vol-hud" id="volHud" hidden><span class="vol-ic" id="volIc">🔊</span><div class="vol-bar"><i id="volBar"></i></div><span class="vol-n" id="volN"></span></div>
+<div class="voice-bubble" id="voiceBubble" hidden></div>
+<div class="dim" id="dim"></div>
+<div class="blackout" id="audioOnly" hidden><p>Solo audio · pantalla apagada</p><small id="audioWhat"></small></div>
+<div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
 <script src="../src/platform/totalplay/device.js"></script>
