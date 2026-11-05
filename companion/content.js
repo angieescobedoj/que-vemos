@@ -59,8 +59,7 @@
   var APPS = [
     { id: 'netflix', kind: 'app', title: 'Netflix', sub: 'App', tag: 'App', color: '#E50914' },
     { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
-    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' },
-    { id: 'ondemand', kind: 'app', title: 'On Demand', sub: 'Series y películas', tag: 'App', color: '#7A4CC4' }
+    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' }
   ];
   var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9 · 11', tag: 'Canales' };
 

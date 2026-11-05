@@ -272,3 +272,33 @@ b{font-weight:700}
 .tile.app.sq .t-name{position:absolute;left:.4rem;right:.4rem;top:50%;transform:translateY(-50%);text-align:center;font-size:1.05rem;font-weight:700;line-height:1.15}
 .tile.app.sq .t-cover{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
 .tile.app.sq.is-focused{border-color:#fff}
+
+/* Experiencias con pantalla propia (v6.3) */
+.x-title{font-size:2.3rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-top:.3rem}
+.x-sub{font-size:1.05rem;color:var(--ink-2);margin-top:.35rem}
+.x-row{display:flex;gap:1rem;margin-top:1.4rem;padding:1rem;margin-left:-1rem;margin-right:-1rem;overflow:hidden;min-height:17rem}
+.x-poster{position:relative;flex:0 0 auto;width:9.2rem;height:13.8rem;border-radius:.9rem;overflow:hidden;background:#241B38;border:2px solid transparent;text-align:left}
+.x-poster img{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.x-poster .x-pt{position:absolute;left:.6rem;right:.6rem;bottom:.6rem;font-size:1rem;font-weight:700;line-height:1.15}
+.x-poster .x-score{position:absolute;right:.45rem;top:.45rem;background:rgba(14,10,22,.85);font-size:.85rem;font-weight:700;padding:.15rem .45rem;border-radius:.4rem}
+.x-poster.is-focused{border-color:#fff;box-shadow:var(--ring);transform:scale(1.04)}
+.x-game{position:relative;flex:0 0 auto;width:22rem;height:13rem;border-radius:1.2rem;overflow:hidden;border:2px solid transparent;text-align:left}
+.x-game .t-art{position:absolute;left:0;top:0;right:0;bottom:0}
+.x-game .xg-body{position:absolute;left:1.2rem;right:1.2rem;bottom:1.1rem}
+.x-game .xg-t{display:block;font-size:1.7rem;font-weight:700}
+.x-game .xg-s{display:block;font-size:1rem;color:var(--ink-2);margin-top:.2rem}
+.x-game.is-focused{border-color:#fff;box-shadow:var(--ring);transform:scale(1.03)}
+.x-msg{font-size:1.1rem;color:var(--ink-2);align-self:center}
+.expscr .bar-btns{margin-top:.6rem}
+.mv-card{display:flex;gap:1.8rem;width:52rem;background:#1E1630;border:1px solid var(--line);border-radius:1.5rem;padding:1.6rem}
+.mv-poster{width:12rem;height:18rem;border-radius:1rem;flex:none;background:#2A2140}
+.mv-body{flex:1;min-width:0;display:flex;flex-direction:column}
+.mv-title{font-size:1.8rem;font-weight:700;letter-spacing:-.02em;margin:.25rem 0 .4rem}
+.mv-ov{font-size:.95rem;color:var(--ink-2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.mv-h{font-size:.85rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:1rem 0 .5rem}
+.mv-provs{display:flex;flex-wrap:wrap;gap:.6rem}
+.prov-btn{display:flex;align-items:center;gap:.55rem;font-size:.95rem;font-weight:700;padding:.45rem .9rem .45rem .45rem;border-radius:.8rem;background:var(--glass-2);border:2px solid transparent}
+.prov-btn img{width:1.9rem;height:1.9rem;border-radius:.45rem}
+.prov-btn.is-focused{border-color:#fff;box-shadow:var(--ring)}
+.mv-none{font-size:.95rem;color:var(--ink-2)}
+.vol-hud{top:13vh}

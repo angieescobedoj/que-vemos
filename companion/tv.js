@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0
+    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -216,13 +216,13 @@
 
   /* --- Apps de streaming: la apertura se simula (API de Totalplay pendiente, ver src/platform/totalplay/apps.js) --- */
   var appTimer = null;
-  function openApp(id) {
-    var a = C.byId(id); if (!a) return;
+  function openApp(id, alt) {
+    var a = C.byId(id) || alt; if (!a) return;
     closeOverlays();
     if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
     if (S.screen === 'game') stopGame();
     show('app'); S.app = id; pushState();
-    $('appAccent').style.background = a.color; $('appName').textContent = a.title; $('appLogo').innerHTML = CP.logos.img(id, 'w185', 'a-logo'); $('appEyebrow').textContent = 'Abriendo…';
+    $('appAccent').style.background = a.color; $('appName').textContent = a.title; $('appLogo').innerHTML = CP.logos.img(id, 'w185', 'a-logo') || (a.logo ? '<img class="a-logo" src="' + QV.catalog.img(a.logo, 'w185') + '" alt="">' : ''); $('appEyebrow').textContent = 'Abriendo…';
     $('appNote').hidden = true; $('appBtns').hidden = true;
     var pr = $('appProgress'); pr.hidden = false; pr.className = 'app-progress'; setTimeout(function () { pr.className = 'app-progress go'; }, 30);
     clearTimeout(appTimer);
@@ -231,8 +231,7 @@
       pr.hidden = true; $('appEyebrow').textContent = 'Simulación';
       $('appNote').textContent = 'En el decodificador real aquí se abre la app de ' + a.title + ' que ya está instalada. Regresar te trae de vuelta.';
       $('appNote').hidden = false;
-      $('appBtns').innerHTML = (id === 'ondemand' ? '<button class="btn" data-focusable data-action="open" data-id="series">Seguir viendo Marea Alta</button>' : '') +
-        '<button class="btn ghost" data-focusable data-action="home">Volver al inicio</button>';
+      $('appBtns').innerHTML = '<button class="btn ghost" data-focusable data-action="home">Volver al inicio</button>';
       $('appBtns').hidden = false;
       TP.focus.setFocus(null); TP.focus.ensure();
     }, 1300);
@@ -285,19 +284,107 @@
     $('dim').style.opacity = String(Math.round((100 - S.bright) * 0.0075 * 100) / 100);
     $('audioOnly').hidden = !S.audioOnly;
     if (S.audioOnly) $('audioWhat').textContent = S.screen === 'player' ? ($('pTitle').textContent + ' sigue sonando') : 'Pulsa cualquier botón para encender la pantalla';
-    var chip = $('expChip'); chip.hidden = !S.exp; chip.textContent = S.exp ? '✨ ' + S.exp : '';
+    var chip = $('expChip'); chip.hidden = !S.exp; chip.textContent = S.exp ? '✨ ' + S.exp + sleepTxt() : '';
+    if ($('xChip')) $('xChip').textContent = S.exp ? '✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt() : '';
   }
   function applyExperience(c, who) {
-    if (c.id === 'none') { S.exp = null; S.bright = 100; S.audioOnly = false; applyLook(); toast(who + ' quitó la experiencia'); pushState(); return; }
+    if (c.id === 'none') { S.exp = null; S.bright = 100; S.audioOnly = false; S.sleepAt = 0; applyLook(); toast(who + ' quitó la experiencia'); if (S.screen === 'exp') goHome(); pushState(); return; }
     S.exp = c.name || 'Experiencia';
     if (typeof c.vol === 'number') setVol(c.vol);
     S.bright = Math.max(10, Math.min(100, c.bright || 100));
     S.audioOnly = !!c.audio;
-    if (c.open === 'game') startGame();
+    S.sleepAt = c.sleep ? now() + c.sleep * 60000 : 0;
     applyLook();
-    toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%', 4200);
+    if (c.id === 'movies') openExpScreen('movies', c, c.who);
+    else if (c.id === 'gaming') openExpScreen('gaming', c, c.who);
+    else toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt(), 4200);
     pushState();
   }
+  function sleepTxt() { return S.sleepAt ? ' · se apaga en ' + Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) + ' min' : ''; }
+
+  /* --- Experiencias que cambian la pantalla ---
+     Noche de películas: recomendaciones reales de TMDB con los géneros que la persona eligió en su celular.
+     Modo gaming: lleva directo a los juegos disponibles. */
+  var GN = { 28: 'Acción', 12: 'Aventura', 16: 'Animación', 35: 'Comedia', 80: 'Crimen', 99: 'Documental', 18: 'Drama', 10751: 'Familia', 14: 'Fantasía', 27: 'Terror', 9648: 'Misterio', 10749: 'Romance', 878: 'Ciencia ficción', 53: 'Suspenso' };
+  var PROV_APP = { 8: 'netflix', 9: 'prime', 119: 'prime', 192: 'youtube', 188: 'youtube' };
+  var X = { kind: null, movies: [], seq: 0, cur: null };
+  function joinNames(list) { return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' y ' + list[list.length - 1]; }
+  function openExpScreen(kind, c, who) {
+    closeOverlays();
+    if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
+    if (S.screen === 'game') stopGame();
+    X.kind = kind; show('exp'); applyLook();
+    var off = '<button class="btn ghost" data-focusable data-action="expOff">Quitar experiencia</button>';
+    if (kind === 'gaming') {
+      $('xBrand').textContent = 'Modo gaming'; $('xEyebrow').textContent = 'Experiencia · Modo gaming';
+      $('xTitle').textContent = '¿A qué jugamos?';
+      $('xSub').textContent = 'Cada quien usa su celular como control. Elige con las flechas y OK.';
+      $('xRow').innerHTML = gameCard(C.GAME, '1 a 4 jugadores · 45 segundos') + gameCard(C.SWIPE, '2 o más · encuentren qué ver');
+      $('xBtns').innerHTML = off;
+      TP.focus.setFocus(null); TP.focus.ensure('.x-game');
+      return;
+    }
+    var genres = (c && c.genres) || [], names = [];
+    for (var i = 0; i < genres.length; i++) if (GN[genres[i]]) names.push(GN[genres[i]]);
+    $('xBrand').textContent = 'Noche de películas'; $('xEyebrow').textContent = 'Experiencia · Noche de películas';
+    $('xTitle').textContent = 'Elegidas para ' + (who || 'ti');
+    $('xSub').textContent = names.length ? 'Porque te gusta ' + joinNames(names).toLowerCase() + ' · en streaming en México' : 'Lo más visto en streaming en México';
+    $('xRow').innerHTML = '<p class="x-msg">Buscando recomendaciones…</p>';
+    $('xBtns').innerHTML = '<button class="btn" data-focusable data-action="open" data-id="swipe">¿No se deciden? Jueguen ¿Qué vemos?</button>' + off;
+    TP.focus.setFocus(null); TP.focus.ensure();
+    var seq = ++X.seq, page = 1 + Math.floor(Math.random() * 2);
+    var url = 'https://api.themoviedb.org/3/discover/movie?api_key=a7795e812c110c40515e414ceb379fac&language=es-MX&watch_region=MX' +
+      '&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=300&page=' + page + (genres.length ? '&with_genres=' + genres.join('|') : '');
+    QV.http.get(url, function (err, data) {
+      if (seq !== X.seq || S.screen !== 'exp') return;
+      var list = [], res = (data && data.results) || [];
+      for (var j = 0; j < res.length && list.length < 6; j++) if (res[j].poster_path) list.push(res[j]);
+      X.movies = list;
+      if (err || !list.length) { $('xRow').innerHTML = '<p class="x-msg">No pudimos traer recomendaciones ahora. Prueben ¿Qué vemos? para decidir en grupo.</p>'; TP.focus.ensure(); return; }
+      var html = '';
+      for (var k = 0; k < list.length; k++) {
+        var m = list[k];
+        html += '<button class="x-poster" data-focusable data-action="movie" data-i="' + k + '"><span class="x-pt">' + esc(m.title) + '</span>' +
+          '<img src="' + QV.catalog.img(m.poster_path, 'w342') + '" alt=""><span class="x-score">★ ' + (Math.round((m.vote_average || 0) * 10) / 10) + '</span></button>';
+      }
+      $('xRow').innerHTML = html;
+      TP.focus.setFocus(null); TP.focus.ensure('.x-poster');
+    });
+  }
+  function gameCard(item, sub) {
+    return '<button class="x-game" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
+      '<span class="xg-body"><span class="xg-t">' + esc(item.title) + '</span><span class="xg-s">' + esc(sub) + '</span></span></button>';
+  }
+  function openMovie(i) {
+    var m = X.movies[i]; if (!m) return;
+    X.cur = m; S.dialog = 'movie';
+    $('mvPoster').src = QV.catalog.img(m.poster_path, 'w342');
+    $('mvTitle').textContent = m.title;
+    $('mvMeta').textContent = (m.release_date || '').substring(0, 4) + ' · ★ ' + (Math.round((m.vote_average || 0) * 10) / 10);
+    $('mvOv').textContent = m.overview || '';
+    $('mvProvs').innerHTML = '<p class="mv-none">Buscando dónde verla…</p>';
+    $('movieDlg').hidden = false;
+    TP.focus.setFocus(null); TP.focus.setScope($('movieDlg'));
+    pushState();
+    QV.catalog.real.details(m.id, function (err, d) {
+      if (X.cur !== m || S.dialog !== 'movie') return;
+      var pv = err ? { flat: [], other: [] } : QV.catalog.providersOf(d), list = pv.flat.length ? pv.flat : pv.other, html = '';
+      for (var j = 0; j < list.length && j < 6; j++) {
+        var p = list[j];
+        html += '<button class="prov-btn" data-focusable data-action="prov" data-pid="' + p.provider_id + '" data-name="' + esc(p.provider_name) + '" data-logo="' + esc(p.logo_path || '') + '">' +
+          (p.logo_path ? '<img src="' + QV.catalog.img(p.logo_path, 'w92') + '" alt="">' : '') + 'Ver en ' + esc(p.provider_name) + '</button>';
+      }
+      $('mvProvs').innerHTML = html || '<p class="mv-none">Por ahora no está en streaming en México.</p>';
+      TP.focus.setFocus(null); TP.focus.setScope($('movieDlg'), '.prov-btn');
+    });
+  }
+  function openProvider(el) {
+    var pid = Number(el.getAttribute('data-pid')), app = PROV_APP[pid], name = el.getAttribute('data-name');
+    closeDialog();
+    if (app) openApp(app);
+    else openApp('p' + pid, { title: name, color: '#7A4CC4', logo: el.getAttribute('data-logo') });
+  }
+
   function setOff(off) {
     if (off === S.off) return;
     S.off = off;
@@ -426,7 +513,7 @@
   }
   function closeDialog() {
     if (!S.dialog) return;
-    S.dialog = null; $('resumeDlg').hidden = true; TP.focus.setScope(null); pushState();
+    S.dialog = null; $('resumeDlg').hidden = true; $('movieDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
   }
 
   /* --- C2 · juego: atrapa estrellas --- */
@@ -498,7 +585,7 @@
     if (S.off) { if (k === 'OK' || k === 'POWER') setOff(false); return; }
     if (S.finding) { stopFind(); return; }
     if (S.audioOnly && k !== 'PLAY' && k !== 'REW' && k !== 'FF') { S.audioOnly = false; applyLook(); pushState(); toast('Pantalla encendida', 1500); return; }
-    if (S.menu || S.guide || S.dialog === 'resume') {
+    if (S.menu || S.guide || S.dialog) {
       if (k === 'BACK') { if (S.menu) closeMenu(); else if (S.guide) closeGuide(); else closeDialog(); return; }
       if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') { TP.focus.move(k.toLowerCase()); return; }
       if (k === 'OK') { TP.focus.activate(); return; }
@@ -532,7 +619,7 @@
       }
       if (k === 'BACK') { exitGame(); return; }
     }
-    if (S.screen === 'app' && k === 'BACK') { goHome(); return; }
+    if ((S.screen === 'app' || S.screen === 'exp') && k === 'BACK') { goHome(); return; }
     if (S.screen === 'search' && k === 'BACK') { S.query = ''; show('home'); renderHome(); return; }
     if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') TP.focus.move(k.toLowerCase());
     else if (k === 'OK') TP.focus.activate();
@@ -550,6 +637,10 @@
     else if (a === 'home') goHome();
     else if (a === 'channel' || a === 'tune') tune(Number(el.getAttribute('data-n')));
     else if (a === 'menuGo') menuGo(el.getAttribute('data-id'));
+    else if (a === 'movie') openMovie(Number(el.getAttribute('data-i')));
+    else if (a === 'closeMovie') closeDialog();
+    else if (a === 'prov') openProvider(el);
+    else if (a === 'expOff') applyExperience({ id: 'none' }, 'Se');
   });
 
   /* ---------------- comandos de los celulares ---------------- */
@@ -686,6 +777,7 @@
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
     if (S.screen === 'player') { paintPlayer(); tickSeries(); }
+    if (S.sleepAt) { if (now() >= S.sleepAt) { S.sleepAt = 0; S.exp = null; S.bright = 100; applyLook(); setOff(true); } else if (d.getSeconds() === 0) applyLook(); }
   }, 1000);
 
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */

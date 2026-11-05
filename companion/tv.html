@@ -8,7 +8,7 @@
 <link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="tv.css?v=6.2">
+<link rel="stylesheet" href="tv.css?v=6.3">
 </head>
 <body>
 <div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
@@ -37,7 +37,7 @@
         <ul class="pair-list" id="pairList"></ul>
       </aside>
     </div>
-    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v6.2</p>
+    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v6.3</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -124,6 +124,19 @@
     </div>
   </section>
 
+  <!-- EXPERIENCIAS que cambian la pantalla: Noche de películas (recomendaciones) y Modo gaming (juegos) -->
+  <section class="screen expscr" data-screen="exp" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span><span id="xBrand">Experiencia</span></div>
+      <div class="top-right"><span class="chip exp" id="xChip"></span></div>
+    </header>
+    <p class="eyebrow" id="xEyebrow"></p>
+    <h1 class="x-title" id="xTitle"></h1>
+    <p class="x-sub" id="xSub"></p>
+    <div class="x-row" id="xRow"></div>
+    <div class="bar-btns" id="xBtns"></div>
+  </section>
+
   <section class="screen boot" data-screen="boot" hidden>
     <p class="eyebrow">Companion</p>
     <h1 class="display" id="bootText">Preparando la sala…</h1>
@@ -160,6 +173,21 @@
   </div>
 </div>
 
+<!-- Detalle de una recomendación (Noche de películas) -->
+<div class="overlay" id="movieDlg" hidden role="dialog" aria-modal="true">
+  <div class="mv-card">
+    <img class="mv-poster" id="mvPoster" alt="">
+    <div class="mv-body">
+      <p class="eyebrow" id="mvMeta"></p>
+      <h2 class="mv-title" id="mvTitle"></h2>
+      <p class="mv-ov" id="mvOv"></p>
+      <p class="mv-h">Dónde verla</p>
+      <div class="mv-provs" id="mvProvs"></div>
+      <div class="bar-btns"><button class="btn ghost" data-focusable data-action="closeMovie">Volver a las recomendaciones</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- Encontrar mi control -->
 <div class="overlay" id="findDlg" hidden>
   <div class="dlg center">
@@ -176,17 +204,18 @@
 <div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
-<script src="../src/platform/totalplay/device.js?v=6.2"></script>
-<script src="../src/platform/totalplay/debug.js?v=6.2"></script>
-<script src="../src/platform/totalplay/keys.js?v=6.2"></script>
-<script src="../src/platform/totalplay/lifecycle.js?v=6.2"></script>
-<script src="../src/platform/totalplay/focus.js?v=6.2"></script>
-<script src="../vendor/qrcode.js?v=6.2"></script>
-<script src="../src/services/http.js?v=6.2"></script>
-<script src="../src/services/firestore-rest.js?v=6.2"></script>
-<script src="content.js?v=6.2"></script>
-<script src="logos.js?v=6.2"></script>
-<script src="store.js?v=6.2"></script>
-<script src="tv.js?v=6.2"></script>
+<script src="../src/platform/totalplay/device.js?v=6.3"></script>
+<script src="../src/platform/totalplay/debug.js?v=6.3"></script>
+<script src="../src/platform/totalplay/keys.js?v=6.3"></script>
+<script src="../src/platform/totalplay/lifecycle.js?v=6.3"></script>
+<script src="../src/platform/totalplay/focus.js?v=6.3"></script>
+<script src="../vendor/qrcode.js?v=6.3"></script>
+<script src="../src/services/http.js?v=6.3"></script>
+<script src="../src/services/firestore-rest.js?v=6.3"></script>
+<script src="../src/services/catalog.js?v=6.3"></script>
+<script src="content.js?v=6.3"></script>
+<script src="logos.js?v=6.3"></script>
+<script src="store.js?v=6.3"></script>
+<script src="tv.js?v=6.3"></script>
 </body>
 </html>

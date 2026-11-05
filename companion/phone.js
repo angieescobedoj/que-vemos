@@ -27,7 +27,7 @@
     { name: 'Terraza', state: 'off', vol: 30 }
   ];
   var STATE_TXT = { on: 'Conectado', sleep: 'En reposo', off: 'Desconectado' };
-  var APP_NAMES = { netflix: 'Netflix', prime: 'Prime Video', youtube: 'YouTube', ondemand: 'On Demand' };
+  var APP_NAMES = { netflix: 'Netflix', prime: 'Prime Video', youtube: 'YouTube' };
 
   /* ---------- háptica: vibración en Android; en iPhone (iOS 18+) el truco del interruptor nativo ---------- */
   var hapLabel = null;
@@ -165,6 +165,8 @@
       html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">Buscando “' + esc(r.query) + '”</div><div class="s">Usa las flechas y OK para elegir</div></div>';
     } else if (r.screen === 'swipe') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#F38BC9,#5470D6)"></span><div><div class="k">En la TV</div><div class="t">¿Qué vemos? · match de películas</div><div class="s">Muévete con el control · Regresar vuelve a Sala TV</div></div>';
+    } else if (r.screen === 'exp') {
+      html = '<span class="thumb" style="background:linear-gradient(150deg,#E58AC3,#7A4CC4)"></span><div><div class="k">En la TV · experiencia</div><div class="t">' + esc(r.exp || 'Experiencia') + '</div><div class="s">' + (r.dialog === 'movie' ? 'Elige dónde verla con OK' : 'Elige con las flechas y OK') + '</div></div>';
     } else if (r.screen === 'game') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
     } else {
@@ -447,7 +449,6 @@
     if (/netflix/.test(t)) return { cmds: [{ t: 'app', id: 'netflix' }], reply: 'Abriendo Netflix' };
     if (/(prime|amazon)/.test(t)) return { cmds: [{ t: 'app', id: 'prime' }], reply: 'Abriendo Prime Video' };
     if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
-    if (/(on demand|ondemand|bajo demanda)/.test(t)) return { cmds: [{ t: 'app', id: 'ondemand' }], reply: 'Abriendo On Demand' };
     if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'channel', n: 7 }], reply: 'Poniendo el partido en el canal 7' };
     if (/(marea alta|seguir viendo|la serie)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Marea Alta' };
@@ -478,9 +479,9 @@
 
   /* ---------- experiencias: ajustes de la TV en un toque (volumen, brillo, pantalla) ---------- */
   var PRESETS = [
-    { id: 'movies', ic: '🍿', name: 'Noche de películas', vol: 60, bright: 65, desc: 'Volumen 60 · brillo 65%' },
-    { id: 'night', ic: '🌙', name: 'Modo noche', vol: 20, bright: 35, desc: 'Volumen 20 · brillo 35%' },
-    { id: 'gaming', ic: '🎮', name: 'Modo gaming', vol: 70, bright: 100, open: 'game', desc: 'Volumen 70 · brillo 100% · abre Atrapa estrellas' },
+    { id: 'movies', ic: '🍿', name: 'Noche de películas', vol: 60, bright: 65, desc: 'Películas recomendadas con tus gustos · luz baja' },
+    { id: 'night', ic: '🌙', name: 'Modo noche', vol: 20, bright: 35, sleep: 30, desc: 'Volumen y brillo bajos · la TV se apaga en 30 min' },
+    { id: 'gaming', ic: '🎮', name: 'Modo gaming', vol: 70, bright: 100, desc: 'Te lleva a los juegos · volumen alto' },
     { id: 'listen', ic: '🎧', name: 'Solo escuchar', vol: 45, bright: 100, audio: true, desc: 'Apaga la pantalla, sigue el sonido' }
   ];
   function customs() { return lsJSON('cp-exps', []); }
@@ -492,7 +493,7 @@
   }
   function applyExp(e, quiet) {
     if (e.id === 'none') { send({ t: 'exp', id: 'none' }); if (!quiet) toast('Experiencia quitada'); }
-    else { send({ t: 'exp', id: e.id, name: e.name, vol: e.vol, bright: e.bright, audio: !!e.audio, open: e.open || '' }); if (!quiet) toast('✨ ' + e.name + ' en la TV'); }
+    else { send({ t: 'exp', id: e.id, name: e.name, vol: e.vol, bright: e.bright, audio: !!e.audio, sleep: e.sleep || 0, genres: e.id === 'movies' ? tastes() : [], who: ls.get('cp-name') || '' }); if (!quiet) toast('✨ ' + e.name + ' en la TV'); }
     if (S.fake) return;
     if (S.sheet === 'exps') closeSheet();
   }
@@ -507,6 +508,15 @@
     var c = customs(); if (c.length) { html += '<p class="lf">Tus experiencias</p>'; for (var j = 0; j < c.length; j++) html += expRow(c[j], true); }
     html += '<div class="stack" style="margin-top:8px"><button class="btn" data-act="newExp">＋ Crear experiencia</button>' + (S.room && S.room.exp ? '<button class="btn ghost" data-exp="none">Quitar experiencia actual</button>' : '') + '</div>';
     openSheet('exps', html);
+  }
+  /* Gustos para Noche de películas: se eligen una vez y se recuerdan en este celular */
+  var GENRES = [[35, 'Comedia'], [28, 'Acción'], [18, 'Drama'], [27, 'Terror'], [10749, 'Romance'], [878, 'Ciencia ficción'], [16, 'Animación'], [53, 'Suspenso'], [12, 'Aventura'], [10751, 'Familia'], [99, 'Documental'], [80, 'Crimen']];
+  function tastes() { var t = lsJSON('cp-tastes', []); return Object.prototype.toString.call(t) === '[object Array]' ? t.slice(0, 3) : []; }
+  function openTastes() {
+    var mine = tastes(), html = '<h2>🍿 Noche de películas</h2><p class="sub">¿Qué se te antoja? Elige hasta 3 y te recomendamos en la TV.</p><div class="chips">';
+    for (var i = 0; i < GENRES.length; i++) html += '<button class="' + (mine.indexOf(GENRES[i][0]) >= 0 ? 'on' : '') + '" data-gen="' + GENRES[i][0] + '">' + GENRES[i][1] + '</button>';
+    html += '</div><div class="stack"><button class="btn" data-act="tastesGo">Ver recomendaciones en la TV</button><button class="btn ghost" data-act="exps">Volver</button></div>';
+    openSheet('tastes', html);
   }
   function openNewExp() {
     var v = S.room && S.room.vol != null ? S.room.vol : 30, b = S.room && S.room.bright != null ? S.room.bright : 100;
@@ -581,7 +591,12 @@
     else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
     else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
     else if (g('data-say')) runVoice(g('data-say'));
-    else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex) applyExp(ex); }
+    else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex && ex.id === 'movies') openTastes(); else if (ex) applyExp(ex); }
+    else if (g('data-gen')) {
+      if (!el.classList.contains('on') && document.querySelectorAll('[data-gen].on').length >= 3) toast('Máximo 3: quita uno primero');
+      else el.classList.toggle('on');
+    }
+    else if (act === 'tastesGo') { var on = document.querySelectorAll('[data-gen].on'), ids = []; for (var gi = 0; gi < on.length; gi++) ids.push(Number(on[gi].getAttribute('data-gen'))); ls.set('cp-tastes', JSON.stringify(ids)); applyExp(expById('movies')); closeSheet(); }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);

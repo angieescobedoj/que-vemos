@@ -74,7 +74,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .vol button{font-size:20px;padding:10px 6px}
 .vol span{text-align:center;font-size:13px;font-weight:700;color:var(--ink-2)}
 .vol button.on{background:var(--red);border-color:var(--red);color:#fff}
-.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .apps button{background:#100C18;border:1px solid var(--line);border-radius:14px;padding:16px 4px 12px;font-size:12px;font-weight:700;position:relative;overflow:hidden}
 .apps button img{display:block;width:40px;height:40px;border-radius:10px;margin:0 auto 7px}
 .apps button:before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
@@ -152,6 +152,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .in-l{width:100%;border:1px solid #DDD3EA;border-radius:12px;padding:12px 14px;font-size:16px;color:#1E1A1A;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .chips button{background:#F1EDF6;color:#4A2E7A;font-size:13px;font-weight:600;border-radius:999px;padding:8px 12px}
+.chips button.on{background:var(--violet);color:#fff}
 .mic{width:96px;height:96px;border-radius:50%;background:var(--violet);color:#fff;font-size:38px;display:flex;align-items:center;justify-content:center;margin:8px auto 10px}
 .mic.on{background:var(--red);animation:pl 1s ease-in-out infinite}
 @keyframes pl{50%{transform:scale(1.07)}}
@@ -242,7 +243,6 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
         <button data-app="netflix" style="--c:#E50914">Netflix</button>
         <button data-app="prime" style="--c:#1A98FF">Prime Video</button>
         <button data-app="youtube" style="--c:#FF0033">YouTube</button>
-        <button data-app="ondemand" style="--c:#7A4CC4">On Demand</button>
       </div>
       <p class="sec-c">Más</p>
       <div class="more">
@@ -281,11 +281,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   <p class="hint">Mantén presionado para mover tu canasta</p>
 </section>
 
-<script src="../src/services/http.js?v=6.2"></script>
-<script src="../src/services/firestore-rest.js?v=6.2"></script>
-<script src="content.js?v=6.2"></script>
-<script src="logos.js?v=6.2"></script>
-<script src="store.js?v=6.2"></script>
-<script src="phone.js?v=6.2"></script>
+<script src="../src/services/http.js?v=6.3"></script>
+<script src="../src/services/firestore-rest.js?v=6.3"></script>
+<script src="content.js?v=6.3"></script>
+<script src="logos.js?v=6.3"></script>
+<script src="store.js?v=6.3"></script>
+<script src="phone.js?v=6.3"></script>
 </body>
 </html>
