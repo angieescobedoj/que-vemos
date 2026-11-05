@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Companion · Sala TV</title>
+<!-- R1: Montserrat local (sin CDN) -->
+<link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tv.css">
+</head>
+<body>
+<div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
+
+<main class="app" id="app">
+
+  <!-- INICIO -->
+  <section class="screen home" data-screen="home">
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span>Sala TV</div>
+      <div class="top-right">
+        <span class="chip" id="phonesChip">Sin celulares vinculados</span>
+        <span class="clock" id="clock"></span>
+      </div>
+    </header>
+
+    <div class="home-body">
+      <div class="rows" id="rows"></div>
+
+      <aside class="pair" id="pairPanel">
+        <p class="eyebrow">Companion</p>
+        <h2 class="pair-title">Usa tu celular con la TV</h2>
+        <div class="qr-card"><div class="qr" id="qr"></div></div>
+        <p class="pair-code">Sala <b id="pairCode">····</b></p>
+        <p class="pair-url" id="pairUrl"></p>
+        <ul class="pair-list" id="pairList"></ul>
+      </aside>
+    </div>
+    <p class="hint">Control: flechas, Enter (OK) y Retroceso (BACK) del teclado, o tu celular.</p>
+  </section>
+
+  <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
+  <section class="screen search" data-screen="search" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span>Buscar</div>
+      <div class="top-right"><span class="chip">Escribe desde tu celular</span></div>
+    </header>
+    <div class="search-box"><span class="search-q" id="searchQ"></span><span class="caret"></span></div>
+    <div class="row-tiles search-results" id="searchResults"></div>
+    <p class="empty" id="searchEmpty" hidden>Sin resultados. Prueba con “marea”, “toros” o “estrellas”.</p>
+  </section>
+
+  <!-- REPRODUCTOR -->
+  <section class="screen player" data-screen="player" hidden>
+    <div class="scene" id="scene"><div class="scene-sun"></div><div class="scene-hz"></div><div class="scene-top"></div></div>
+    <div class="p-top">
+      <div>
+        <p class="eyebrow" id="pTag"></p>
+        <h1 class="p-title" id="pTitle"></h1>
+        <p class="p-sub" id="pSub"></p>
+      </div>
+      <div class="scorebug" id="scorebug" hidden></div>
+    </div>
+    <div class="p-bottom" id="pBottom">
+      <div class="p-state" id="pState"></div>
+      <div class="bar"><i id="pBar"></i></div>
+      <div class="p-times"><span id="pPos"></span><span id="pDur"></span></div>
+    </div>
+    <div class="live-strip" id="liveStrip" hidden><span class="live">EN VIVO</span><span id="liveMin"></span></div>
+
+    <!-- A2 · Pausa enriquecida -->
+    <aside class="pause-panel" id="pausePanel" hidden>
+      <p class="eyebrow">En esta escena · <span id="ppPlace"></span></p>
+      <div class="pp-group"><p class="pp-h">Personajes</p><div id="ppCast"></div></div>
+      <div class="pp-group"><p class="pp-h">Está sonando</p><div id="ppSong"></div></div>
+      <div class="pp-group"><p class="pp-h">Productos</p><div id="ppProd"></div></div>
+      <p class="pp-more">Ver más en tu celular</p>
+    </aside>
+
+  </section>
+
+  <!-- C2 · JUEGO -->
+  <section class="screen game" data-screen="game" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span>Atrapa estrellas</div>
+      <div class="top-right"><span class="chip" id="gameTime"></span></div>
+    </header>
+    <div class="game-wrap">
+      <div class="stage" id="stage"></div>
+      <aside class="g-side">
+        <p class="eyebrow">Marcador</p>
+        <div id="gScores"></div>
+        <div class="g-join" id="gJoin">
+          <div class="qr-card small"><div class="qr" id="qr2"></div></div>
+          <p>Escanea para jugar con tu celular como control</p>
+        </div>
+      </aside>
+    </div>
+    <div class="g-over" id="gOver" hidden>
+      <div class="g-over-card">
+        <p class="eyebrow">Fin del juego</p>
+        <h1 class="display" id="gWinner"></h1>
+        <div class="bar-btns">
+          <button class="btn" data-focusable data-action="gameAgain">Jugar otra vez</button>
+          <button class="btn ghost" data-focusable data-action="goHome">Salir</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen boot" data-screen="boot" hidden>
+    <p class="eyebrow">Companion</p>
+    <h1 class="display" id="bootText">Preparando la sala…</h1>
+  </section>
+</main>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- B3 · Continuar donde lo dejaste -->
+<div class="overlay" id="resumeDlg" hidden role="dialog" aria-modal="true">
+  <div class="dlg">
+    <p class="eyebrow">Marea Alta · T1 E3</p>
+    <h2 class="dlg-title">¿Continuar donde lo dejaste?</h2>
+    <p class="dlg-sub" id="resumeSub"></p>
+    <div class="bar"><i id="resumeBar"></i></div>
+    <div class="bar-btns">
+      <button class="btn" data-focusable data-action="resume">Continuar</button>
+      <button class="btn ghost" data-focusable data-action="restart">Desde el inicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
+<script src="../src/platform/totalplay/device.js"></script>
+<script src="../src/platform/totalplay/debug.js"></script>
+<script src="../src/platform/totalplay/keys.js"></script>
+<script src="../src/platform/totalplay/lifecycle.js"></script>
+<script src="../src/platform/totalplay/focus.js"></script>
+<script src="../vendor/qrcode.js"></script>
+<script src="../src/services/http.js"></script>
+<script src="../src/services/firestore-rest.js"></script>
+<script src="content.js"></script>
+<script src="store.js"></script>
+<script src="tv.js"></script>
+</body>
+</html>

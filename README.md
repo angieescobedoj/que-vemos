@@ -43,3 +43,26 @@ vendor/qrcode.js              generador de QR ES5 (sin CDN)
 - **Abrir apps de terceros desde la web app** (`src/platform/totalplay/apps.js`): ninguna fuente documenta una API; el PDF de integración indica que el Portal de Totalplay es quien cede el control a las apps. En la demo el botón muestra una pantalla de confirmación simulada. Cuando ingeniería confirme la API, se conecta ahí y el resto no cambia.
 - Soporte en el runtime Opera del STB de: XHR con CORS hacia `firestore.googleapis.com` / `api.themoviedb.org` / `image.tmdb.org`, flexbox, variables CSS, `clamp()`, `getComputedStyle`, `matchMedia`, woff2 (hay woff de respaldo y Arial como fallback). Todo tiene fallback razonable o degrada; nada probado en hardware todavía.
 - Red de producción (HTTPS/CORS/allowlist): usar solo la URL que apruebe ingeniería.
+
+## Companion (prototipo celular + TV) — `companion/`
+
+Prototipo para explorar cómo el celular puede trabajar con la TV de Totalplay. La TV simula la STB y el celular funciona como Companion; se comunican en tiempo real por el mismo Firebase del juego (`rooms/{código}` y `rooms/{código}/players/{id}`, con polling por REST).
+
+- **`companion/tv.html`** — pantalla de TV (ES5, lineamientos de la STB: Montserrat local, sin blur, navegación con D-pad). Muestra un QR para vincular celulares.
+- **`companion/index.html`** — el Companion en el celular (se abre al escanear el QR).
+
+Flujos incluidos (ideas priorizadas en la votación del workshop):
+
+| Idea | Qué pasa |
+|---|---|
+| A1 · Datos de lo que ves | En el partido en vivo, el celular muestra alineación, estadísticas y datos; la TV avisa quién está consultando. |
+| A2 · Pausa enriquecida | Al pausar Marea Alta (desde la TV o “Pausar y descubrir” en el celular), la TV muestra personajes, canción y productos de la escena. |
+| A4 · Está sonando | Al cambiar de escena, la canción llega al celular como aviso para guardarla en tu soundtrack. |
+| B1 · Control inteligente | D-pad, OK, regresar, inicio, play/pausa y búsqueda escribiendo en el celular. |
+| B3 · Continuar donde lo dejaste | Al abrir Marea Alta, la TV ofrece continuar; también se puede continuar desde la pestaña “Seguir viendo” del celular. |
+| C2 · Control de videojuegos | “Atrapa estrellas”: cada celular es un control y mueve su canasta en la TV (1 a 4 jugadores). |
+
+Todo el contenido (equipos, series, actores, canciones y productos) es ficticio.
+
+**Probar:** abrir `…/companion/tv.html` en la compu (pantalla completa) y escanear el QR con uno o varios celulares. Control desde el teclado: flechas, Enter (OK) y Retroceso (BACK).
+**Ensayo sin celulares:** `…/companion/tv.html?demo=1` y abrir el link bajo el QR en otras pestañas del mismo navegador (cada pestaña es un celular).
