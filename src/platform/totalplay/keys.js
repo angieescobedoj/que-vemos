@@ -19,6 +19,9 @@
     var code = event.keyCode || event.which;
     for (var name in KEYS) if (KEYS.hasOwnProperty(name) && KEYS[name] === code) return name;
     if (!(TP.device && TP.device.hasTotalplayRuntime()) && DESKTOP_ALIASES[code]) return DESKTOP_ALIASES[code];
+    /* Diagnostics on the box: any key the app doesn't know is written to the serial/DevTools log, so if a remote
+       sends a different code for BACK than the guide's 461, engineering can see it right away. */
+    if (TP.device && TP.device.hasTotalplayRuntime() && TP.debug) TP.debug.log('unmapped key: ' + code);
     return null;
   }
   TP.keys = { KEYS: KEYS, normalizeKey: normalizeKey };

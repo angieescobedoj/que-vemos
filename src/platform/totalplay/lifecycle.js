@@ -38,7 +38,9 @@
     var url = getReturnUrl();
     if (url) location.href = url;
   }
-  function handleMenu(event) { if (event && event.preventDefault) event.preventDefault(); }
+  /* MENU / EXIT: left completely to the STB, which takes the user out natively. No preventDefault here:
+     blocking the default would stop the platform from doing its job (R6 forbids our own exit, not the native one). */
+  function handleMenu(event) { /* intentionally empty */ }
 
   function getPowerState() {
     if (!(TP.device && TP.device.hasTotalplayRuntime())) return 'WAKEUP';
