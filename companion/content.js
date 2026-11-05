@@ -63,6 +63,39 @@
   ];
   var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9 · 11', tag: 'Canales' };
 
+  /* Catálogo simulado de películas para "Noche de películas" (mismo enfoque que el modo demo del juego ¿Qué vemos?):
+     títulos inventados, portadas en degradado, cada una disponible en una de las apps del decodificador. */
+  var GENRE_IDS = [35, 28, 18, 27, 10749, 878, 16, 53, 12, 10751, 99, 80];
+  var GENRE_NAMES = { 35: 'Comedia', 28: 'Acción', 18: 'Drama', 27: 'Terror', 10749: 'Romance', 878: 'Ciencia ficción', 16: 'Animación', 53: 'Suspenso', 12: 'Aventura', 10751: 'Familia', 99: 'Documental', 80: 'Crimen' };
+  var MOVIES = (function () {
+    var T = ['La última función', 'El silencio del lago', 'Noches en Coyoacán', 'Lo que queda de octubre', 'El club de los martes', 'Sombras sobre Marte',
+      'Un verano en Valparaíso', 'La casa de los espejos', 'Regreso a la montaña', 'Cartas para Elena', 'El secreto de Lucía', 'Fuego en la niebla',
+      'Tres bodas y un perro', 'Código Tormenta', 'La herencia del faro', 'Pasillo 9', 'Amor a destiempo', 'Órbita cero',
+      'Pequeño dragón azul', 'Doble filo', 'Expedición Amazonas', 'Mi familia en apuros', 'Planeta océano', 'El robo del siglo',
+      'Vecinos de terror', 'La carrera final', 'Mientras dormías', 'Café para dos', 'Línea de fuego', 'El jardín de Nora',
+      'Ciudad sin luz', 'La isla de los gatos', 'Profundo', 'Cuarenta y ocho horas', 'Tierra de gigantes', 'El último tren'];
+    var apps = ['netflix', 'prime', 'youtube'], seed = 11, out = [];
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    for (var i = 0; i < 36; i++) {
+      var h = Math.floor(rnd() * 360);
+      out.push({ id: 'm' + i, title: T[i], year: 2008 + Math.floor(rnd() * 18),
+        genres: [GENRE_IDS[i % 12], GENRE_IDS[(i * 5 + 3) % 12]], min: 88 + Math.floor(rnd() * 50), score: Math.round((6.2 + rnd() * 2.4) * 10) / 10,
+        app: apps[(i + Math.floor(i / 12)) % 3], art: ['hsl(' + h + ',48%,48%)', 'hsl(' + ((h + 50) % 360) + ',45%,14%)', 'hsla(' + ((h + 180) % 360) + ',70%,75%,.45)'] });
+    }
+    return out;
+  })();
+  /* Las 6 que mejor coinciden con los géneros elegidos (con un poco de azar para que no salgan siempre las mismas) */
+  function recommend(genres, n) {
+    var list = MOVIES.slice(), g = genres || [];
+    for (var i = 0; i < list.length; i++) {
+      var hit = 0; for (var j = 0; j < g.length; j++) if (list[i].genres[0] === g[j] || list[i].genres[1] === g[j]) hit++;
+      list[i]._rank = hit * 10 + list[i].score + Math.random() * 2.5;
+    }
+    list.sort(function (a, b) { return b._rank - a._rank; });
+    return list.slice(0, n || 6);
+  }
+  function movieById(id) { for (var i = 0; i < MOVIES.length; i++) if (MOVIES[i].id === id) return MOVIES[i]; return null; }
+
   function sceneAt(pos) {
     var s = SERIES.scenes;
     for (var i = 0; i < s.length; i++) if (pos >= s[i].from && pos < s[i].to) return i;
@@ -80,5 +113,5 @@
   }
   function all() { return [SERIES, MATCH, LIVE].concat(APPS).concat([GAME, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

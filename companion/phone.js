@@ -156,6 +156,9 @@
     } else if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
       html = '<span class="thumb" style="background:linear-gradient(150deg,' + sc.art[0] + ',' + sc.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + '</div><div class="t">Marea Alta · T1 E3</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
+    } else if (r.screen === 'player' && r.content === 'movie' && r.movie) {
+      var mv = r.movie, mp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
+      html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
     } else if (r.screen === 'player' && r.content === 'match') {
       html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">Canal 7 · en vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
     } else if (r.screen === 'player' && r.content === 'live') {

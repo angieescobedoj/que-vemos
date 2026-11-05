@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0
+    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -31,7 +31,9 @@
   }
 
   function curPos() { return S.playing ? S.pos + (now() - S.posAt) / 1000 : S.pos; }
-  function setPos(p, playing) { S.pos = Math.max(0, Math.min(C.SERIES.duration - 1, p)); S.posAt = now(); S.playing = playing; }
+  function dur() { return S.content === 'movie' && S.movie ? S.movie.min * 60 : C.SERIES.duration; }
+  function setPos(p, playing) { S.pos = Math.max(0, Math.min(dur() - 1, p)); S.posAt = now(); S.playing = playing; }
+  function vod() { return S.content === 'series' || S.content === 'movie'; }
   function playerName(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return S.players[i].name || 'Alguien'; return 'Alguien'; }
   function playerIndex(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return i; return 0; }
   function connected() { var out = [], t = now(); for (var i = 0; i < S.players.length; i++) if (t - (S.players[i].seen || 0) < SEEN_MS) out.push(S.players[i]); return out; }
@@ -55,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
-      audioOnly: S.audioOnly, exp: S.exp || '', menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now()
+      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app, dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now()
     };
   }
   function pushState() {
@@ -65,7 +67,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -332,24 +334,36 @@
     $('xRow').innerHTML = '<p class="x-msg">Buscando recomendaciones…</p>';
     $('xBtns').innerHTML = '<button class="btn" data-focusable data-action="open" data-id="swipe">¿No se deciden? Jueguen ¿Qué vemos?</button>' + off;
     TP.focus.setFocus(null); TP.focus.ensure();
-    var seq = ++X.seq, page = 1 + Math.floor(Math.random() * 2);
-    var url = 'https://api.themoviedb.org/3/discover/movie?api_key=a7795e812c110c40515e414ceb379fac&language=es-MX&watch_region=MX' +
-      '&with_watch_monetization_types=flatrate&sort_by=popularity.desc&vote_count.gte=300&page=' + page + (genres.length ? '&with_genres=' + genres.join('|') : '');
-    QV.http.get(url, function (err, data) {
-      if (seq !== X.seq || S.screen !== 'exp') return;
-      var list = [], res = (data && data.results) || [];
-      for (var j = 0; j < res.length && list.length < 6; j++) if (res[j].poster_path) list.push(res[j]);
-      X.movies = list;
-      if (err || !list.length) { $('xRow').innerHTML = '<p class="x-msg">No pudimos traer recomendaciones ahora. Prueben ¿Qué vemos? para decidir en grupo.</p>'; TP.focus.ensure(); return; }
-      var html = '';
-      for (var k = 0; k < list.length; k++) {
-        var m = list[k];
-        html += '<button class="x-poster" data-focusable data-action="movie" data-i="' + k + '"><span class="x-pt">' + esc(m.title) + '</span>' +
-          '<img src="' + QV.catalog.img(m.poster_path, 'w342') + '" alt=""><span class="x-score">★ ' + (Math.round((m.vote_average || 0) * 10) / 10) + '</span></button>';
-      }
-      $('xRow').innerHTML = html;
-      TP.focus.setFocus(null); TP.focus.ensure('.x-poster');
-    });
+    var list = C.recommend(genres, 6), html = '';
+    X.movies = list;
+    for (var k = 0; k < list.length; k++) {
+      var m = list[k];
+      html += '<button class="x-poster" data-focusable data-action="movie" data-i="' + k + '">' +
+        '<span class="x-art" style="background:radial-gradient(40% 30% at 60% 38%,' + m.art[2] + ' 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,' + m.art[0] + ' 0%,' + m.art[1] + ' 100%)"></span>' +
+        '<span class="x-pt">' + esc(m.title) + '<small>★ ' + m.score + ' · ' + m.year + '</small></span>' +
+        '<span class="x-app">' + (CP.logos.img(m.app, 'w92', 'x-applogo') || '') + esc(appTitle(m.app)) + '</span></button>';
+    }
+    $('xRow').innerHTML = html;
+    TP.focus.setFocus(null); TP.focus.ensure('.x-poster');
+  }
+  function appTitle(id) { var a = C.byId(id); return a ? a.title : ''; }
+  /* OK en una recomendación: se "abre" su app y empieza a reproducirse directo */
+  var mvTimer = null;
+  function playMovie(i) {
+    var m = X.movies[i], a = m && C.byId(m.app); if (!m) return;
+    closeOverlays();
+    show('app'); S.app = m.app; pushState();
+    $('appAccent').style.background = a.color; $('appLogo').innerHTML = CP.logos.img(m.app, 'w185', 'a-logo');
+    $('appEyebrow').textContent = 'Abriendo en ' + a.title; $('appName').textContent = m.title;
+    $('appNote').hidden = true; $('appBtns').hidden = true;
+    var pr = $('appProgress'); pr.hidden = false; pr.className = 'app-progress'; setTimeout(function () { pr.className = 'app-progress go'; }, 30);
+    clearTimeout(mvTimer); clearTimeout(appTimer);
+    mvTimer = setTimeout(function () {
+      if (S.screen !== 'app') return;
+      S.movie = m; S.content = 'movie'; setPos(0, true);
+      show('player'); paintPlayer();
+      toast('▶ ' + m.title + ' · ' + a.title, 3000);
+    }, 1400);
   }
   function gameCard(item, sub) {
     return '<button class="x-game" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
@@ -421,17 +435,20 @@
 
   function leavePlayer() {
     if (S.content === 'series') { S.saved = curPos(); S.playing = false; }
+    /* de una película recomendada se regresa a la lista de recomendaciones */
+    if (S.content === 'movie' && X.kind === 'movies' && S.exp) { S.content = null; S.movie = null; S.playing = false; show('exp'); TP.focus.ensure('.x-poster'); return; }
+    if (S.content === 'movie') S.movie = null;
     S.content = null; S.sceneIdx = -1;
     show('home'); renderHome();
   }
   function togglePause() {
-    if (S.content === 'series') setPos(curPos(), !S.playing);
+    if (vod()) setPos(curPos(), !S.playing);
     else S.playing = !S.playing;
     paintPlayer(); pushState();
     toast(S.playing ? '▶ Reproduciendo' : '❚❚ En pausa', 1500);
   }
   function seek(delta) {
-    if (S.content !== 'series') { toast(S.screen === 'player' ? 'En vivo no se puede adelantar' : 'No hay nada reproduciéndose', 1800); return; }
+    if (!vod()) { toast(S.screen === 'player' ? 'En vivo no se puede adelantar' : 'No hay nada reproduciéndose', 1800); return; }
     setPos(curPos() + delta, S.playing); paintPlayer(); pushState();
     toast((delta > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(delta) + ' s', 1500);
   }
@@ -458,6 +475,18 @@
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
       $('liveMin').textContent = S.playing ? 'Canal 7 · minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
       $('pausePanel').hidden = true;
+      return;
+    }
+    if (S.content === 'movie') {
+      var mv = S.movie, mp = curPos(), names = [];
+      for (var gi = 0; gi < mv.genres.length; gi++) names.push(C.GENRE_NAMES[mv.genres[gi]]);
+      scene.className = 'scene';
+      scene.style.background = 'radial-gradient(35% 45% at 65% 40%,' + mv.art[2] + ' 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,' + mv.art[0] + ' 0%,' + mv.art[1] + ' 100%)';
+      $('pTag').textContent = 'Película · en ' + appTitle(mv.app); $('pTitle').textContent = mv.title; $('pSub').textContent = mv.year + ' · ' + names.join(' · ') + ' · ' + mv.min + ' min';
+      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
+      $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
+      $('pBar').style.width = (mp / dur() * 100) + '%';
+      $('pPos').textContent = C.fmt(mp); $('pDur').textContent = '-' + C.fmt(dur() - mp);
       return;
     }
     var p = curPos(), idx = C.sceneAt(p), sc = C.SERIES.scenes[idx];
@@ -594,7 +623,7 @@
     if (k === 'REW') { seek(-30); return; }
     if (k === 'FF') { seek(30); return; }
     if (S.screen === 'player') {
-      if (S.content === 'series') {
+      if (vod()) {
         if (k === 'OK' || k === 'PLAY') togglePause();
         else if (k === 'LEFT') seek(-30);
         else if (k === 'RIGHT') seek(30);
@@ -637,7 +666,7 @@
     else if (a === 'home') goHome();
     else if (a === 'channel' || a === 'tune') tune(Number(el.getAttribute('data-n')));
     else if (a === 'menuGo') menuGo(el.getAttribute('data-id'));
-    else if (a === 'movie') openMovie(Number(el.getAttribute('data-i')));
+    else if (a === 'movie') playMovie(Number(el.getAttribute('data-i')));
     else if (a === 'closeMovie') closeDialog();
     else if (a === 'prov') openProvider(el);
     else if (a === 'expOff') applyExperience({ id: 'none' }, 'Se');
