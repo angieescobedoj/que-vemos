@@ -681,6 +681,15 @@ function renderAvatars(){
   $('#avatars').innerHTML = ps.slice(0, max).map((p, i) => avatarHTML(p, i)).join('') +
     (ps.length > max ? `<span class="av" style="background:var(--glass-2)">+${ps.length - max}</span>` : '');
 }
+/* Only one person gets "Empezar": whoever created the room, or (when the TV created it, or the creator left)
+   the first person who joined. Everyone else sees who they're waiting on. */
+function starter(){
+  return S.players.find(p => p.id === S.room?.host) || S.players[0];
+}
+/* A deck search counts as in progress for 40 s at most, so a phone that dropped mid-search can't lock the room. */
+function buildingNow(){
+  return !!S.room?.building && (!S.room.buildingAt || Date.now() - S.room.buildingAt < 40000);
+}
 function renderLobby(){
   if (S.screen !== 'lobby'){ S.my = new Set(me().genres || []); S.deckKey = null; }
   show('lobby'); setBackdrop(null);
@@ -694,7 +703,7 @@ function renderLobby(){
   chipsEl.querySelectorAll('.chip').forEach(b => { b.setAttribute('aria-pressed', S.my.has(+b.dataset.g)); b.disabled = !!m.ready; });
   const pending = S.players.filter(p => !p.ready);
   const btn = $('#readyBtn'), note = $('#lobbyNote');
-  note.hidden = !S.room.building;
+  note.hidden = !buildingNow();
   if (S.room.building) note.textContent = `${S.room.building} está buscando las películas…`;
   $('#changeBtn').hidden = !m.ready;
   if (S.building) return;
@@ -705,8 +714,11 @@ function renderLobby(){
     btn.onclick = () => store.setPlayer(S.code, S.pid, { genres: [...S.my], ready: true });
   } else if (pending.length){
     waitFor(pending.length === 1 ? `Esperando a que ${pending[0].name} elija…` : `Esperando a ${pending.map(p => p.name).join(', ')}…`);
-  } else if (S.room.building){
+  } else if (buildingNow()){
     waitFor(`${S.room.building} está buscando las películas…`); note.hidden = true;
+    clearTimeout(S.buildTimer); S.buildTimer = setTimeout(() => S.screen === 'lobby' && render(), 41000 - (Date.now() - (S.room.buildingAt || Date.now())));
+  } else if (starter()?.id !== S.pid){
+    waitFor(`Todos listos. Esperando a que ${starter().name} empiece…`);
   } else {
     setCta(btn, S.players.length > 1 ? `Empezar (${S.players.length} personas)` : 'Empezar');
     btn.onclick = () => startGame('all');
@@ -781,7 +793,7 @@ async function buildDeck(sets, mode){
 async function startGame(mode){
   const btn = $('#readyBtn'); S.building = true; busyBtn(btn, true, 'Buscando películas…');
   try {
-    await store.updateRoom(S.code, { building: me().name });
+    await store.updateRoom(S.code, { building: me().name, buildingAt: Date.now() });
     const sets = S.players.filter(p => p.genres?.length).map(p => p.genres);
     let deck = await buildDeck(sets, mode);
     if (mode === 'all' && sets.length > 1 && deck.length < 12){

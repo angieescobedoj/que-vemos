@@ -132,7 +132,7 @@
     $('lobbyList').innerHTML = h;
     $('lobbyEmpty').hidden = ps.length > 0;
     $('playerCount').textContent = ps.length ? ps.length + (ps.length === 1 ? ' persona' : ' personas') : '';
-    if (S.room.building) $('lobbyEmpty').hidden = false, $('lobbyEmpty').textContent = S.room.building + ' está buscando las películas…';
+    if (S.room.building && (!S.room.buildingAt || Date.now() - S.room.buildingAt < 40000)) $('lobbyEmpty').hidden = false, $('lobbyEmpty').textContent = S.room.building + ' está buscando las películas…';
     else $('lobbyEmpty').textContent = 'Esperando a que alguien escanee el código…';
   }
 
