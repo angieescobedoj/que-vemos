@@ -70,6 +70,9 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 /* the old arrow circle only shows up as the loading spinner now */
 .cta .go{display:none;flex:none}
 .cta.busy .go{display:inline-flex}
+.waiting{height:58px;width:100%;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:12px;margin:0;padding:0 22px;font-size:15px;font-weight:500;color:var(--ink-2);text-align:center}
+.waiting .spin{flex:none;color:var(--ink)}
+.waiting .w-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cta .cta-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn{height:54px;width:100%;border-radius:999px;background:#fff;color:var(--on-white);font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line)}
@@ -245,6 +248,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <p class="muted small" id="lobbyNote" hidden></p>
     </div>
     <div class="actions">
+      <p class="waiting glass" id="lobbyWait" hidden><span class="spin"></span><span class="w-t"></span></p>
       <button class="cta" id="readyBtn"><span class="cta-t"></span><span class="go"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
       <button class="link" id="changeBtn" hidden>Cambiar mis géneros</button>
     </div>
@@ -436,11 +440,13 @@ async function firestoreStore(){
   const getPlayers = async c => { const d = await call('GET', `${BASE}/rooms/${c}/players?pageSize=200&${KEY}`); return (d?.documents || []).map(x => ({ id: x.name.split('/').pop(), ...decF(x.fields) })); };
   /* polling "listeners": fire on change; kick() refreshes right after our own writes */
   const pollers = new Set();
-  const kick = () => pollers.forEach(f => f());
-  function watch(load, cb){
-    let last = null, stop = false, busy = false, fails = 0;
-    const tick = async () => {
-      if (stop || busy) return; busy = true;
+  const kick = () => pollers.forEach(f => f(true));
+  function watch(load, cb, every){
+    let last = null, stop = false, busy = false, fails = 0, ran = 0;
+    const tick = async (force) => {
+      if (stop || busy) return;
+      if (every && force !== true && Date.now() - ran < every()) return;
+      busy = true; ran = Date.now();
       try { const v = await load(); fails = 0; const j = JSON.stringify(v); if (j !== last){ last = j; cb(v); } }
       catch (e){ console.error(e); if (++fails === 3) toast('Sin conexión con la sala. Reintentando…'); }
       finally { busy = false; }
@@ -453,8 +459,8 @@ async function firestoreStore(){
     getRoom,
     async createRoom(c, d){ await after(call('PATCH', `${BASE}/rooms/${c}?${KEY}`, { fields: encF(d) })); },
     async updateRoom(c, d){ await after(call('PATCH', `${BASE}/rooms/${c}?${mask(d)}&currentDocument.exists=true&${KEY}`, { fields: encF(d) })); },
-    onRoom(c, cb){ return watch(() => getRoom(c), cb); },
-    onPlayers(c, cb){ return watch(() => getPlayers(c), cb); },
+    onRoom(c, cb){ return watch(() => getRoom(c), v => { cb(v); setTimeout(kick, 0); }); },  /* a room change (start, results, new round) refreshes the players right away */
+    onPlayers(c, cb){ return watch(() => getPlayers(c), cb, playersEvery); },
     async getPlayer(c, p){ const d = await call('GET', `${BASE}/rooms/${c}/players/${p}?${KEY}`); return d ? decF(d.fields) : null; },
     async setPlayer(c, p, d){ await after(call('PATCH', `${BASE}/rooms/${c}/players/${p}?${mask(d)}&${KEY}`, { fields: encF(d) })); },
     async removePlayer(c, p){ await after(call('DELETE', `${BASE}/rooms/${c}/players/${p}?${KEY}`)); },
@@ -549,6 +555,20 @@ function demoCatalog(){
         'watch/providers': { results: { MX: { flatrate: m._prov.map(p => ({ provider_name: p })) } } } };
     }
   };
+}
+
+/* How often to re-read the players list (each player is a billed Firestore read). While swiping only the
+   "referee" needs everyone's votes to spot the 3rd match quickly: the TV when there is one, else the room's
+   first player. Everyone else checks occasionally, which is still enough to follow the room. */
+function playersEvery(){
+  const sc = S.screen;
+  if (sc === 'play'){
+    const referee = S.room?.host !== 'tv' && S.players[0]?.id === S.pid;
+    return referee ? 1500 : 6000;
+  }
+  if (sc === 'wait') return 3000;
+  if (sc === 'results') return 5000;
+  return 2000;
 }
 
 /* ---------- state ---------- */
@@ -678,13 +698,17 @@ function renderLobby(){
   if (S.room.building) note.textContent = `${S.room.building} está buscando las películas…`;
   $('#changeBtn').hidden = !m.ready;
   if (S.building) return;
+  const wait = $('#lobbyWait'), waitFor = text => { wait.hidden = false; wait.querySelector('.w-t').textContent = text; btn.hidden = true; };
+  wait.hidden = true; btn.hidden = false;
   if (!m.ready){
     setCta(btn, S.my.size ? 'Ya elegí' : 'Me da igual el género');
     btn.onclick = () => store.setPlayer(S.code, S.pid, { genres: [...S.my], ready: true });
   } else if (pending.length){
-    setCta(btn, `Esperando a ${pending.map(p => p.name).join(', ')}`, true);
+    waitFor(pending.length === 1 ? `Esperando a que ${pending[0].name} elija…` : `Esperando a ${pending.map(p => p.name).join(', ')}…`);
+  } else if (S.room.building){
+    waitFor(`${S.room.building} está buscando las películas…`); note.hidden = true;
   } else {
-    setCta(btn, S.players.length > 1 ? `Empezar (${S.players.length} personas)` : 'Empezar', !!S.room.building);
+    setCta(btn, S.players.length > 1 ? `Empezar (${S.players.length} personas)` : 'Empezar');
     btn.onclick = () => startGame('all');
   }
 }
