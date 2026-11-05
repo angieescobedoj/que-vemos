@@ -100,8 +100,10 @@
   }
   function tileHtml(item, wide) {
     if (item.kind === 'app') {
-      return '<button class="tile sm app" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-bar" style="background:' + item.color + '"></span>' +
-        CP.logos.img(item.id, 'w154', 't-logo') + '<span class="t-body"><span class="t-tag">App</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
+      /* Como en un launcher de TV: tarjeta cuadrada que es el ícono oficial completo. Debajo queda el nombre por si el ícono no carga. */
+      var logo = CP.logos.img(item.id, 'w185', 't-cover');
+      return '<button class="tile app sq' + (logo ? ' has-logo' : '') + '" data-focusable data-action="open" data-id="' + item.id + '" aria-label="' + esc(item.title) + '"' +
+        (logo ? '' : ' style="background:' + item.color + '"') + '><span class="t-name">' + esc(item.title) + '</span>' + logo + '</button>';
     }
     if (item.n) {
       return '<button class="tile sm" data-focusable data-action="channel" data-id="ch' + item.n + '" data-n="' + item.n + '"><span class="t-art" style="background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')"></span><span class="t-shade"></span>' +
