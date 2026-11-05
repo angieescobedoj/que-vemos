@@ -389,7 +389,13 @@
     polling = true;
     store.listPlayers(S.code, function (err, ps) {
       polling = false;
-      if (err) { if (!S.offline) { S.offline = true; $('netBanner').hidden = false; } return; }
+      if (err) {
+        S.fails = (S.fails || 0) + 1;
+        /* one blip doesn't count: show the banner after 2 failed checks in a row, with the reason */
+        if (S.fails >= 2) { S.offline = true; $('netBanner').hidden = false; $('netBanner').textContent = 'Sin conexión con los celulares (' + (err.message || 'error') + '). Reintentando…'; }
+        return;
+      }
+      S.fails = 0;
       if (S.offline) { S.offline = false; $('netBanner').hidden = true; }
       processPlayers(ps || []);
     });
