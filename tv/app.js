@@ -218,11 +218,11 @@
       if (err) { slot.innerHTML = '<p class="prov-note">Sin información de plataformas</p>'; return; }
       var pv = QV.catalog.providersOf(d), h = '';
       if (pv.flat.length) {
-        for (var i = 0; i < pv.flat.length && i < 3; i++) {
+        for (var i = 0; i < pv.flat.length && i < 2; i++) {
           var pr = pv.flat[i], desc = TP.apps.describe(pr.provider_name);
           h += '<button class="pbtn" data-focusable data-action="open" data-provider="' + esc(pr.provider_name) + '" data-movie="' + m.id + '">' +
             (pr.logo_path ? '<img src="' + img(pr.logo_path, 'w92') + '" alt="">' : '<span class="nologo">' + esc(desc.label.charAt(0)) + '</span>') +
-            'Ver en ' + esc(desc.label) + '</button>';
+            '<span class="pl">Ver en ' + esc(desc.label) + '</span></button>';
         }
       } else if (pv.other.length) {
         h += '<p class="prov-note">Solo en renta o compra: ' + esc(pv.other[0].provider_name) + '</p>';

@@ -150,10 +150,9 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .live-label{font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
 .live-sub{color:var(--ink-2);font-size:.95rem;max-width:26ch}
 /* ---------- stage: waiting + results share the three slots ---------- */
-.screen.stage{flex-direction:column;gap:1.1rem;overflow-y:auto;overflow-x:hidden}
-.screen.stage::-webkit-scrollbar{display:none}
+.screen.stage{flex-direction:column;gap:1.1rem;overflow:hidden}   /* never scrolls: everything is sized to fit the screen */
 .screen.stage > *{flex-shrink:0}
-.screen.stage .slots{flex:1 0 auto;padding-bottom:1.2rem}
+.screen.stage .slots{flex:1 1 auto;min-height:0}
 .stage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex:none}
 .stage-head .lede{margin-top:.45rem;max-width:none}
 .stage-head .bar{margin-top:0;padding-top:0}
@@ -164,8 +163,8 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .person.done{background:#fff;color:var(--on-white);border-color:#fff}
 .person.done em{color:#666}
 .slots{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;gap:2.6rem;padding-top:.4rem}
-.slot{width:17rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.8rem}
-.slot-poster{position:relative;width:11.6rem;height:17.4rem;border-radius:1rem;overflow:visible;flex:none}
+.slot{width:17rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.6rem}
+.slot-poster{position:relative;width:10.2rem;height:15.3rem;border-radius:1rem;overflow:visible;flex:none}
 .slot-poster img{width:100%;height:100%;object-fit:cover;border-radius:1rem;display:block;box-shadow:0 .9rem 2rem rgba(0,0,0,.45)}
 .slot-num{position:absolute;top:-.6rem;left:-.6rem;z-index:2;width:1.8rem;height:1.8rem;border-radius:50%;background:#fff;color:var(--on-white);font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
 .slot.empty .slot-poster{border:.12rem dashed rgba(255,255,255,.32);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center}
@@ -176,7 +175,9 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .slot-info .tag{align-self:center}
 .slot-title{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .slot-sub{color:var(--ink-2);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.slot .prov{justify-content:center;margin-top:.2rem}
+.slot .prov{justify-content:center;margin-top:.2rem;gap:.4rem;flex-direction:column;align-items:center;flex-wrap:nowrap}
+.slot .pbtn{max-width:100%}
+.slot .pbtn .pl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .slot .prov-note{text-align:center}
 /* reveal: each poster turns around into view, one after another (transform + opacity only, R3) */
 .slot.filled{animation:slotFlip .8s cubic-bezier(.2,.8,.2,1) both}
