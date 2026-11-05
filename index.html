@@ -622,7 +622,7 @@ $('#joinBtn').onclick = async () => {
   try {
     if (!(await store.getRoom(code))) toast(`No encontramos la sala ${code}. Revisa el código.`);
     else await enter(code, name);
-  } catch (e){ console.error(e); toast('No se pudo entrar a la sala. Revisa tu internet.'); }
+  } catch (e){ console.error(e); toast(/429|RESOURCE_EXHAUSTED/.test(e.message) ? 'La base de datos llegó a su límite (429). Intenta en unos minutos.' : `No se pudo entrar a la sala (${e.name === 'AbortError' ? 'sin respuesta' : e.message.slice(0, 60)}).`); }
   busyBtn(btn, false);
 };
 
