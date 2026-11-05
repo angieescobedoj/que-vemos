@@ -150,7 +150,7 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .live-label{font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
 .live-sub{color:var(--ink-2);font-size:.95rem;max-width:26ch}
 /* ---------- stage: waiting + results share the three slots ---------- */
-.screen.stage{flex-direction:column;gap:1.1rem;overflow:hidden}   /* never scrolls: everything is sized to fit the screen */
+.screen.stage{flex-direction:column;gap:1.1rem;overflow:hidden;padding:.8rem;margin:-.8rem}   /* inner room so focus rings at the edges aren't clipped */   /* never scrolls: everything is sized to fit the screen */
 .screen.stage > *{flex-shrink:0}
 .screen.stage .slots{flex:1 1 auto;min-height:0}
 .stage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex:none}
