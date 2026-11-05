@@ -64,10 +64,12 @@ img{max-width:100%;display:block}
 .pill .dim{color:var(--ink-2);font-weight:500}
 .circ{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--on-white);display:grid;place-items:center;flex:none}
 svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.cta{height:64px;width:100%;border-radius:999px;border:1.5px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 7px 0 26px;font-weight:600;font-size:17px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:opacity .2s,transform .1s;text-align:left}
+.cta{height:58px;width:100%;border-radius:999px;border:0;background:#fff;color:var(--on-white);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 24px;font-weight:600;font-size:17px;transition:opacity .2s,transform .1s;text-align:center}
 .cta:active{transform:scale(.985)}
 .cta:disabled{opacity:.45;cursor:default}
-.cta .go{width:50px;height:50px;border-radius:50%;background:#fff;color:var(--on-white);display:grid;place-items:center;flex:none}
+/* the old arrow circle only shows up as the loading spinner now */
+.cta .go{display:none;flex:none}
+.cta.busy .go{display:inline-flex}
 .cta .cta-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn{height:54px;width:100%;border-radius:999px;background:#fff;color:var(--on-white);font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line)}
@@ -121,10 +123,9 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .card::-webkit-scrollbar{display:none}
 .card.under{transform:scale(.95) translateY(6px);pointer-events:none;transition:transform .3s}
 .card.under .cap,.card.under .more{visibility:hidden}
-/* reading details: hide the next movie and give this one its own solid panel */
-.card.under{transition:transform .3s,opacity .2s}
+/* reading details: the next movie fades out so it doesn't show through the info panels */
+.card.under{transition:transform .3s,opacity .35s ease}
 .deck.reading .card.under{opacity:0}
-.deck.reading .card:not(.under){background:rgba(13,14,22,.86);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-radius:30px}
 .poster{position:relative;height:calc(100% - 104px);aspect-ratio:2/3;max-width:100%;margin:0 auto;border-radius:30px;overflow:hidden;background:var(--glass);box-shadow:0 24px 50px rgba(0,0,0,.45)}
 .poster img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;pointer-events:none}
 .cap{height:104px;text-align:center;padding:16px 8px 0}
@@ -380,9 +381,9 @@ function setCta(btn, text, disabled = false){ const t = btn.querySelector('.cta-
 function busyBtn(btn, on, label){
   if (on){
     btn.dataset.l = btn.innerHTML; btn.disabled = true;
-    if (btn.classList.contains('cta')){ btn.querySelector('.go').innerHTML = '<span class="spin"></span>'; if (label) btn.querySelector('.cta-t').textContent = label; }
+    if (btn.classList.contains('cta')){ btn.classList.add('busy'); btn.querySelector('.go').innerHTML = '<span class="spin"></span>'; if (label) btn.querySelector('.cta-t').textContent = label; }
     else btn.innerHTML = `<span class="spin"></span>${label || ''}`;
-  } else { if (btn.dataset.l) btn.innerHTML = btn.dataset.l; delete btn.dataset.l; btn.disabled = false; }
+  } else { if (btn.dataset.l) btn.innerHTML = btn.dataset.l; delete btn.dataset.l; btn.classList.remove('busy'); btn.disabled = false; }
 }
 function avatarHTML(p, i){ const [bg, fg] = AV[i % AV.length]; return `<span class="av" style="background:${bg};color:${fg}">${esc((p.name || '?')[0].toUpperCase())}</span>`; }
 
