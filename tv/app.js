@@ -5,7 +5,7 @@
 
   /* ---------- config / helpers ---------- */
   var DEMO = /[?&]demo(=|&|$)/.test(location.search);
-  var POLL_MS = 2000, LAUNCH_SIM_MS = 1600;
+  var POLL_MS = 2000, LAUNCH_SIM_MS = 1600, GOAL = 3;  /* the round ends when everyone agrees on GOAL movies */
   var GENRES = [[28,'Acción'],[12,'Aventura'],[16,'Animación'],[35,'Comedia'],[80,'Crimen'],[99,'Documental'],[18,'Drama'],[10751,'Familia'],[14,'Fantasía'],[36,'Historia'],[27,'Terror'],[10402,'Música'],[9648,'Misterio'],[10749,'Romance'],[878,'Ciencia ficción'],[53,'Suspenso'],[10752,'Bélica'],[37,'Western']];
   var GNAME = {}; for (var gi = 0; gi < GENRES.length; gi++) GNAME[GENRES[gi][0]] = GENRES[gi][1];
   var AV = [['#FFFFFF','#111'],['#F38BC9','#fff'],['#5470D6','#fff'],['#9678FF','#fff'],['#7FC8E8','#111'],['#FFC2E2','#111']];
@@ -95,7 +95,7 @@
     var st = S.room.status;
     if (st === 'lobby') renderLobby();
     else if (st === 'playing') {
-      if (S.players.length && allDone()) { store.updateRoom(S.code, { status: 'results' }, function () { poll(); }); }
+      if (S.players.length && (allDone() || liveMatches().length >= GOAL)) { store.updateRoom(S.code, { status: 'results' }, function () { poll(); }); }
       renderPlaying();
     }
     else if (st === 'results') renderResults();
@@ -147,41 +147,49 @@
     }
     return out;
   }
+  /* Empty slot: dashed poster frame with its number; the titles stay a surprise until the results. */
+  function emptySlot(k, label) {
+    return '<div class="slot empty"><div class="slot-poster"><span class="slot-num">' + (k + 1) + '</span><span class="slot-q">?</span></div>' +
+      '<div class="slot-info"><p class="slot-wait">' + label + '</p></div></div>';
+  }
   function renderPlaying() {
-    if (S.screen !== 'playing') { show('playing'); S.resKey = null; }
-    var total = (S.room.deck || []).length, ps = S.players, h = '';
+    if (S.screen !== 'playing') {
+      show('playing'); S.resKey = null;
+      var e = ''; for (var k = 0; k < GOAL; k++) e += emptySlot(k, 'Por descubrir');
+      $('playSlots').innerHTML = e;
+    }
+    var ps = S.players, h = '';
     for (var i = 0; i < ps.length; i++) {
-      var p = ps[i], idx = Math.min(p.idx || 0, total), pct = total ? Math.round(idx / total * 100) : 0;
-      h += '<div class="row">' + avatar(p, i) + '<div class="row-main"><p class="row-name">' + esc(p.name) + '</p>' +
-        '<p class="row-sub">' + (p.done ? 'Terminó · votó ' + idx + ' películas' : 'Va en ' + Math.min(idx + 1, total) + ' de ' + total) + '</p>' +
-        '<div class="prog"><i style="width:' + pct + '%"></i></div></div>' +
-        '<span class="status ' + (p.done ? 'on' : '') + '">' + (p.done ? 'Terminó' : 'Deslizando') + '</span></div>';
+      var p = ps[i];
+      h += '<span class="person' + (p.done ? ' done' : '') + '">' + avatar(p, i) + esc(p.name) +
+        '<em>' + (p.done ? 'Terminó' : 'Deslizando') + '</em></span>';
     }
     $('playList').innerHTML = h;
-    var live = liveMatches().length;   /* count only — no titles until the results screen */
-    $('liveCount').textContent = live;
-    $('liveLabel').textContent = live === 1 ? 'coincidencia' : 'coincidencias';
   }
 
   /* ---------- results ---------- */
+  /* Up to GOAL movies everyone liked (deck order). With none, up to GOAL of the most-voted, marked "x de n". */
   function computeResults() {
     var deck = S.room.deck || [], n = S.players.length, scored = [];
     for (var i = 0; i < deck.length; i++) {
       var yes = 0; for (var j = 0; j < n; j++) if (includes(S.players[j].likes, deck[i].id)) yes++;
       if (yes > 0) scored.push({ m: deck[i], i: i, yes: yes });
     }
-    var full = [], partial = [];
-    for (var k = 0; k < scored.length; k++) { if (scored[k].yes === n) full.push(scored[k]); else if (n > 2 && scored[k].yes >= 2) partial.push(scored[k]); }
+    var full = [];
+    for (var k = 0; k < scored.length; k++) if (scored[k].yes === n) full.push(scored[k]);
     full.sort(function (a, b) { return a.i - b.i; });
-    partial.sort(function (a, b) { return b.yes - a.yes || a.i - b.i; });
-    return { full: full, partial: partial.slice(0, 10), n: n };
+    if (full.length) return { picks: full.slice(0, GOAL), full: Math.min(full.length, GOAL), n: n };
+    if (n < 2) return { picks: [], full: 0, n: n };
+    scored.sort(function (a, b) { return b.yes - a.yes || a.i - b.i; });
+    return { picks: scored.slice(0, GOAL), full: 0, n: n };
   }
-  function resRow(x, n, hero) {
-    var m = x.m;
-    return '<div class="res' + (hero ? ' hero' : '') + '"><img src="' + img(m.p, hero ? 'w342' : 'w185') + '" alt="">' +
-      '<div class="body"><span class="tag ' + (x.yes === n ? '' : 'soft') + '">' + (x.yes === n ? (n > 1 ? 'Todos dijeron sí' : 'Dijo que sí') : x.yes + ' de ' + n) + '</span>' +
-      '<p class="res-title">' + esc(m.t) + (altTitle(m) ? ' <span>(' + esc(altTitle(m)) + ')</span>' : '') + '</p>' +
-      '<p class="res-sub">' + esc([m.y, genresText(m.g)].join(m.y && genresText(m.g) ? ' · ' : '')) + '</p>' +
+  function filledSlot(x, k, n) {
+    var m = x.m, tag = x.yes === n ? (n > 1 ? 'Todos dijeron sí' : 'Dijo que sí') : x.yes + ' de ' + n;
+    return '<div class="slot filled" style="animation-delay:' + (k * 260) + 'ms">' +
+      '<div class="slot-poster"><span class="slot-num">' + (k + 1) + '</span><img src="' + img(m.p, 'w342') + '" alt=""></div>' +
+      '<div class="slot-info"><span class="tag ' + (x.yes === n ? '' : 'soft') + '">' + tag + '</span>' +
+      '<p class="slot-title">' + esc(m.t) + '</p>' +
+      '<p class="slot-sub">' + esc([altTitle(m), m.y].join(altTitle(m) && m.y ? ' · ' : '')) + '</p>' +
       '<div class="prov" data-prov="' + m.id + '"><p class="prov-note">Buscando dónde verla…</p></div></div></div>';
   }
   function renderResults() {
@@ -191,19 +199,14 @@
     S.resKey = key; show('results');
     var R = computeResults(), n = R.n, h = '';
     $('resPeople').textContent = n + (n === 1 ? ' persona' : ' personas');
-    if (R.full.length) {
-      $('resTitle').textContent = R.full.length === 1 ? 'Coincidieron en una película' : 'Coincidieron en ' + R.full.length + ' películas';
-      for (var f = 0; f < R.full.length; f++) h += resRow(R.full[f], n, f === 0);
-      if (R.partial.length) h += '<div class="section-label"><h2>Casi</h2><small>Las que más votos tuvieron</small></div>';
-    } else {
-      $('resTitle').textContent = 'No coincidieron en ninguna';
-      h += '<p class="lede">' + (R.partial.length ? 'Estas fueron las que más votos tuvieron.' : 'Prueben otra ronda con otros géneros.') + '</p>';
-    }
-    for (var p = 0; p < R.partial.length; p++) h += resRow(R.partial[p], n, false);
-    var sc = $('resScroll'); sc.innerHTML = h; sc.scrollTop = 0;
-    var all = R.full.concat(R.partial);
+    $('resTitle').textContent = R.full >= GOAL ? '¡Ya tienen sus ' + GOAL + ' películas!' : R.full === 1 ? 'Coincidieron en una película'
+      : R.full ? 'Coincidieron en ' + R.full + ' películas' : 'No coincidieron esta vez';
+    $('resLede').textContent = R.full ? 'Elijan una para verla ahora, o jueguen otra ronda con películas nuevas.'
+      : R.picks.length ? 'Estas fueron las que más votos tuvieron. Otra ronda trae películas nuevas.' : 'Jueguen otra ronda: les tocarán películas nuevas.';
+    for (var k = 0; k < GOAL; k++) h += R.picks[k] ? filledSlot(R.picks[k], k, n) : emptySlot(k, 'Sin coincidencia');
+    $('resSlots').innerHTML = h;
     S.resAutoFocus = true;
-    for (var d = 0; d < all.length; d++) loadProviders(all[d].m);
+    for (var d = 0; d < R.picks.length; d++) loadProviders(R.picks[d].m);
     TP.focus.ensure('[data-action="newRound"]');
   }
   function loadProviders(m) {
@@ -212,19 +215,18 @@
       if (err) { slot.innerHTML = '<p class="prov-note">Sin información de plataformas</p>'; return; }
       var pv = QV.catalog.providersOf(d), h = '';
       if (pv.flat.length) {
-        for (var i = 0; i < pv.flat.length; i++) {
+        for (var i = 0; i < pv.flat.length && i < 3; i++) {
           var pr = pv.flat[i], desc = TP.apps.describe(pr.provider_name);
           h += '<button class="pbtn" data-focusable data-action="open" data-provider="' + esc(pr.provider_name) + '" data-movie="' + m.id + '">' +
             (pr.logo_path ? '<img src="' + img(pr.logo_path, 'w92') + '" alt="">' : '<span class="nologo">' + esc(desc.label.charAt(0)) + '</span>') +
             'Ver en ' + esc(desc.label) + '</button>';
         }
       } else if (pv.other.length) {
-        h += '<p class="prov-note">Solo en renta o compra:</p>';
-        for (var k = 0; k < pv.other.length && k < 3; k++) h += '<span class="pbtn static">' + esc(pv.other[k].provider_name) + '</span>';
+        h += '<p class="prov-note">Solo en renta o compra: ' + esc(pv.other[0].provider_name) + '</p>';
       } else h += '<p class="prov-note">No está en streaming en México.</p>';
       slot.innerHTML = h;
       /* First "Ver en…" button to appear takes focus, unless the person already started moving. */
-      var first = S.resAutoFocus && !S.launchOpen && document.querySelector('.res .pbtn[data-focusable]');
+      var first = S.resAutoFocus && !S.launchOpen && document.querySelector('.slot .pbtn[data-focusable]');
       if (first) { S.resAutoFocus = false; TP.focus.setFocus(first); } else TP.focus.ensure();
     });
   }
@@ -262,12 +264,23 @@
   }
 
   /* ---------- actions ---------- */
+  /* Everything anyone voted on in this room so far: the next deck skips all of it (same rule as the phone). */
+  function seenSoFar() {
+    var seen = {}, out = [], prev = S.room.seen || [], i, j;
+    function add(id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }
+    for (i = 0; i < prev.length; i++) add(prev[i]);
+    for (i = 0; i < S.players.length; i++) {
+      var p = S.players[i], l = (p.likes || []).concat(p.passes || []);
+      for (j = 0; j < l.length; j++) add(l[j]);
+    }
+    return out;
+  }
   function playerIds() { var ids = []; for (var i = 0; i < S.players.length; i++) ids.push(S.players[i].id); return ids; }
   var actions = {
     newRoom: function () { closeLaunch(); startRoom(); },
     forceResults: function () { store.updateRoom(S.code, { status: 'results' }, function () { poll(); }); },
     newRound: function () {
-      store.resetRound(S.code, playerIds(), { status: 'lobby', deck: null, building: null, round: (S.room.round || 1) + 1 }, function () { poll(); });
+      store.resetRound(S.code, playerIds(), { status: 'lobby', deck: null, building: null, seen: seenSoFar(), round: (S.room.round || 1) + 1 }, function () { poll(); });
     },
     closeLaunch: closeLaunch,
     backToCompanion: backToCompanion,

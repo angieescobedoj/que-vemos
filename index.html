@@ -126,10 +126,10 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 /* reading details: the next movie fades out so it doesn't show through the info panels */
 .card.under{transition:transform .3s,opacity .35s ease}
 .deck.reading .card.under{opacity:0}
-.poster{position:relative;height:calc(100% - 104px);aspect-ratio:2/3;max-width:100%;margin:0 auto;border-radius:30px;overflow:hidden;background:var(--glass);box-shadow:0 24px 50px rgba(0,0,0,.45)}
+.poster{position:relative;height:calc(100% - 86px);aspect-ratio:2/3;max-width:100%;margin:0 auto;border-radius:30px;overflow:hidden;background:var(--glass);box-shadow:0 24px 50px rgba(0,0,0,.45)}
 .poster img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;pointer-events:none}
-.cap{height:104px;text-align:center;padding:16px 8px 0}
-.m-title{font-size:26px;font-weight:700;letter-spacing:-.04em;line-height:1.08;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cap{height:86px;text-align:center;padding:10px 8px 0}
+.m-title{font-size:24px;font-weight:700;letter-spacing:-.04em;line-height:1.08;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .m-sub{margin:6px 0 0;font-size:14px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stamp{position:absolute;top:18px;padding:6px 16px;border-radius:999px;font-weight:700;font-size:18px;letter-spacing:.06em;opacity:0;pointer-events:none}
 .stamp.yes{left:18px;background:#fff;color:var(--on-white)}
@@ -148,8 +148,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .person .ph{width:66px;height:66px;margin:0 auto 8px;border-radius:50%;background:var(--glass-2);object-fit:cover;display:grid;place-items:center;font-weight:600;color:var(--ink-2)}
 .person b{display:block;font-size:13px;font-weight:600;line-height:1.25}
 .person i{display:block;font-size:12px;font-style:normal;color:var(--ink-2);line-height:1.25;margin-top:2px}
-.play-foot{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 8px 12px}
-.seg{width:100%;height:62px;border-radius:999px;display:flex;align-items:center;padding:6px;gap:6px}
+.play-foot{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 8px 10px}
+.seg{width:100%;height:58px;border-radius:999px;display:flex;align-items:center;padding:6px;gap:6px}
 .seg button{flex:1;height:100%;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;transition:transform .1s}
 .seg button:active{transform:scale(.96)}
 .seg .sep{width:1px;height:26px;background:var(--line);flex:none}
@@ -165,6 +165,10 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .feat .body{flex:1;min-width:0;padding:8px 6px 8px 0;display:flex;flex-direction:column;gap:8px}
 .f-title{font-size:22px;font-weight:700;letter-spacing:-.035em;line-height:1.1;margin:0}
 .f-sub{margin:0;color:var(--ink-2);font-size:14px}
+.pick{position:relative;animation:pickIn .5s cubic-bezier(.2,.8,.2,1) both}
+.pick img{width:132px;height:198px}
+.pick .num{position:absolute;top:2px;left:2px;z-index:1;width:30px;height:30px;border-radius:50%;background:#fff;color:var(--on-white);font-weight:700;font-size:14px;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+@keyframes pickIn{from{opacity:0;transform:perspective(900px) rotateY(-70deg) translateY(10px)}to{opacity:1;transform:none}}
 .tag{align-self:flex-start;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;background:#fff;color:var(--on-white);white-space:nowrap}
 .tag.soft{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.35);padding:4px 10px}
 .res{display:flex;gap:12px;padding:12px 14px;align-items:center}
@@ -304,7 +308,8 @@ const FIREBASE = {
   messagingSenderId: "170225023461",
   appId: "1:170225023461:web:fa2409fa8fbfd59fa8570c"
 };
-const DECK_MAX = 80;
+const DECK_MAX = 30;      /* movies per round — the round usually ends sooner, at GOAL matches */
+const GOAL = 3;           /* the round ends as soon as everyone agrees on this many movies */
 const params = new URLSearchParams(location.search);
 const DEMO = params.has('demo');
 
@@ -631,7 +636,7 @@ function render(){
   const st = S.room.status;
   if (st === 'lobby') renderLobby();
   else if (st === 'playing'){
-    if (S.players.length && S.players.every(p => p.done)){ store.updateRoom(S.code, { status: 'results' }); return; }
+    if (S.players.length && (S.players.every(p => p.done) || fullMatches().length >= GOAL)){ store.updateRoom(S.code, { status: 'results' }); return; }
     if (m.done) renderWait(); else renderPlay();
   }
   else if (st === 'results') renderResults();
@@ -702,30 +707,45 @@ function minimalCombos(sets){
   return min.sort((a, b) => a.length - b.length).slice(0, 12);
 }
 const satisfies = (m, sets) => sets.every(s => s.some(g => m.genre_ids.includes(g)));
-async function fetchPool(withGenres, pages){
+/* Pulls TMDB pages (popular first) until it has `need` movies that aren't in `exclude`. Going deeper into the
+   catalog round after round is what keeps every new round fresh, however many rounds a room plays. */
+async function fetchPool(withGenres, need, exclude){
   const base = { sort_by: 'popularity.desc', 'vote_count.gte': 150, include_adult: false, watch_region: 'MX', with_watch_monetization_types: 'flatrate' };
   if (withGenres) base.with_genres = withGenres;
-  const jobs = [];
-  for (let p = 1; p <= pages; p++){
-    jobs.push(catalog.discover({ ...base, language: 'es-MX', page: p }), catalog.discover({ ...base, language: 'en-US', page: p }));
+  const out = [], got = new Set(), MAX_PAGE = 60;
+  for (let page = 1; page <= MAX_PAGE && out.length < need; page += 2){
+    const pages = [page, page + 1];
+    const res = await Promise.all(pages.flatMap(p => [
+      catalog.discover({ ...base, language: 'es-MX', page: p }).catch(() => ({ results: [] })),
+      catalog.discover({ ...base, language: 'en-US', page: p }).catch(() => ({ results: [] }))
+    ]));
+    let empty = true;
+    for (let i = 0; i < res.length; i += 2){
+      const en = new Map((res[i + 1].results || []).map(m => [m.id, m.title]));
+      for (const m of res[i].results || []){
+        empty = false;
+        if (!m.poster_path || exclude.has(m.id) || got.has(m.id)) continue;
+        got.add(m.id); out.push({ ...m, en_title: en.get(m.id) });
+      }
+      if (res[i].total_pages && pages[i / 2] >= res[i].total_pages) empty = true;
+    }
+    if (empty) break;
   }
-  const res = await Promise.all(jobs.map(j => j.catch(() => ({ results: [] }))));
-  const en = new Map(); res.filter((_, i) => i % 2).forEach(r => r.results.forEach(m => en.set(m.id, m.title)));
-  const out = []; res.filter((_, i) => i % 2 === 0).forEach(r => r.results.forEach(m => out.push({ ...m, en_title: en.get(m.id) })));
   return out;
 }
 async function buildDeck(sets, mode){
+  const exclude = new Set(S.room.seen || []);
   let pool;
-  if (!sets.length) pool = await fetchPool(null, 5);
+  if (!sets.length) pool = await fetchPool(null, DECK_MAX, exclude);
   else if (mode === 'all'){
-    const combos = minimalCombos(sets), pages = combos.length > 6 ? 1 : 2;
-    pool = (await Promise.all(combos.map(c => fetchPool(c.join(','), pages)))).flat().filter(m => satisfies(m, sets));
-  } else pool = await fetchPool([...new Set(sets.flat())].join('|'), 5);
-  const seen = new Set();
-  const list = pool.filter(m => m.poster_path && !seen.has(m.id) && seen.add(m.id))
+    const combos = minimalCombos(sets), per = Math.max(10, Math.ceil(DECK_MAX * 1.5 / combos.length));
+    pool = (await Promise.all(combos.map(c => fetchPool(c.join(','), per, exclude)))).flat().filter(m => satisfies(m, sets));
+  } else pool = await fetchPool([...new Set(sets.flat())].join('|'), DECK_MAX, exclude);
+  const uniq = new Set();
+  const list = pool.filter(m => !uniq.has(m.id) && uniq.add(m.id))
     .sort((a, b) => b.popularity - a.popularity).slice(0, DECK_MAX);
-  for (let i = 0; i < list.length; i += 8){
-    const w = list.slice(i, i + 8).sort(() => Math.random() - .5); list.splice(i, w.length, ...w);
+  for (let i = 0; i < list.length; i += 6){
+    const w = list.slice(i, i + 6).sort(() => Math.random() - .5); list.splice(i, w.length, ...w);
   }
   return list.map(m => {
     const en = m.en_title || (m.original_language === 'en' ? m.original_title : null);
@@ -740,7 +760,7 @@ async function startGame(mode){
     await store.updateRoom(S.code, { building: me().name });
     const sets = S.players.filter(p => p.genres?.length).map(p => p.genres);
     let deck = await buildDeck(sets, mode);
-    if (mode === 'all' && sets.length > 1 && deck.length < 20){
+    if (mode === 'all' && sets.length > 1 && deck.length < 12){
       const choice = await sheet(deck.length ? {
         title: `Solo hay ${deck.length} películas que combinan los géneros de todos.`,
         text: 'Pueden jugar con estas o ampliar a películas que tengan cualquiera de los géneros elegidos.',
@@ -901,8 +921,8 @@ document.addEventListener('keydown', e => {
 $('#endBtn').onclick = async () => {
   const none = fullMatches().length === 0;
   const ok = await sheet({
-    title: none ? 'Aún no hay ninguna coincidencia entre todos.' : '¿Seguro que quieres terminar?',
-    text: none ? '¿Estás seguro de que quieres terminar?' : '',
+    title: none ? 'Aún no hay ninguna coincidencia entre todos.' : `Llevan ${fullMatches().length} de ${GOAL} coincidencias.`,
+    text: none ? '¿Seguro que quieres terminar?' : '¿Quieres terminar y ver las que llevan?',
     buttons: [{ label: 'Sí, terminar', value: true }, { label: 'No, seguir deslizando', value: false, ghost: true }]
   });
   if (ok) finish();
@@ -926,62 +946,60 @@ $('#forceBtn').onclick = async () => {
 };
 
 /* ---------- results ---------- */
-let lastResults = { full: [], partial: [], n: 0 };
+let lastResults = { picks: [], full: 0, n: 0 };
+function computeResults(){
+  const deck = S.room.deck || [], n = S.players.length;
+  const scored = deck.map((m, i) => ({ m, i, yes: S.players.filter(p => (p.likes || []).includes(m.id)).length })).filter(x => x.yes > 0);
+  const full = scored.filter(x => x.yes === n).sort((a, b) => a.i - b.i).slice(0, GOAL);
+  const near = full.length || n < 2 ? [] : scored.sort((a, b) => b.yes - a.yes || a.i - b.i).slice(0, GOAL);
+  return { picks: full.length ? full : near, full: full.length, n };
+}
 function renderResults(){
   const key = `res:${S.room.round}:${S.players.map(p => (p.likes || []).length).join(',')}`;
   if (S.screen === 'results' && S.resKey === key) return;
   S.resKey = key; show('results'); S.deckKey = null;
-  const deck = S.room.deck || [], n = S.players.length;
-  const scored = deck.map((m, i) => ({ m, i, yes: S.players.filter(p => (p.likes || []).includes(m.id)).length })).filter(x => x.yes > 0);
-  const full = scored.filter(x => x.yes === n).sort((a, b) => a.i - b.i);
-  const partial = n > 2 ? scored.filter(x => x.yes < n && x.yes >= 2).sort((a, b) => b.yes - a.yes || a.i - b.i).slice(0, 10) : [];
-  lastResults = { full, partial, n };
+  const R = computeResults(), { picks, full, n } = R;
+  lastResults = R;
+  const title = full >= GOAL ? `¡Ya tienen sus ${GOAL} películas!` : full === 1 ? 'Coincidieron en una película'
+    : full ? `Coincidieron en ${full} películas` : 'No coincidieron esta vez';
+  const lede = full ? 'Elijan una para ver ahora, o jueguen otra ronda con películas nuevas.'
+    : picks.length ? 'Estas fueron las que más votos tuvieron. Otra ronda trae películas nuevas.' : 'Jueguen otra ronda: les tocarán películas nuevas.';
   let h = `<header class="top"><span class="pill glass">Sala <b>${esc(S.code)}</b><span class="dim">· ${n} ${n === 1 ? 'persona' : 'personas'}</span></span>
-    <button class="pill glass" id="shareRes" aria-label="Compartir resultados" style="padding:0 12px"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button></header>`;
-  if (full.length){
-    h += `<h2 class="h1 big">${full.length === 1 ? 'Coincidieron en una película' : `Coincidieron en ${full.length} películas`}</h2>`;
-    const f = full[0].m;
-    h += `<article class="feat glass"><img src="${img(f.p, 'w342')}" alt="Póster de ${esc(f.t)}"><div class="body">
-      <span class="tag">${n > 1 ? 'Todos dijeron sí' : 'Dijiste que sí'}</span>
-      <h3 class="f-title">${esc(f.t)}</h3><p class="f-sub">${esc([altTitle(f), f.y].filter(Boolean).join(' · '))}</p>
-      <div data-prov="${f.id}" data-style="chips"><p class="prov-note">Buscando dónde verla…</p></div></div></article>`;
-    if (full.length > 1) h += `<div class="list glass">${full.slice(1).map(x => resRow(x, n)).join('')}</div>`;
-    if (partial.length) h += `<div class="section-label"><h3>Casi</h3><span class="muted small">Las que más votos tuvieron</span></div>`;
-  } else {
-    h += `<h2 class="h1 big">No coincidieron en ninguna</h2><p class="lede">${partial.length ? 'Estas fueron las que más votos tuvieron.' : 'Prueben otra ronda con otros géneros.'}</p>`;
-  }
-  if (partial.length) h += `<div class="list glass">${partial.map(x => resRow(x, n)).join('')}</div>`;
+    <button class="pill glass" id="shareRes" aria-label="Compartir resultados" style="padding:0 12px"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button></header>
+    <h2 class="h1 big">${title}</h2><p class="lede">${lede}</p>`;
+  h += picks.map((x, k) => {
+    const m = x.m, tag = x.yes === n ? (n > 1 ? 'Todos dijeron sí' : 'Dijiste que sí') : `${x.yes} de ${n}`;
+    return `<article class="feat glass pick" style="animation-delay:${k * 140}ms"><span class="num">${k + 1}</span>
+      <img src="${img(m.p, 'w342')}" alt="Póster de ${esc(m.t)}"><div class="body">
+      <span class="tag ${x.yes === n ? '' : 'soft'}">${tag}</span>
+      <h3 class="f-title">${esc(m.t)}</h3><p class="f-sub">${esc([altTitle(m), m.y].filter(Boolean).join(' · '))}</p>
+      <div data-prov="${m.id}"><p class="prov-note">Buscando dónde verla…</p></div></div></article>`;
+  }).join('');
   const body = $('#resultsBody'); body.innerHTML = h; body.scrollTop = 0;
   $('#shareRes').onclick = shareResults;
-  setBackdrop(full[0] ? img(full[0].m.p, 'w185') : partial[0] ? img(partial[0].m.p, 'w185') : null);
-  [...full, ...partial].forEach(({ m }) => details(m.id).then(d => {
+  setBackdrop(picks[0] ? img(picks[0].m.p, 'w185') : null);
+  picks.forEach(({ m }) => details(m.id).then(d => {
     const slot = document.querySelector(`[data-prov="${m.id}"]`); if (!slot) return;
     const pv = providersOf(d); m._prov = pv.flat.map(p => p.provider_name);
-    if (slot.dataset.style === 'chips'){
-      slot.innerHTML = pv.flat.length ? provHTML(pv.flat)
-        : pv.other.length ? `<p class="prov-note">Solo en renta o compra:</p>${provHTML(pv.other.slice(0, 3))}`
-        : '<p class="prov-note">No está en streaming en México.</p>';
-    } else {
-      const names = pv.flat.map(p => p.provider_name);
-      slot.textContent = names.length ? names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2}` : '')
-        : pv.other.length ? `Renta en ${pv.other[0].provider_name}` : 'No está en streaming';
-    }
+    slot.innerHTML = pv.flat.length ? provHTML(pv.flat)
+      : pv.other.length ? `<p class="prov-note">Solo en renta o compra:</p>${provHTML(pv.other.slice(0, 3))}`
+      : '<p class="prov-note">No está en streaming en México.</p>';
   }).catch(() => { const slot = document.querySelector(`[data-prov="${m.id}"]`); if (slot) slot.textContent = 'Sin información de plataformas'; }));
 }
-function resRow({ m, yes }, n){
-  return `<div class="res"><img src="${img(m.p, 'w185')}" alt="" loading="lazy"><div class="row-main">
-    <p class="res-title">${titleHTML(m)}</p>
-    <p class="row-sub">${esc(m.y)}${m.y ? ' · ' : ''}<span data-prov="${m.id}">…</span></p></div>
-    <span class="tag ${yes === n ? '' : 'soft'}">${yes === n ? 'Todos' : `${yes} de ${n}`}</span></div>`;
-}
 function shareResults(){
-  const { full, partial, n } = lastResults;
+  const { picks, full, n } = lastResults;
   const line = ({ m, yes }) => `• ${m.t}${m.y ? ` (${m.y})` : ''}${m._prov?.length ? ` — ${m._prov.join(', ')}` : ''}${yes < n ? ` · ${yes} de ${n}` : ''}`;
-  const text = full.length ? `Coincidimos en ${full.length === 1 ? 'una película' : `${full.length} películas`}:\n${full.map(line).join('\n')}`
-    : `No coincidimos en ninguna. Las más votadas:\n${partial.map(line).join('\n')}`;
+  const text = full ? `Coincidimos en ${full === 1 ? 'una película' : `${full} películas`}:\n${picks.map(line).join('\n')}`
+    : picks.length ? `No coincidimos en ninguna. Las más votadas:\n${picks.map(line).join('\n')}` : 'No coincidimos en ninguna película.';
   shareText(text);
 }
-$('#againBtn').onclick = () => store.resetRound(S.code, S.players.map(p => p.id), { status: 'lobby', deck: null, building: null, round: (S.room.round || 1) + 1 });
+/* Everything anyone voted on in this room so far — the next deck skips all of it. */
+function seenSoFar(){
+  const seen = new Set(S.room.seen || []);
+  S.players.forEach(p => [...(p.likes || []), ...(p.passes || [])].forEach(id => seen.add(id)));
+  return [...seen];
+}
+$('#againBtn').onclick = () => store.resetRound(S.code, S.players.map(p => p.id), { status: 'lobby', deck: null, building: null, seen: seenSoFar(), round: (S.room.round || 1) + 1 });
 $('#leaveBtn').onclick = leave;
 
 /* ---------- boot ---------- */

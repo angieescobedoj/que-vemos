@@ -47,31 +47,28 @@
   </section>
 
   <!-- PLAYING: live progress -->
-  <section class="screen playing" data-screen="playing" hidden>
-    <div class="col left">
-      <p class="eyebrow">Sala <b id="playCode"></b></p>
-      <h1 class="display">Están deslizando…</h1>
-      <p class="lede">Cuando todos terminen, los resultados aparecen aquí solos.</p>
-      <div class="list" id="playList"></div>
+  <section class="screen stage playing" data-screen="playing" hidden>
+    <header class="stage-head">
+      <div>
+        <p class="eyebrow">Sala <b id="playCode"></b></p>
+        <h1 class="display">Esperando los resultados…</h1>
+        <p class="lede">El juego termina en cuanto coincidan en 3 películas.</p>
+      </div>
       <div class="bar">
         <button class="btn ghost" data-focusable data-action="forceResults">Ver resultados ahora</button>
       </div>
-    </div>
-    <div class="col right">
-      <div class="panel live">
-        <p class="big-count" id="liveCount">0</p>
-        <p class="live-label" id="liveLabel">coincidencias</p>
-        <p class="live-sub">¿Cuáles? Sorpresa. Las verán aquí cuando todos terminen.</p>
-      </div>
-    </div>
+    </header>
+    <div class="people" id="playList"></div>
+    <div class="slots" id="playSlots"></div>
   </section>
 
-  <!-- RESULTS -->
-  <section class="screen results" data-screen="results" hidden>
-    <header class="res-head">
+  <!-- RESULTS: the same three slots, now filled -->
+  <section class="screen stage results" data-screen="results" hidden>
+    <header class="stage-head">
       <div>
         <p class="eyebrow">Sala <b id="resCode"></b> · <span id="resPeople"></span></p>
         <h1 class="display" id="resTitle"></h1>
+        <p class="lede" id="resLede"></p>
       </div>
       <div class="bar">
         <button class="btn ghost" data-focusable data-action="newRound">Jugar otra ronda</button>
@@ -79,7 +76,7 @@
         <button class="btn ghost" data-focusable data-action="backToCompanion" hidden>Volver a Sala TV</button>
       </div>
     </header>
-    <div class="res-scroll" id="resScroll"></div>
+    <div class="slots" id="resSlots"></div>
   </section>
 
   <!-- ERROR / BOOT -->
