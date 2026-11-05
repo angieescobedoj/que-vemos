@@ -49,7 +49,8 @@ b{font-weight:700}
 
 /* home */
 .home-body{flex:1;min-height:0;display:flex;gap:2rem}
-.rows{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.1rem;overflow:hidden}
+.rows{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.1rem;overflow:hidden;
+  padding:.9rem;margin:-.9rem}  /* room for the focused tile's scale + ring, so the clip never cuts them; the negative margin keeps the layout in place */
 .row-h{font-size:.85rem;font-weight:700;margin-bottom:.55rem;color:var(--ink-2)}
 .row-tiles{display:flex;gap:1rem}
 .tile{position:relative;flex:0 0 auto;width:9.6rem;height:7rem;border-radius:1rem;overflow:hidden;text-align:left;
