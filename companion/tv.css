@@ -262,3 +262,8 @@ b{font-weight:700}
 .blackout small{font-size:.85rem}
 .blackout.off{z-index:90}
 .tile .t-tag.t-red{color:#FF8A9B}
+/* logos de apps (imágenes del catálogo de TMDB; sin red se queda el texto) */
+.tile .t-logo{position:absolute;left:.65rem;top:.6rem;width:2rem;height:2rem;border-radius:.5rem}
+.tile.app .t-logo ~ .t-body .t-tag{display:none}
+.m-logo{width:1.5rem;height:1.5rem;border-radius:.35rem;flex:none}
+.a-logo{width:7rem;height:7rem;border-radius:1.4rem;margin-bottom:.4rem}

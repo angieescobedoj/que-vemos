@@ -620,5 +620,12 @@
     render(); window.scrollTo(0, 0);
   }
 
+  /* logos oficiales en los accesos directos (si no cargan, se queda el nombre) */
+  function paintAppLogos() {
+    var bs = document.querySelectorAll('.apps button[data-app]');
+    for (var i = 0; i < bs.length; i++) { var id = bs[i].getAttribute('data-app'), im = CP.logos.img(id, 'w92', 'logo'); if (im && !bs[i].querySelector('img')) bs[i].insertAdjacentHTML('afterbegin', im); }
+  }
+  CP.logos.ready(paintAppLogos);
+
   connect(S.code);
 })(window.CP);

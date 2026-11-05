@@ -101,7 +101,7 @@
   function tileHtml(item, wide) {
     if (item.kind === 'app') {
       return '<button class="tile sm app" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-bar" style="background:' + item.color + '"></span>' +
-        '<span class="t-body"><span class="t-tag">App</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
+        CP.logos.img(item.id, 'w154', 't-logo') + '<span class="t-body"><span class="t-tag">App</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
     }
     if (item.n) {
       return '<button class="tile sm" data-focusable data-action="channel" data-id="ch' + item.n + '" data-n="' + item.n + '"><span class="t-art" style="background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')"></span><span class="t-shade"></span>' +
@@ -220,7 +220,7 @@
     if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
     if (S.screen === 'game') stopGame();
     show('app'); S.app = id; pushState();
-    $('appAccent').style.background = a.color; $('appName').textContent = a.title; $('appEyebrow').textContent = 'Abriendo…';
+    $('appAccent').style.background = a.color; $('appName').textContent = a.title; $('appLogo').innerHTML = CP.logos.img(id, 'w185', 'a-logo'); $('appEyebrow').textContent = 'Abriendo…';
     $('appNote').hidden = true; $('appBtns').hidden = true;
     var pr = $('appProgress'); pr.hidden = false; pr.className = 'app-progress'; setTimeout(function () { pr.className = 'app-progress go'; }, 30);
     clearTimeout(appTimer);
@@ -238,7 +238,8 @@
 
   /* --- Menú lateral (☰ en el celular) --- */
   function menuItem(id, label, color) {
-    return '<button class="m-item" data-focusable data-action="menuGo" data-id="' + id + '">' + (color ? '<span class="sw" style="background:' + color + '"></span>' : '') + esc(label) + '</button>';
+    var logo = CP.logos.img(id, 'w92', 'm-logo');
+    return '<button class="m-item" data-focusable data-action="menuGo" data-id="' + id + '">' + (logo || (color ? '<span class="sw" style="background:' + color + '"></span>' : '')) + esc(label) + '</button>';
   }
   function openMenu() {
     closeGuide(); closeDialog();
@@ -699,5 +700,7 @@
   TP.lifecycle.on('standby', function () { S.standby = true; stopPolling(); });
   TP.lifecycle.on('wakeup', function () { S.standby = false; startPolling(); poll(); });
 
+  /* cuando llegan los logos de las apps, se repinta lo que los muestra (el foco se conserva) */
+  CP.logos.ready(function () { if (S.screen === 'home') renderHome(); if (S.menu) { var f = TP.focus.current(), fid = f && f.getAttribute('data-id'); openMenu(); if (fid) TP.focus.setFocus($('menu').querySelector('[data-id="' + fid + '"]')); } });
   boot();
 })(window.CP, window.TP);
