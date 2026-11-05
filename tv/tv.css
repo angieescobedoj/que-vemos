@@ -155,6 +155,11 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .screen.stage .slots{flex:1 1 auto;min-height:0}
 .stage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex:none}
 .stage-head .lede{margin-top:.45rem;max-width:none}
+/* header text never wraps (wrapping pushed the results off screen on the STB); it truncates instead */
+.stage-head > div:first-child{min-width:0;flex:1}
+.stage-head .display,.stage-head .lede{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-head .display{font-size:2.3rem}
+.stage-head .bar{flex:none}
 .stage-head .bar{margin-top:0;padding-top:0}
 .people{display:flex;flex-wrap:wrap;gap:.6rem;flex:none}
 .person{display:inline-flex;align-items:center;gap:.55rem;height:2.4rem;padding:0 .9rem 0 .3rem;border-radius:999px;background:var(--glass);border:1px solid var(--line);font-weight:600;font-size:.85rem}
@@ -225,4 +230,19 @@ h2{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
 .pbtn img,.pbtn .nologo{flex:none}
 .provs-body .bar{margin-top:1rem}
 
+/* results: the poster is the target. Focus = poster grows + white ring (transform/box-shadow only, R3). */
+.slot.filled{cursor:default;border-radius:1rem}
+.slot.filled .slot-poster{transition:transform .18s ease}
+.slot.filled .slot-poster img{transition:box-shadow .18s ease}
+.slot.filled.is-focused .slot-poster{-webkit-transform:scale(1.06);transform:scale(1.06)}
+.slot.filled.is-focused .slot-poster img{box-shadow:0 0 0 .22rem #fff,0 0 0 .6rem rgba(255,255,255,.28),0 1.2rem 2.4rem rgba(0,0,0,.5)}
+.slot.filled.is-focused .slot-title{color:#fff}
+.slot-where{font-size:1rem;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.slot.filled.is-focused .slot-where{color:var(--ink)}
+.slots{padding-top:1rem}
+/* results header in two rows: the title gets the full width; lede + buttons share the second row */
+.stage-head.two{flex-direction:column;align-items:stretch;gap:.5rem}
+.stage-head.two .sh-top{min-width:0}
+.stage-head.two .sh-bottom{display:flex;align-items:center;justify-content:space-between;gap:2rem}
+.stage-head.two .sh-bottom .lede{margin-top:0;min-width:0;flex:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}

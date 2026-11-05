@@ -64,16 +64,18 @@
 
   <!-- RESULTS: the same three slots, now filled -->
   <section class="screen stage results" data-screen="results" hidden>
-    <header class="stage-head">
-      <div>
+    <header class="stage-head two">
+      <div class="sh-top">
         <p class="eyebrow">Sala <b id="resCode"></b> · <span id="resPeople"></span></p>
         <h1 class="display" id="resTitle"></h1>
-        <p class="lede" id="resLede"></p>
       </div>
-      <div class="bar">
-        <button class="btn ghost" data-focusable data-action="newRound">Jugar otra ronda</button>
-        <button class="btn ghost" data-focusable data-action="newRoom">Nueva sala</button>
-        <button class="btn ghost" data-focusable data-action="backToCompanion" hidden>Volver a Sala TV</button>
+      <div class="sh-bottom">
+        <p class="lede" id="resLede"></p>
+        <div class="bar">
+          <button class="btn ghost" data-focusable data-action="newRound">Jugar otra ronda</button>
+          <button class="btn ghost" data-focusable data-action="newRoom">Nueva sala</button>
+          <button class="btn ghost" data-focusable data-action="backToCompanion" hidden>Volver a Sala TV</button>
+        </div>
       </div>
     </header>
     <div class="slots" id="resSlots"></div>

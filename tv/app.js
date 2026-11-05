@@ -161,6 +161,7 @@
       var e = ''; for (var k = 0; k < GOAL; k++) e += emptySlot(k, 'Por descubrir');
       $('playSlots').innerHTML = e;
     }
+    fitStage('playing');
     var ps = S.players, h = '';
     for (var i = 0; i < ps.length; i++) {
       var p = ps[i];
@@ -188,12 +189,12 @@
   }
   function filledSlot(x, k, n) {
     var m = x.m, tag = x.yes === n ? (n > 1 ? 'Todos dijeron sí' : 'Dijo que sí') : x.yes + ' de ' + n;
-    return '<div class="slot filled" style="animation-delay:' + (k * 260) + 'ms">' +
+    return '<div class="slot filled" data-focusable data-action="moreProvs" data-movie="' + m.id + '" style="animation-delay:' + (k * 260) + 'ms">' +
       '<div class="slot-poster"><span class="slot-num">' + (k + 1) + '</span><img src="' + img(m.p, 'w342') + '" alt=""></div>' +
       '<div class="slot-info"><span class="tag ' + (x.yes === n ? '' : 'soft') + '">' + tag + '</span>' +
       '<p class="slot-title">' + esc(m.t) + '</p>' +
       '<p class="slot-sub">' + esc([altTitle(m), m.y].join(altTitle(m) && m.y ? ' · ' : '')) + '</p>' +
-      '<div class="prov" data-prov="' + m.id + '"><p class="prov-note">Buscando dónde verla…</p></div></div></div>';
+      '<p class="slot-where" data-prov="' + m.id + '">Buscando dónde verla…</p></div></div>';
   }
   function renderResults() {
     var sig = []; for (var i = 0; i < S.players.length; i++) sig.push((S.players[i].likes || []).length);
@@ -204,13 +205,26 @@
     $('resPeople').textContent = n + (n === 1 ? ' persona' : ' personas');
     $('resTitle').textContent = R.full >= GOAL ? '¡Ya tienen sus ' + GOAL + ' películas!' : R.full === 1 ? 'Coincidieron en una película'
       : R.full ? 'Coincidieron en ' + R.full + ' películas' : 'No coincidieron esta vez';
-    $('resLede').textContent = R.full ? 'Elijan una para verla ahora, o jueguen otra ronda con películas nuevas.'
-      : R.picks.length ? 'Estas fueron las que más votos tuvieron. Otra ronda trae películas nuevas.' : 'Jueguen otra ronda: les tocarán películas nuevas.';
+    $('resLede').textContent = R.full ? 'Elijan una o jueguen otra ronda.'
+      : R.picks.length ? 'Las más votadas. Otra ronda trae películas nuevas.' : 'Otra ronda trae películas nuevas.';
     for (var k = 0; k < GOAL; k++) h += R.picks[k] ? filledSlot(R.picks[k], k, n) : emptySlot(k, 'Sin coincidencia');
     $('resSlots').innerHTML = h;
-    S.resAutoFocus = true;
     for (var d = 0; d < R.picks.length; d++) loadProviders(R.picks[d].m);
-    TP.focus.ensure('[data-action="newRound"]');
+    fitStage('results');
+    var firstPoster = document.querySelector('#resSlots .slot.filled');
+    if (firstPoster) TP.focus.setFocus(firstPoster); else TP.focus.ensure('[data-action="newRound"]');
+  }
+  /* No scroll on TV: if the screen's content is taller than the screen (other fonts, 720p, an extra header
+     button…), shrink the posters step by step until everything fits. Measured, so it adapts to whatever the
+     STB actually renders. */
+  var POSTER_H = 17.4, POSTER_MIN = 8;   /* posters are the hero now: start big, shrink only if the screen needs it */
+  function fitStage(name) {
+    var sec = document.querySelector('[data-screen="' + name + '"]'); if (!sec || sec.hidden) return;
+    var posters = sec.querySelectorAll('.slot-poster'), h = POSTER_H, i;
+    function apply() { for (i = 0; i < posters.length; i++) { posters[i].style.height = h + 'rem'; posters[i].style.width = (h * 2 / 3) + 'rem'; } }
+    apply();
+    var guard = 0;
+    while (sec.scrollHeight > sec.clientHeight + 1 && h > POSTER_MIN && guard++ < 40) { h -= .3; apply(); }
   }
   function provBtn(pr, movieId, short) {
     var desc = TP.apps.describe(pr.provider_name);
@@ -218,19 +232,23 @@
       (pr.logo_path ? '<img src="' + img(pr.logo_path, 'w92') + '" alt="">' : '<span class="nologo">' + esc(desc.label.charAt(0)) + '</span>') +
       '<span class="pl">' + (short ? '' : 'Ver en ') + esc(desc.label) + '</span></button>';
   }
-  /* "+N": every platform for that movie in one dialog, no scroll (3 columns when there are many). */
+  /* OK on a poster: every platform for that movie in one dialog (2 columns, no scroll). */
   function openProvs(movieId) {
-    var m = findMovie(movieId), list = S.provs[movieId] || [], h = '';
-    if (!m || !list.length) return;
+    var m = findMovie(movieId); if (!m) return;
+    var info = S.provs[movieId], list = (info && info.flat) || [], h = '', sub;
     for (var i = 0; i < list.length; i++) h += provBtn(list[i], movieId, true);  /* the dialog title already says 'Dónde verla' */
+    if (!info) sub = 'Buscando dónde verla…';
+    else if (list.length) sub = list.length + (list.length === 1 ? ' plataforma' : ' plataformas') + ' en México';
+    else if (info.other.length) sub = 'No está en suscripción. Solo en renta o compra: ' + info.other[0].provider_name + '.';
+    else sub = 'No está en streaming en México.';
     $('provsGrid').innerHTML = h;
-    $('provsGrid').className = 'provs-grid';   /* always 2 columns: long names stay readable */
     $('provsPoster').src = img(m.p, 'w342');
     $('provsTitle').textContent = m.t;
-    $('provsSub').textContent = list.length + (list.length === 1 ? ' plataforma' : ' plataformas') + ' en México';
-    S.provsReturn = TP.focus.current(); S.provsOpen = true;
+    $('provsSub').textContent = sub;
+    if (!S.provsOpen) S.provsReturn = TP.focus.current();
+    S.provsOpen = movieId;
     $('provs').hidden = false;
-    TP.focus.setScope($('provs'), '#provsGrid .pbtn');
+    TP.focus.setScope($('provs'), list.length ? '#provsGrid .pbtn' : '[data-action="closeProvs"]');
   }
   function closeProvs() {
     if (!S.provsOpen) return;
@@ -240,24 +258,17 @@
   }
   function loadProviders(m) {
     catalog.details(m.id, function (err, d) {
-      var slot = document.querySelector('[data-prov="' + m.id + '"]'); if (!slot) return;
-      if (err) { slot.innerHTML = '<p class="prov-note">Sin información de plataformas</p>'; return; }
-      var pv = QV.catalog.providersOf(d), h = '';
-      if (pv.flat.length) {
-        S.provs[m.id] = pv.flat;
-        /* Row 1: first platform. Row 2: second platform, plus "+N" when there are more (opens them all). */
-        h += provBtn(pv.flat[0], m.id);
-        if (pv.flat.length > 1) {
-          h += '<div class="prov-row">' + provBtn(pv.flat[1], m.id) +
-            (pv.flat.length > 2 ? '<button class="pbtn more" data-focusable data-action="moreProvs" data-movie="' + m.id + '">+' + (pv.flat.length - 2) + '</button>' : '') + '</div>';
-        }
-      } else if (pv.other.length) {
-        h += '<p class="prov-note">Solo en renta o compra: ' + esc(pv.other[0].provider_name) + '</p>';
-      } else h += '<p class="prov-note">No está en streaming en México.</p>';
-      slot.innerHTML = h;
-      /* First "Ver en…" button to appear takes focus, unless the person already started moving. */
-      var first = S.resAutoFocus && !S.launchOpen && document.querySelector('.slot .pbtn[data-focusable]');
-      if (first) { S.resAutoFocus = false; TP.focus.setFocus(first); } else TP.focus.ensure();
+      var pv = err ? { flat: [], other: [] } : QV.catalog.providersOf(d);
+      S.provs[m.id] = pv;
+      var line = document.querySelector('[data-prov="' + m.id + '"]');
+      if (line) {
+        var f = pv.flat;
+        line.textContent = err ? 'Sin información de plataformas'
+          : f.length ? 'En ' + TP.apps.describe(f[0].provider_name).label + (f.length > 1 ? ' y ' + (f.length - 1) + ' más' : '')
+          : pv.other.length ? 'Solo en renta o compra' : 'No está en streaming en México';
+      }
+      if (S.provsOpen === m.id) openProvs(m.id);   /* dialog was opened while this was still loading */
+      fitStage('results');
     });
   }
 
