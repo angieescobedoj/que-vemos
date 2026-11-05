@@ -644,7 +644,10 @@
     var html = '<h2>🌙 Modo noche</h2><p class="sub">¿En cuánto se apaga la TV? También puedes elegirlo en la TV con el control.</p><div class="chips">';
     var opts = [15, 30, 45, 60, 90, 0];
     for (var i = 0; i < opts.length; i++) html += '<button data-sleep="' + opts[i] + '">' + (opts[i] ? opts[i] + ' min' : 'No apagar') + '</button>';
-    openSheet('sleep', html + '</div>');
+    html += '</div><label class="lf">O escribe cuántos minutos</label><div class="stepper"><button data-sstep="-5" aria-label="Menos">−</button>' +
+      '<input id="slIn" type="number" inputmode="numeric" min="1" max="300" value="25"><span>min</span><button data-sstep="5" aria-label="Más">＋</button></div>' +
+      '<button class="btn" data-act="sleepGo" style="margin-top:12px">Programar apagado</button>';
+    openSheet('sleep', html);
     S.sleepAsk = { seen: false };
   }
 
@@ -663,6 +666,8 @@
     else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
     else if (g('data-say')) runVoice(g('data-say'));
     else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex && ex.id === 'movies') openTastes(); else if (ex && ex.id === 'night') { applyExp(ex); openSleepSheet(); } else if (ex) applyExp(ex); }
+    else if (g('data-sstep')) { var si = $('slIn'); si.value = Math.max(1, Math.min(300, (Number(si.value) || 0) + Number(g('data-sstep')))); }
+    else if (act === 'sleepGo') { var sv = Math.round(Number($('slIn').value)); if (!(sv >= 1 && sv <= 300)) { toast('Escribe entre 1 y 300 minutos', true); return; } send({ t: 'sleep', min: sv }); S.sleepAsk = null; closeSheet(); toast('🌙 La TV se apagará en ' + sv + ' min'); }
     else if (g('data-sleep') !== null && el.hasAttribute('data-sleep')) { var mn = Number(g('data-sleep')); send({ t: 'sleep', min: mn }); S.sleepAsk = null; closeSheet(); toast(mn ? '🌙 La TV se apagará en ' + mn + ' min' : 'Sin apagado automático'); }
     else if (g('data-gen')) {
       if (!el.classList.contains('on') && document.querySelectorAll('[data-gen].on').length >= 3) toast('Máximo 3: quita uno primero');

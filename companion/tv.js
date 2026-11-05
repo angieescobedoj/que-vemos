@@ -308,58 +308,67 @@
   function openSleep() {
     var html = '';
     for (var i = 0; i < SLEEP_OPTS.length; i++) html += '<button class="btn ghost" data-focusable data-action="sleep" data-min="' + SLEEP_OPTS[i] + '">' + (SLEEP_OPTS[i] ? SLEEP_OPTS[i] + ' min' : 'No apagar') + '</button>';
-    $('sleepOpts').innerHTML = html; closeMenu(); closeGuide();
+    html += '<button class="btn ghost" data-focusable data-action="sleepCustom">Otro tiempo…</button>';
+    $('sleepOpts').className = 'sleep-opts'; $('sleepOpts').innerHTML = html; closeMenu(); closeGuide();
     S.dialog = 'sleep'; $('sleepDlg').hidden = false;
     TP.focus.setFocus(null); TP.focus.setScope($('sleepDlg'), '[data-min="30"]');
     pushState();
+  }
+  /* "Otro tiempo": − / + de 5 en 5 minutos con el control */
+  var sleepCustom = 25;
+  function fmtMin(m) { return m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
+  function openSleepCustom() {
+    $('sleepOpts').className = 'sleep-opts col';
+    $('sleepOpts').innerHTML = '<div class="sleep-step"><button class="btn ghost" data-focusable data-action="sleepStep" data-d="-5">−</button>' +
+      '<span class="sleep-val" id="sleepVal">' + fmtMin(sleepCustom) + '</span><button class="btn ghost" data-focusable data-action="sleepStep" data-d="5">+</button></div>' +
+      '<button class="btn" data-focusable data-action="sleep" data-min="' + sleepCustom + '" id="sleepOk">Apagar en ' + fmtMin(sleepCustom) + '</button>' +
+      '<button class="btn ghost" data-focusable data-action="sleepBack">Volver</button>';
+    TP.focus.setFocus(null); TP.focus.setScope($('sleepDlg'), '[data-d="5"]');
+  }
+  function stepSleep(d) {
+    sleepCustom = Math.max(5, Math.min(300, sleepCustom + d));
+    $('sleepVal').textContent = fmtMin(sleepCustom); $('sleepOk').setAttribute('data-min', sleepCustom); $('sleepOk').textContent = 'Apagar en ' + fmtMin(sleepCustom);
   }
   function setSleep(min, who) {
     S.sleepAt = min > 0 ? now() + min * 60000 : 0;
     if (S.dialog === 'sleep') closeDialog();
     applyLook();
-    toast(min > 0 ? '🌙 La TV se apagará en ' + min + ' min' + (who ? ' · lo eligió ' + who : '') : 'Sin apagado automático', 3500);
+    toast(min > 0 ? '🌙 La TV se apagará en ' + fmtMin(min) + (who ? ' · lo eligió ' + who : '') : 'Sin apagado automático', 3500);
     pushState();
   }
 
-  /* --- Solo escuchar: música de fondo generada aquí mismo (sin archivos ni derechos), para mostrar que el audio sigue --- */
-  var MUS = { on: false, timer: null, step: 0, next: 0, master: null };
-  var CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], ARP = [0, 1, 2, 1, 0, 2, 1, 2], BEAT = 0.42;
-  function audioCtx() {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-      actx = actx || new AC();
-      if (actx.state === 'suspended' && actx.resume) actx.resume();
-      return actx;
-    } catch (e) { return null; }
+  /* --- Solo escuchar: música de fondo (audio/ambient.mp3, compuesta para este prototipo, sin derechos de terceros).
+     Se usa un <audio> normal porque varios STB no traen Web Audio. Si el navegador bloquea el sonido hasta que alguien
+     toque la pantalla, la TV lo dice y basta con OK en el control para que empiece. */
+  var bgm = null, bgmBlocked = false, bgmPrimed = false;
+  function bgmEl() {
+    if (!bgm) {
+      bgm = document.createElement('audio'); bgm.src = 'audio/ambient.mp3?v=1'; bgm.loop = true; bgm.preload = 'auto';
+      bgm.addEventListener('ended', function () { try { bgm.currentTime = 0; bgm.play(); } catch (e) { /* ignore */ } });
+      document.body.appendChild(bgm);
+    }
+    return bgm;
   }
-  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-  function tone(ctx, t, f, len, type, peak) {
-    var o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    o.connect(g); g.connect(MUS.master); o.start(t); o.stop(t + len + 0.05);
+  function musicVol() { if (bgm) bgm.volume = S.muted ? 0 : Math.max(0, Math.min(1, S.vol / 100)); }
+  function musicHint(blocked) {
+    bgmBlocked = blocked;
+    $('audioWhat').textContent = blocked ? 'Pulsa OK en el control de la TV para escuchar la música' : 'Pantalla apagada · pulsa cualquier botón para encenderla';
   }
-  function musicVol() { if (MUS.master) MUS.master.gain.value = S.muted ? 0 : (S.vol / 100) * 0.7; }
   function startMusic() {
-    if (MUS.on) { musicVol(); return; }
-    var ctx = audioCtx(); if (!ctx) return;
-    MUS.on = true; MUS.master = ctx.createGain(); MUS.master.connect(ctx.destination); musicVol();
-    MUS.step = 0; MUS.next = ctx.currentTime + 0.1;
-    MUS.timer = setInterval(function () {
-      while (MUS.on && MUS.next < ctx.currentTime + 0.35) {
-        var bar = Math.floor(MUS.step / 8) % CHORDS.length, ch = CHORDS[bar], s8 = MUS.step % 8, t = MUS.next;
-        if (s8 === 0) { for (var i = 0; i < 3; i++) tone(ctx, t, hz(ch[i]), BEAT * 8, 'sine', 0.05); }
-        if (s8 === 0 || s8 === 4) tone(ctx, t, hz(ch[0] - 12), BEAT * 3.6, 'sine', 0.12);
-        tone(ctx, t, hz(ch[ARP[s8]] + 12), BEAT * 1.4, 'triangle', 0.07);
-        MUS.next += BEAT; MUS.step++;
-      }
-    }, 100);
+    var a = bgmEl(); a.muted = false; musicVol();
+    try {
+      var pr = a.play();
+      if (pr && pr.then) pr.then(function () { musicHint(false); }, function (err) { musicHint(true); TP.debug.log('bgm: ' + (err && err.name)); });
+      else musicHint(false);
+    } catch (e) { musicHint(true); }
   }
-  function stopMusic() {
-    if (!MUS.on) return;
-    MUS.on = false; clearInterval(MUS.timer);
-    try { MUS.master.gain.setTargetAtTime(0, actx.currentTime, 0.15); } catch (e) { /* ignore */ }
-    var m = MUS.master; setTimeout(function () { try { m.disconnect(); } catch (e) { /* ignore */ } }, 800);
+  function stopMusic() { if (bgm) { try { bgm.pause(); } catch (e) { /* ignore */ } } }
+  /* Primera tecla del control: "desbloquea" el audio para que después pueda sonar aunque la orden venga del celular. */
+  function primeAudio() {
+    if (bgmPrimed) return; bgmPrimed = true;
+    var a = bgmEl();
+    if (S.audioOnly) { startMusic(); return; }
+    try { a.muted = true; var pr = a.play(); if (pr && pr.then) pr.then(function () { if (!S.audioOnly) a.pause(); a.muted = false; }, function () { a.muted = false; bgmPrimed = false; }); } catch (e) { a.muted = false; }
   }
 
   function sleepTxt() { return S.sleepAt ? ' · se apaga en ' + Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) + ' min' : ''; }
@@ -675,6 +684,7 @@
   function handleKey(k) {
     if (S.off) { if (k === 'OK' || k === 'POWER') setOff(false); return; }
     if (S.finding) { stopFind(); return; }
+    if (S.audioOnly && bgmBlocked && k === 'OK') { startMusic(); return; }
     if (S.audioOnly && k !== 'PLAY' && k !== 'REW' && k !== 'FF') { S.audioOnly = false; applyLook(); pushState(); toast('Pantalla encendida', 1500); return; }
     if (S.menu || S.guide || S.dialog) {
       if (k === 'BACK') { if (S.menu) closeMenu(); else if (S.guide) closeGuide(); else closeDialog(); return; }
@@ -733,6 +743,9 @@
     else if (a === 'prov') openProvider(el);
     else if (a === 'expOff') applyExperience({ id: 'none' }, 'Se');
     else if (a === 'sleep') setSleep(Number(el.getAttribute('data-min')), '');
+    else if (a === 'sleepCustom') openSleepCustom();
+    else if (a === 'sleepStep') stepSleep(Number(el.getAttribute('data-d')));
+    else if (a === 'sleepBack') openSleep();
   });
 
   /* ---------------- comandos de los celulares ---------------- */
@@ -877,7 +890,8 @@
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */
   window.addEventListener('keydown', function (e) {
     if (TP.lifecycle.handlePlatformEvent(e)) return;
-    if (actx && actx.state === 'suspended' && actx.resume) { try { actx.resume(); } catch (err) { /* ignore */ } }   /* una tecla del control desbloquea el audio */
+    if (actx && actx.state === 'suspended' && actx.resume) { try { actx.resume(); } catch (err) { /* ignore */ } }
+    primeAudio();   /* una tecla del control desbloquea el audio */
     var k = TP.keys.normalizeKey(e);
     if (!k) return;
     if (k === 'MENU' || k === 'EXIT') { TP.lifecycle.handleMenu(e); return; }

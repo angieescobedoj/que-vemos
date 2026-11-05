@@ -319,3 +319,8 @@ b{font-weight:700}
 .eq i:nth-child(2){animation-delay:.25s}.eq i:nth-child(3){animation-delay:.5s}.eq i:nth-child(4){animation-delay:.75s}
 @keyframes eq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
 .blackout p{color:rgba(255,255,255,.55)}
+.sleep-step{display:flex;align-items:center;justify-content:center;gap:1rem;width:100%}
+.sleep-step .btn{min-width:4rem;font-size:1.4rem;padding:.4rem 1rem}
+.sleep-val{font-size:2rem;font-weight:700;min-width:9rem;text-align:center}
+.sleep-opts.col{flex-direction:column;align-items:center}
+.sleep-opts.col #sleepOk{min-width:18rem}

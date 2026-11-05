@@ -166,6 +166,10 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .chk .t{font-weight:700;font-size:14px}
 .chk .s{font-size:12.5px;color:#666}
 .chk .fix{display:block;color:#9A2236;font-weight:600;margin-top:3px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:48px;height:48px;border-radius:12px;background:#F1EDF6;color:#4A2E7A;font-size:22px;font-weight:700;flex:none}
+.stepper input{flex:1;min-width:0;text-align:center;font-size:22px;font-weight:700;border:1px solid #DDD3EA;border-radius:12px;padding:9px;color:#1E1A1A}
+.stepper span{font-weight:700;color:#555}
 .verdict span{display:block;font-weight:500;font-size:13px;margin-top:4px}
 .diag div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #EEE;font-size:14px}
 .diag div b{text-align:right}
@@ -194,6 +198,7 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .pad button.pressed{background:var(--card-2);color:#fff;filter:none;transform:none}
 .pad .ok.pressed{background:#9D6FE6;transform:scale(.96)}
 .sheet button.pressed,.banner button.pressed{filter:brightness(.88)}
+.sheet:not([hidden]) ~ .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top))}
 .toast.err{background:var(--red);color:#fff}
 </style>
 </head>
@@ -288,11 +293,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   <p class="hint">Mantén presionado para mover tu canasta</p>
 </section>
 
-<script src="../src/services/http.js?v=6.5"></script>
-<script src="../src/services/firestore-rest.js?v=6.5"></script>
-<script src="content.js?v=6.5"></script>
-<script src="logos.js?v=6.5"></script>
-<script src="store.js?v=6.5"></script>
-<script src="phone.js?v=6.5"></script>
+<script src="../src/services/http.js?v=6.6"></script>
+<script src="../src/services/firestore-rest.js?v=6.6"></script>
+<script src="content.js?v=6.6"></script>
+<script src="logos.js?v=6.6"></script>
+<script src="store.js?v=6.6"></script>
+<script src="phone.js?v=6.6"></script>
 </body>
 </html>
