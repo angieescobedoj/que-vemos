@@ -47,6 +47,7 @@
   }
   /* Abierto desde Companion (companion/tv.html): permite volver a la Sala TV. */
   var FROM_COMPANION = /[?&]back=companion(&|$)/.test(location.search);
+  var CP_CODE = ((location.search.match(/[?&]cp=([A-Za-z0-9]{4})/) || [])[1] || '').toUpperCase();
   function backToCompanion() { location.href = 'companion/tv.html' + (DEMO ? '?demo=1' : ''); }
   function createRoom(cb) {
     var tries = 0;
@@ -276,20 +277,59 @@
   });
 
   /* ---------- input: remote control first, pointer as an extra layer ---------- */
+  /* Una sola ruta para el control: teclado/control remoto del STB y comandos del celular del Companion. */
+  function handleKey(k, e) {
+    function stop() { if (e && e.preventDefault) e.preventDefault(); }
+    if (k === 'LEFT' || k === 'RIGHT' || k === 'UP' || k === 'DOWN') { stop(); S.resAutoFocus = false; TP.focus.move(k.toLowerCase()); return; }
+    if (k === 'OK') { stop(); TP.focus.activate(); return; }
+    if (k === 'BACK') {
+      if (S.launchOpen) { stop(); closeLaunch(); return; }   /* one level back inside the app */
+      if (FROM_COMPANION) { stop(); backToCompanion(); return; } /* navegación interna de la demo, no salida de la app */
+      if (e) TP.lifecycle.handleRootBack(e);                  /* root: isolated, empty (R6) */
+      return;
+    }
+    if ((k === 'MENU' || k === 'EXIT') && e) { TP.lifecycle.handleMenu(e); }     /* native; never our own exit (R6) */
+  }
   window.addEventListener('keydown', function (e) {
     if (TP.lifecycle.handlePlatformEvent(e)) return;
     var k = TP.keys.normalizeKey(e);
     if (!k) return;
-    if (k === 'LEFT' || k === 'RIGHT' || k === 'UP' || k === 'DOWN') { e.preventDefault(); S.resAutoFocus = false; TP.focus.move(k.toLowerCase()); return; }
-    if (k === 'OK') { e.preventDefault(); TP.focus.activate(); return; }
-    if (k === 'BACK') {
-      if (S.launchOpen) { e.preventDefault(); closeLaunch(); return; }   /* one level back inside the app */
-      if (FROM_COMPANION) { e.preventDefault(); backToCompanion(); return; } /* navegación interna de la demo, no salida de la app */
-      TP.lifecycle.handleRootBack(e);                                     /* root: isolated, empty (R6) */
-      return;
-    }
-    if (k === 'MENU' || k === 'EXIT') { TP.lifecycle.handleMenu(e); }     /* native; never our own exit (R6) */
+    handleKey(k, e);
   });
+
+  /* Puente con el Companion: el celular vinculado a la Sala TV sigue funcionando como control dentro del juego.
+     Lee rooms/{cp}/players (mismo esquema que companion/tv.js) y aplica solo los comandos nuevos. */
+  (function companionBridge() {
+    if (!FROM_COMPANION || !CP_CODE) return;
+    var lastSeq = {}, primed = false, busy = false;
+    function listDemo(cb) {
+      var out = [], pre = 'cp-demo-' + CP_CODE + '-p-';
+      try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(pre) === 0) { var p = JSON.parse(localStorage.getItem(k)); if (p) { p.id = k.substring(pre.length); out.push(p); } } } } catch (e) { /* ignore */ }
+      cb(null, out);
+    }
+    function apply(c) {
+      if (c.t === 'key') handleKey(c.k, null);
+      else if (c.t === 'home' || c.t === 'open' || c.t === 'search' || c.t === 'game') backToCompanion();
+    }
+    function tick() {
+      if (busy || S.standby) return; busy = true;
+      (DEMO ? listDemo : function (cb) { QV.firestoreStore.listPlayers(CP_CODE, cb); })(function (err, ps) {
+        busy = false; if (err || !ps) return;
+        for (var i = 0; i < ps.length; i++) {
+          var cmds = ps[i].cmds || [], id = ps[i].id;
+          for (var j = 0; j < cmds.length; j++) {
+            if (!cmds[j]) continue;
+            if (!primed || lastSeq[id] === undefined) { lastSeq[id] = Math.max(lastSeq[id] || 0, cmds[j].seq); continue; }
+            if (cmds[j].seq > lastSeq[id]) { lastSeq[id] = cmds[j].seq; apply(cmds[j]); }
+          }
+          if (lastSeq[id] === undefined) lastSeq[id] = 0;
+        }
+        primed = true;
+      });
+    }
+    setInterval(tick, 600); tick();
+  })();
+
   TP.focus.enablePointer();
 
   /* ---------- lifecycle ---------- */

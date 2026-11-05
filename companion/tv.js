@@ -213,7 +213,8 @@
   function launchSwipe() {
     closeDialog();
     show('boot'); $('bootText').textContent = 'Abriendo ¿Qué vemos?…';
-    setTimeout(function () { location.href = '../tv.html?back=companion' + (CP.DEMO ? '&demo=1' : ''); }, 600);
+    S.screen = 'swipe'; pushState();
+    setTimeout(function () { location.href = '../tv.html?back=companion&cp=' + S.code + (CP.DEMO ? '&demo=1' : ''); }, 900);
   }
 
   /* --- B3 · continuar donde lo dejaste --- */

@@ -112,6 +112,8 @@
       html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">En vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">' + C.MATCH.sub + '</div></div>';
     } else if (r.screen === 'search') {
       html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">Buscando “' + esc(r.query) + '”</div><div class="s">Usa las flechas y OK para elegir</div></div>';
+    } else if (r.screen === 'swipe') {
+      html = '<span class="thumb" style="background:linear-gradient(150deg,#F38BC9,#5470D6)"></span><div><div class="k">En la TV</div><div class="t">¿Qué vemos? · match de películas</div><div class="s">Muévete con el control · Regresar o Inicio vuelve a Sala TV</div></div>';
     } else if (r.screen === 'game') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
     } else {
