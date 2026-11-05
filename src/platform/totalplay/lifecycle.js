@@ -18,9 +18,26 @@
     return false;
   }
 
-  /* R6 — root-level BACK / MENU / EXIT: intentionally empty. Ready to be wired to the official
+  /* R6 — root-level BACK / MENU / EXIT: no exit logic of our own. Ready to be wired to the official
      Totalplay exit API the day it is confirmed. Do NOT add window.close(), history.back() or GOTO_HOMEPAGE here. */
-  function handleRootBack(event) { if (event && event.preventDefault) event.preventDefault(); }
+  /* ?return=<url>: when a launcher (e.g. Lab UX) opens this app, root BACK goes back to it.
+     Only allowlisted hosts, so the page can't be used as an open redirect. Without ?return= it stays empty (R6).
+     This navigates to the launcher's URL; it never closes the browser or calls an exit API. */
+  var RETURN_OK = /^https:\/\/stteccimm\.org\//;
+  function getReturnUrl() {
+    var m = /[?&]return=([^&#]*)/.exec(location.search), url;
+    if (!m) return '';
+    try { url = decodeURIComponent(m[1]); } catch (e) { return ''; }
+    return RETURN_OK.test(url) ? url : '';
+  }
+  /* '&return=…' to append when navigating between pages of the app, or '' */
+  function returnQuery() { var url = getReturnUrl(); return url ? '&return=' + encodeURIComponent(url) : ''; }
+
+  function handleRootBack(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    var url = getReturnUrl();
+    if (url) location.href = url;
+  }
   function handleMenu(event) { if (event && event.preventDefault) event.preventDefault(); }
 
   function getPowerState() {
@@ -29,5 +46,5 @@
   }
 
   TP.lifecycle = { STANDBY: STANDBY, WAKEUP: WAKEUP, on: on, handlePlatformEvent: handlePlatformEvent,
-    handleRootBack: handleRootBack, handleMenu: handleMenu, getPowerState: getPowerState };
+    handleRootBack: handleRootBack, handleMenu: handleMenu, getPowerState: getPowerState, returnQuery: returnQuery };
 })(window.TP = window.TP || {});
