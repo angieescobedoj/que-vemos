@@ -16,7 +16,10 @@
   --ring:0 0 0 .18rem #fff,0 0 0 .5rem rgba(185,160,214,.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{font-size:1.48vw;font-size:clamp(14px,1.48vw,36px);height:100%}
+/* 1rem ≈ 28px at 1920×1080. The whole screen scales like a TV in any window: by width or height, whichever
+   is smaller, with no px floor (a narrow desktop window just shows a smaller TV instead of cutting it off).
+   Runtimes without min() fall back to the plain vw line. */
+html{font-size:1.48vw;font-size:min(1.48vw,2.6vh);height:100%}
 body{height:100%;overflow:hidden;color:var(--ink);font-family:var(--sans);line-height:1.35;-webkit-font-smoothing:antialiased;
   background:radial-gradient(50% 45% at 80% 10%,rgba(122,76,196,.45) 0%,rgba(122,76,196,0) 70%),
              radial-gradient(45% 40% at 10% 90%,rgba(229,138,195,.22) 0%,rgba(229,138,195,0) 70%),
