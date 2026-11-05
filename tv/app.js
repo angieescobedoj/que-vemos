@@ -47,7 +47,9 @@
   }
   /* Abierto desde Companion (companion/tv.html): permite volver a la Sala TV. */
   var FROM_COMPANION = /[?&]back=companion(&|$)/.test(location.search);
+  /* Sala del Companion: viene en ?cp=; si no (versión en caché de la Sala TV), la última que guardó esa TV en este navegador. */
   var CP_CODE = ((location.search.match(/[?&]cp=([A-Za-z0-9]{4})/) || [])[1] || '').toUpperCase();
+  if (FROM_COMPANION && !CP_CODE) { try { CP_CODE = (localStorage.getItem('cp-tv-code' + (DEMO ? '-demo' : '')) || '').toUpperCase(); } catch (e) { CP_CODE = ''; } }
   function backToCompanion() { location.href = 'companion/tv.html' + (DEMO ? '?demo=1' : ''); }
   function createRoom(cb) {
     var tries = 0;
