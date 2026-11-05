@@ -620,6 +620,21 @@
     render(); window.scrollTo(0, 0);
   }
 
+  /* Botón presionado visible en iOS (Safari no muestra :active sin esto) y en Android. */
+  document.addEventListener('touchstart', function () {}, { passive: true });
+  var pressedAt = 0;
+  document.addEventListener('pointerdown', function (e) {
+    var b = e.target.closest && e.target.closest('button'); if (!b) return;
+    b.classList.add('pressed'); pressedAt = Date.now();
+  }, { passive: true });
+  function release() {
+    var wait = Math.max(0, 140 - (Date.now() - pressedAt));
+    setTimeout(function () { var l = document.querySelectorAll('button.pressed'); for (var i = 0; i < l.length; i++) l[i].classList.remove('pressed'); }, wait);
+  }
+  document.addEventListener('pointerup', release, { passive: true });
+  document.addEventListener('pointercancel', release, { passive: true });
+  window.addEventListener('scroll', release, { passive: true });
+
   /* logos oficiales en los accesos directos (si no cargan, se queda el nombre) */
   function paintAppLogos() {
     var bs = document.querySelectorAll('.apps button[data-app]');

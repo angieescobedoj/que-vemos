@@ -3,7 +3,7 @@
    el juego ¿Qué vemos? para "Ver en Netflix"), se guardan 7 días en localStorage y, si no hay red, se queda el texto. */
 (function (CP, QV) {
   'use strict';
-  var KEY = 'a7795e812c110c40515e414ceb379fac', LS = 'cp-logos-v1', WEEK = 7 * 24 * 3600 * 1000;
+  var KEY = 'a7795e812c110c40515e414ceb379fac', LS = 'cp-logos-v2', WEEK = 7 * 24 * 3600 * 1000;
   var HOSTS = ['https://image.tmdb.org/t/p/', 'https://media.themoviedb.org/t/p/', 'https://wsrv.nl/?url=image.tmdb.org/t/p/'];
   /* id de la app → id de proveedor en TMDB y nombre de respaldo */
   var MATCH = { netflix: { pid: 8, re: /^netflix$/i }, prime: { pid: 119, re: /^amazon prime video$/i }, youtube: { pid: 192, re: /^youtube$/i, alt: /youtube/i } };
@@ -25,7 +25,7 @@
   function fetchAll() {
     var kinds = ['tv', 'movie'], n = 0;
     function next() {
-      if (n >= kinds.length) { save(paths); done(); return; }
+      if (n >= kinds.length) { if (paths.netflix || paths.prime || paths.youtube) save(paths); done(); return; }
       var url = 'https://api.themoviedb.org/3/watch/providers/' + kinds[n++] + '?api_key=' + KEY + '&watch_region=MX&language=es-MX';
       QV.http.get(url, function (err, data) { if (!err && data && data.results) pick(data.results); next(); });
     }

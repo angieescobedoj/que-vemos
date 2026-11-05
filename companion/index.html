@@ -45,7 +45,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(47,158,98,.25);flex:none}
 .dot.off{background:var(--red);box-shadow:0 0 0 4px rgba(217,54,79,.25)}
 .dot.sleep{background:#E0A93A;box-shadow:0 0 0 4px rgba(224,169,58,.25)}
-.pwr{width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:22px;font-weight:700;flex:none}
+.pwr{width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:22px;font-weight:700;flex:none;display:flex;align-items:center;justify-content:center}
 .pwr.sleep{background:var(--card-2);color:var(--green);border:1px solid var(--line)}
 .now{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .now .thumb{width:50px;height:50px;border-radius:14px;flex:none}
@@ -177,6 +177,15 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .game .gb button.on{background:var(--violet);color:#fff}
 .game .hint{text-align:center;font-size:12px;color:var(--ink-3);margin-top:10px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#fff;color:#1E1A1A;font-weight:600;font-size:13px;padding:10px 16px;border-radius:12px;z-index:45;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+/* Feedback al presionar, igual en iPhone y Android: iOS no pinta :active por sí solo, así que phone.js pone .pressed
+   en cuanto el dedo toca el botón y lo deja al menos 140 ms para que se alcance a ver aunque el toque sea rapidísimo. */
+button{transition:background-color .08s,transform .08s,filter .08s}
+button.pressed{transform:scale(.95);filter:brightness(1.4)}
+.quick button.pressed,.row2 button.pressed,.keys3 button.pressed,.vol button.pressed,.more button.pressed,.apps button.pressed,.dec.pressed,.tab.pressed{background:#3D3060;border-color:rgba(185,160,214,.7);filter:none}
+.quick button.voice.pressed{background:#9D6FE6;border-color:#9D6FE6}
+.pad button.pressed{background:var(--card-2);color:#fff;filter:none;transform:none}
+.pad .ok.pressed{background:#9D6FE6;transform:scale(.96)}
+.sheet button.pressed,.banner button.pressed{filter:brightness(.88)}
 .toast.err{background:var(--red);color:#fff}
 </style>
 </head>
@@ -195,7 +204,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
   <section id="main" hidden>
     <header class="top">
       <button class="dec" data-act="decoders"><span class="dot" id="dot"></span><span style="min-width:0"><b id="decName">Sala</b><small id="decState">Conectado</small></span><i>▾</i></button>
-      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV">⏻</button>
+      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
     </header>
     <div class="fake-note" id="fakeNote" hidden></div>
     <div class="now" id="now"></div>
