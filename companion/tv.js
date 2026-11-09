@@ -96,13 +96,13 @@
 
   /* --- inicio --- */
   function artFor(item) {
-    if (item.id === 'match') return 'background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
+    if (item.id === 'match') return 'background:url(' + C.PHOTOS.match + '640) center/cover no-repeat,repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
     if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w780') + ') center/cover no-repeat';
     if (item.id === 'series' || item.id === 'bunny') { if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat'; var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
     if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
     if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat';
     if (item.id === 'ship') return 'background:radial-gradient(1.5px 1.5px at 25% 30%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(1.5px 1.5px at 70% 25%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(35% 35% at 70% 75%,rgba(127,214,255,.45) 0%,rgba(127,214,255,0) 70%),linear-gradient(180deg,#070512,#2A1E60)';
-    if (item.id === 'recipe') return 'background:radial-gradient(40% 45% at 72% 40%,rgba(255,196,92,.55) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#3E7A3A 0%,#1E3A1C 100%)';
+    if (item.id === 'recipe') return 'background:url(' + C.PHOTOS.recipe + '640) center/cover no-repeat,radial-gradient(40% 45% at 72% 40%,rgba(255,196,92,.55) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#3E7A3A 0%,#1E3A1C 100%)';
     if (item.id === 'tv') return 'background:linear-gradient(150deg,#3D7BE8,#2E7D49 55%,#3A2160)';
     if (item.id === 'game') return 'background:radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
     return item.art ? 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')' : '';
@@ -122,7 +122,7 @@
     }
     var extra = '';
     if (item.id === 'series') extra = '<div class="t-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></div>';
-    if (item.id === 'recipe') extra = '<span class="t-emo">🌮</span>' + (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
+    if (item.id === 'recipe') extra = '' + (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
     if (item.id === 'bunny' && S.vsaved > 1) extra = '<div class="t-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></div>';
     var sub = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     return '<button class="tile' + (wide ? ' wide' : '') + '" data-focusable data-action="open" data-id="' + item.id + '">' +
@@ -843,8 +843,9 @@
     if (S.content === 'recipe') {
       var RC = C.RECIPE, rp = curPos(), si = C.recipeStep(rp), step = RC.steps[si];
       scene.className = 'scene';
-      scene.style.background = 'radial-gradient(45% 55% at 75% 35%,rgba(255,196,92,.35) 0%,rgba(255,196,92,0) 70%),linear-gradient(160deg,#3E6A36 0%,#1A2E18 100%)';
-      $('pTag').textContent = 'Recetas · Cocina en casa'; $('pTitle').textContent = RC.title;
+      scene.className = 'scene img';
+      scene.style.background = 'linear-gradient(180deg,rgba(10,7,16,.55) 0%,rgba(10,7,16,.25) 40%,rgba(10,7,16,.6) 100%),url(' + C.PHOTOS.recipe + '1600) center/cover no-repeat,linear-gradient(160deg,#3E6A36 0%,#1A2E18 100%)';
+      $('pTag').textContent = RC.title + ' · cocina en casa'; $('pTitle').textContent = RC.dish;
       $('pSub').textContent = S.recipeSeq ? '📱 La receta y los ingredientes ya están en tu celular' : 'Receta para 4 personas · 25 min';
       $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
       $('rcNum').textContent = 'Paso ' + (si + 1) + ' de ' + RC.steps.length; $('rcIc').textContent = step.ic; $('rcT').textContent = step.t; $('rcD').textContent = step.d;
@@ -880,7 +881,8 @@
     }
     if (S.content === 'match') {
       var m = C.MATCH;
-      scene.className = 'scene pitch'; scene.style.background = '';
+      scene.className = 'scene img';
+      scene.style.background = 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.65) 100%),url(' + C.PHOTOS.match + '1600) center/cover no-repeat,repeating-linear-gradient(90deg,#2E7D49 0 8%,#2A7243 8% 16%)';
       $('pTag').textContent = 'En vivo · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
       $('scorebug').hidden = false;
       $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + m.score[0] + ' – ' + m.score[1] +

@@ -52,7 +52,13 @@
      Se usa un fragmento de 60 s con un corte a comerciales; durante el corte el celular muestra datos curiosos. */
   /* Recetas (no es canal: es un contenido de "Para ti"). La TV reproduce la receta paso a paso y al celular le llega
      la lista de ingredientes para comprarlos en un supermercado de Shop Totalplay sin pausar la TV. Supermercados ficticios. */
-  var RECIPE = { id: 'recipe', kind: 'recipe', title: 'Enchiladas verdes', sub: 'Cocina en casa · 25 min', tag: 'Recetas', dur: 150, sendAt: 4,
+  /* Fotos reales con licencia libre de Unsplash (se cargan desde images.unsplash.com; si no cargan queda el degradado):
+     receta: Jason Briscoe · unsplash.com/photos/GrdJp16CPk8 — partido: Eduard Delputte · unsplash.com/photos/65yjpk2HSlA */
+  var PHOTOS = {
+    recipe: 'https://images.unsplash.com/photo-1556911073-a517e752729c?fm=jpg&q=70&fit=crop&w=',
+    match: 'https://images.unsplash.com/photo-1762013315117-1c8005ad2b41?fm=jpg&q=70&fit=crop&w='
+  };
+  var RECIPE = { id: 'recipe', kind: 'recipe', title: 'Recetas para ti', dish: 'Enchiladas verdes', sub: 'Hoy: enchiladas verdes', tag: 'Cocina en casa', dur: 150, sendAt: 4,
     steps: [
       { t: 'Cuece los tomates y el chile', d: 'Hierve el tomate verde y los chiles serranos unos 10 minutos.', ic: '🍅' },
       { t: 'Licúa la salsa', d: 'Licúa con cebolla, ajo, cilantro y un poco del agua de cocción.', ic: '🥣' },
@@ -186,5 +192,5 @@
   }
   function all() { return [SERIES, BUNNY, RECIPE, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, PHOTOS: PHOTOS, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

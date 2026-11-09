@@ -158,7 +158,7 @@
       html = '<span class="thumb" style="' + sinArt(sc.art) + '"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(sc.place) + '</div><div class="t">Los Pecadores</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
     } else if (r.screen === 'player' && r.content === 'recipe') {
       var RC = C.RECIPE, si = r.recipeStep || 0;
-      html = '<span class="thumb" style="background:linear-gradient(150deg,#3E7A3A,#1E3A1C);display:flex;align-items:center;justify-content:center;font-size:24px">' + RC.steps[si].ic + '</span><div class="grow"><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · paso ' + (si + 1) + ' de ' + RC.steps.length + '</div><div class="t">' + esc(RC.title) + '</div><div class="s">' + esc(RC.steps[si].t) + '</div></div>' +
+      html = '<span class="thumb" style="background:#3E7A3A url(' + C.PHOTOS.recipe + '200) center/cover"></span><div class="grow"><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · paso ' + (si + 1) + ' de ' + RC.steps.length + '</div><div class="t">' + esc(RC.dish) + '</div><div class="s">' + esc(RC.steps[si].t) + '</div></div>' +
         (r.recipeSeq ? '<button class="nowbtn" data-act="recipe">🛒 Receta</button>' : '');
     } else if (r.screen === 'player' && r.content === 'video') {
       var vp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
@@ -171,7 +171,7 @@
       var mv = r.movie, mp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
       html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(mv.label || APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
     } else if (r.screen === 'player' && r.content === 'match') {
-      html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">En vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
+      html = '<span class="thumb" style="background:#2E7D49 url(' + C.PHOTOS.match + '200) center/cover"></span><div><div class="k">En vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
     } else if (r.screen === 'player' && r.content === 'live') {
       var ch = C.channel(r.channel) || C.CHANNELS[0];
       html = '<span class="thumb" style="background:linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')"></span><div><div class="k">Canal ' + ch.n + ' · en vivo</div><div class="t">' + esc(ch.show) + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
@@ -478,7 +478,7 @@
   function showRecipeBanner() {
     var RC = C.RECIPE, b = $('banner');
     b.className = 'banner offer';
-    b.innerHTML = '<span class="poster" style="background:linear-gradient(150deg,#3E7A3A,#1E3A1C);display:flex;align-items:center;justify-content:center;font-size:30px">🌮</span><div class="grow"><div class="k">Te llegó la receta</div><div class="t">' + esc(RC.title) + '</div><div class="s">' + RC.ingredients.length + ' ingredientes · cómpralos en Shop sin pausar la TV</div></div>' +
+    b.innerHTML = '<span class="poster" style="background:#3E7A3A url(' + C.PHOTOS.recipe + '200) center/cover"></span><div class="grow"><div class="k">Te llegó la receta</div><div class="t">' + esc(RC.dish) + '</div><div class="s">' + RC.ingredients.length + ' ingredientes · cómpralos en Shop sin pausar la TV</div></div>' +
       '<div class="row"><button data-act="recipe">Ver receta e ingredientes</button><button class="g" data-act="closeBanner">Luego</button></div>';
     b.hidden = false; buzz(); setTimeout(buzz, 180);
     clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 25000);
@@ -491,7 +491,7 @@
   function openRecipe() {
     var RC = C.RECIPE, tab = S.rcTab || 'ing';
     if (!S.rcSel) { S.rcSel = []; for (var i = 0; i < RC.ingredients.length; i++) S.rcSel.push(true); S.rcStore = 0; }
-    var html = '<p class="eyebrow" style="color:#7A4CC4">Receta · se sigue viendo en la TV</p><h2>' + esc(RC.title) + '</h2><p class="sub">Para 4 personas · 25 min</p>' +
+    var html = '<p class="eyebrow" style="color:#7A4CC4">Receta · se sigue viendo en la TV</p><h2>' + esc(RC.dish) + '</h2><p class="sub">Para 4 personas · 25 min</p>' +
       '<div class="seg2"><button class="' + (tab === 'ing' ? 'on' : '') + '" data-rctab="ing">Ingredientes</button><button class="' + (tab === 'pasos' ? 'on' : '') + '" data-rctab="pasos">Pasos</button></div>';
     if (tab === 'pasos') {
       var cur = (S.room && S.room.recipeStep) || 0; S.rcStepShown = cur;
