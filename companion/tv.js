@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, pong: '', ad: null, offer: null, vsaved: 0
+    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, pong: '', ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -31,9 +31,9 @@
   }
 
   function curPos() { if (S.content === 'video') return $('vid').currentTime || 0; return S.playing ? S.pos + (now() - S.posAt) / 1000 : S.pos; }
-  function dur() { return S.content === 'movie' && S.movie ? S.movie.min * 60 : C.SERIES.duration; }
+  function dur() { return S.content === 'movie' && S.movie ? S.movie.min * 60 : S.content === 'recipe' ? C.RECIPE.dur : C.SERIES.duration; }
   function setPos(p, playing) { S.pos = Math.max(0, Math.min(dur() - 1, p)); S.posAt = now(); S.playing = playing; }
-  function vod() { return S.content === 'series' || S.content === 'movie'; }
+  function vod() { return S.content === 'series' || S.content === 'movie' || S.content === 'recipe'; }
   function playerName(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return S.players[i].name || 'Alguien'; return 'Alguien'; }
   function playerIndex(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return i; return 0; }
   function connected() { var out = [], t = now(); for (var i = 0; i < S.players.length; i++) if (t - (S.players[i].seen || 0) < SEEN_MS) out.push(S.players[i]); return out; }
@@ -57,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
-      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), pong: S.pong, ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved),
+      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), pong: S.pong, ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }, sleepLeft: S.sleepAt ? Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) : 0
     };
   }
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.pong, snap.sleepLeft, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.pong, snap.sleepLeft, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -101,6 +101,7 @@
     if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
     if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat';
     if (item.id === 'ship') return 'background:radial-gradient(1.5px 1.5px at 25% 30%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(1.5px 1.5px at 70% 25%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(35% 35% at 70% 75%,rgba(127,214,255,.45) 0%,rgba(127,214,255,0) 70%),linear-gradient(180deg,#070512,#2A1E60)';
+    if (item.id === 'recipe') return 'background:radial-gradient(40% 45% at 72% 40%,rgba(255,196,92,.55) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#3E7A3A 0%,#1E3A1C 100%)';
     if (item.id === 'tv') return 'background:linear-gradient(150deg,#3D7BE8,#2E7D49 55%,#3A2160)';
     if (item.id === 'game') return 'background:radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
     return item.art ? 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')' : '';
@@ -119,6 +120,7 @@
     }
     var extra = '';
     if (item.id === 'series') extra = '<div class="t-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></div>';
+    if (item.id === 'recipe') extra = (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
     if (item.id === 'bunny' && S.vsaved > 1) extra = '<div class="t-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></div>';
     var sub = item.id === 'series' ? 'T1 E3 · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     return '<button class="tile' + (wide ? ' wide' : '') + '" data-focusable data-action="open" data-id="' + item.id + '">' +
@@ -128,7 +130,7 @@
       '<span class="t-title" style="display:block">' + esc(item.title) + '</span><span class="t-sub" style="display:block">' + esc(sub) + '</span>' + extra + '</span></button>';
   }
   function renderHome() {
-    var r1 = '<div><p class="row-h">Para ti</p><div class="row-tiles">' + tileHtml(C.SERIES, true) + tileHtml(C.BUNNY, true) + tileHtml(C.MATCH, true) + '</div></div>';
+    var r1 = '<div><p class="row-h">Para ti</p><div class="row-tiles">' + tileHtml(C.SERIES, true) + tileHtml(C.BUNNY, true) + tileHtml(C.RECIPE, true) + tileHtml(C.MATCH, true) + '</div></div>';
     var chs = ''; for (var i = 0; i < C.CHANNELS.length; i++) chs += tileHtml(C.CHANNELS[i]);
     var r2 = '<div><p class="row-h">Canales en vivo</p><div class="row-tiles">' + chs + '</div></div>';
     var apps = ''; for (var j = 0; j < C.APPS.length; j++) apps += tileHtml(C.APPS[j]);
@@ -175,6 +177,7 @@
     if (id === 'swipe') { launchSwipe(); return; }
     if (id === 'ship') { startShip(); return; }
     if (id === 'bunny') { playBunny(from === 'start'); return; }
+    if (id === 'recipe') { playRecipe(); return; }
     if (item.kind === 'app') { openApp(id); return; }
     if (id === 'tv') { tune(S.channel); return; }
     if (id === 'match') { openMatch(); return; }
@@ -383,6 +386,29 @@
     });
     v.addEventListener('error', function () { if (S.content === 'video') toast('No se pudo reproducir el video en este equipo', 3500); });
   })();
+
+  /* ================= Recetas: la TV sigue reproduciendo y la lista de compras llega al celular ================= */
+  function playRecipe() {
+    closeOverlays(); stopVideo(); S.offer = null;
+    if (S.screen === 'game') stopGame();
+    if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
+    var start = S.rsaved > 1 && S.rsaved < C.RECIPE.dur - 5 ? S.rsaved : 0;
+    S.content = 'recipe'; S.movie = null; setPos(start, true);
+    if (start < C.RECIPE.sendAt) S.recipeSeq = 0;
+    $('pausePanel').hidden = true;
+    show('player'); paintPlayer();
+    if (start) toast('Continuando la receta · paso ' + (C.recipeStep(start) + 1) + ' de ' + C.RECIPE.steps.length);
+  }
+  function tickRecipe() {
+    if (S.content !== 'recipe') return;
+    var p = curPos();
+    if (!S.recipeSeq && p >= C.RECIPE.sendAt) {
+      S.recipeSeq = now(); pushState();
+      toast(connected().length ? '📱 Te mandamos la receta y los ingredientes a tu celular' : '📱 Escanea el QR para recibir la receta en tu celular', 4500);
+    }
+    var st = C.recipeStep(p); if (st !== S.recipeStepIdx) { S.recipeStepIdx = st; pushState(); }
+    if (p >= C.RECIPE.dur - 0.5) { S.rsaved = 0; toast('¡Buen provecho! 🍽️', 3000); leavePlayer(); }
+  }
 
   /* ================= Pausa en un canal → sugerencia en el celular (On Demand renta / Anytime) ================= */
   var KEY = 'a7795e812c110c40515e414ceb379fac', TMDB = {};
@@ -763,6 +789,7 @@
   }
 
   function leavePlayer() {
+    if (S.content === 'recipe') { S.rsaved = curPos() >= C.RECIPE.dur - 1 ? 0 : curPos(); S.playing = false; }
     if (S.content === 'video') stopVideo();
     if (S.content === 'series') { S.saved = curPos(); S.playing = false; }
     /* de una película recomendada se regresa a la lista de recomendaciones */
@@ -789,6 +816,20 @@
     var scene = $('scene');
     $('chLogo').hidden = true;
     $('vid').hidden = S.content !== 'video'; $('vidShade').hidden = S.content !== 'video';
+    $('recipeCard').hidden = S.content !== 'recipe';
+    if (S.content === 'recipe') {
+      var RC = C.RECIPE, rp = curPos(), si = C.recipeStep(rp), step = RC.steps[si];
+      scene.className = 'scene';
+      scene.style.background = 'radial-gradient(45% 55% at 75% 35%,rgba(255,196,92,.35) 0%,rgba(255,196,92,0) 70%),linear-gradient(160deg,#3E6A36 0%,#1A2E18 100%)';
+      $('pTag').textContent = 'Recetas · Cocina en casa'; $('pTitle').textContent = RC.title;
+      $('pSub').textContent = S.recipeSeq ? '📱 La receta y los ingredientes ya están en tu celular' : 'Receta para 4 personas · 25 min';
+      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
+      $('rcNum').textContent = 'Paso ' + (si + 1) + ' de ' + RC.steps.length; $('rcIc').textContent = step.ic; $('rcT').textContent = step.t; $('rcD').textContent = step.d;
+      $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
+      $('pBar').style.width = (rp / RC.dur * 100) + '%';
+      $('pPos').textContent = C.fmt(rp); $('pDur').textContent = '-' + C.fmt(RC.dur - rp);
+      return;
+    }
     if (S.content === 'video') {
       var B = C.BUNNY, vt = $('vid').currentTime || 0, vp = $('vid').paused;
       scene.className = 'scene'; scene.style.background = '#000';
@@ -1197,7 +1238,7 @@
   setInterval(function () {
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    if (S.screen === 'player') { paintPlayer(); tickSeries(); }
+    if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); }
     if (S.sleepAt) { if (now() >= S.sleepAt) { S.sleepAt = 0; S.exp = null; S.bright = 100; applyLook(); setOff(true); } else if (d.getSeconds() === 0) applyLook(); }
   }, 1000);
 

@@ -247,6 +247,21 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .chipb{flex:none;background:#F1EDF6;color:#4A2E7A;font-size:12.5px;font-weight:700;border-radius:999px;padding:8px 12px}
 .chipb.on{background:var(--violet);color:#fff}
 .pairb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nowbtn{flex:none;margin-left:auto;background:var(--violet);color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:9px 12px}
+.now .grow{flex:1;min-width:0}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#F1EDF6;border-radius:12px;padding:4px;margin-bottom:12px}
+.seg2 button{border-radius:9px;padding:9px;font-size:13.5px;font-weight:700;color:#6A5A80}
+.seg2 button.on{background:#fff;color:#4A2E7A;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.opt.ing{padding:9px 12px}
+.opt .ck2{width:22px;height:22px;border-radius:7px;border:2px solid #CFC4DE;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.opt.ing.on .ck2{background:var(--violet);border-color:var(--violet)}
+.opt.ing:not(.on) .t,.opt.ing:not(.on) .pr{color:#AAA;text-decoration:line-through}
+.opt .pr{flex:none;font-size:14px}
+.stores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stores button{background:#F6F1FC;border:2px solid transparent;border-radius:12px;padding:9px 6px;text-align:center;color:#2A1E40}
+.stores button b{display:block;font-size:12.5px}
+.stores small{display:block;font-size:11px;color:#777;margin-top:2px}
+.stores button.on{border-color:var(--violet);background:#fff}
 .toast.err{background:var(--red);color:#fff}
 </style>
 </head>
@@ -360,11 +375,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.1"></script>
-<script src="../src/services/firestore-rest.js?v=7.1"></script>
-<script src="content.js?v=7.1"></script>
-<script src="logos.js?v=7.1"></script>
-<script src="store.js?v=7.1"></script>
-<script src="phone.js?v=7.1"></script>
+<script src="../src/services/http.js?v=7.2"></script>
+<script src="../src/services/firestore-rest.js?v=7.2"></script>
+<script src="content.js?v=7.2"></script>
+<script src="logos.js?v=7.2"></script>
+<script src="store.js?v=7.2"></script>
+<script src="phone.js?v=7.2"></script>
 </body>
 </html>

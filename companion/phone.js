@@ -156,6 +156,10 @@
     } else if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
       html = '<span class="thumb" style="background:linear-gradient(150deg,' + sc.art[0] + ',' + sc.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + '</div><div class="t">Marea Alta · T1 E3</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
+    } else if (r.screen === 'player' && r.content === 'recipe') {
+      var RC = C.RECIPE, si = r.recipeStep || 0;
+      html = '<span class="thumb" style="background:linear-gradient(150deg,#3E7A3A,#1E3A1C);display:flex;align-items:center;justify-content:center;font-size:24px">' + RC.steps[si].ic + '</span><div class="grow"><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · paso ' + (si + 1) + ' de ' + RC.steps.length + '</div><div class="t">' + esc(RC.title) + '</div><div class="s">' + esc(RC.steps[si].t) + '</div></div>' +
+        (r.recipeSeq ? '<button class="nowbtn" data-act="recipe">🛒 Receta</button>' : '');
     } else if (r.screen === 'player' && r.content === 'video') {
       var vp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
       html = '<span class="thumb" style="background:#000 url(' + C.BUNNY.poster + ') center/cover"></span><div><div class="k">' + (r.ad ? 'Comercial · vuelve en ' + Math.max(0, Math.ceil((r.ad.endsAt - Date.now()) / 1000)) + ' s' : (r.playing ? 'Reproduciendo' : 'En pausa')) + '</div><div class="t">Big Buck Bunny</div><div class="s">' + C.fmt(Math.min(vp, C.BUNNY.dur)) + ' / ' + C.fmt(C.BUNNY.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
@@ -228,6 +232,10 @@
     if ((r.songSeq || 0) > S.songSeen) { S.songSeen = r.songSeq; if (r.content === 'series') showSongBanner(sceneNow().song); }
     /* corte a comerciales: datos curiosos de la película mientras dura */
     if (r.ad && r.ad.seq !== S.adSeen) { S.adSeen = r.ad.seq; showFacts(r.ad); }
+    /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
+    if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
+    if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
+    if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
     if (!r.ad && S.sheet === 'facts' && !S.factsEnding) endFacts();
     /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
     if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
@@ -450,6 +458,44 @@
     buzz(); setTimeout(buzz, 160);
   }
 
+  /* ---------- Recetas: ingredientes y compra en supermercados de Shop Totalplay, sin pausar la TV ---------- */
+  function showRecipeBanner() {
+    var RC = C.RECIPE, b = $('banner');
+    b.className = 'banner offer';
+    b.innerHTML = '<span class="poster" style="background:linear-gradient(150deg,#3E7A3A,#1E3A1C);display:flex;align-items:center;justify-content:center;font-size:30px">🌮</span><div class="grow"><div class="k">Te llegó la receta</div><div class="t">' + esc(RC.title) + '</div><div class="s">' + RC.ingredients.length + ' ingredientes · cómpralos en Shop sin pausar la TV</div></div>' +
+      '<div class="row"><button data-act="recipe">Ver receta e ingredientes</button><button class="g" data-act="closeBanner">Luego</button></div>';
+    b.hidden = false; buzz(); setTimeout(buzz, 180);
+    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 25000);
+  }
+  function rcTotal() {
+    var RC = C.RECIPE, st = RC.stores[S.rcStore || 0], t = 0, n = 0;
+    for (var i = 0; i < RC.ingredients.length; i++) if (S.rcSel[i]) { t += Math.round(RC.ingredients[i].p * st.f); n++; }
+    return { t: t, n: n, st: st };
+  }
+  function openRecipe() {
+    var RC = C.RECIPE, tab = S.rcTab || 'ing';
+    if (!S.rcSel) { S.rcSel = []; for (var i = 0; i < RC.ingredients.length; i++) S.rcSel.push(true); S.rcStore = 0; }
+    var html = '<p class="eyebrow" style="color:#7A4CC4">Receta · se sigue viendo en la TV</p><h2>' + esc(RC.title) + '</h2><p class="sub">Para 4 personas · 25 min</p>' +
+      '<div class="seg2"><button class="' + (tab === 'ing' ? 'on' : '') + '" data-rctab="ing">Ingredientes</button><button class="' + (tab === 'pasos' ? 'on' : '') + '" data-rctab="pasos">Pasos</button></div>';
+    if (tab === 'pasos') {
+      var cur = (S.room && S.room.recipeStep) || 0; S.rcStepShown = cur;
+      for (var k = 0; k < RC.steps.length; k++) html += '<div class="opt' + (k === cur ? ' on' : '') + '"><span class="ic">' + RC.steps[k].ic + '</span><span class="grow"><span class="t">' + (k + 1) + '. ' + esc(RC.steps[k].t) + (k === cur ? ' <span class="tag" style="background:#E3F4EA;color:#1F6B43">En la TV</span>' : '') + '</span><span class="s" style="display:block">' + esc(RC.steps[k].d) + '</span></span></div>';
+      openSheet('recipe', html); return;
+    }
+    var st = RC.stores[S.rcStore || 0];
+    for (var j = 0; j < RC.ingredients.length; j++) {
+      var it = RC.ingredients[j], on = S.rcSel[j];
+      html += '<button class="opt ing' + (on ? ' on' : '') + '" data-ing="' + j + '"><span class="ck2">' + (on ? '✓' : '') + '</span><span class="ic">' + it.ic + '</span><span class="grow"><span class="t">' + esc(it.n) + '</span><span class="s" style="display:block">' + esc(it.q) + '</span></span><b class="pr">' + money(Math.round(it.p * st.f)) + '</b></button>';
+    }
+    html += '<p class="lf">Surtir en un supermercado de Shop Totalplay</p><div class="stores">';
+    for (var s2 = 0; s2 < RC.stores.length; s2++) html += '<button class="' + (s2 === (S.rcStore || 0) ? 'on' : '') + '" data-store="' + s2 + '"><b>' + esc(RC.stores[s2].n) + '</b><small>Llega en ' + esc(RC.stores[s2].eta) + '</small></button>';
+    var tot = rcTotal();
+    html += '</div><p class="sub" style="margin:10px 0 8px">¿Ya tienes algo? Quítale la palomita.</p>' +
+      '<button class="btn" data-act="rcBuy"' + (tot.n ? '' : ' disabled style="opacity:.45"') + '>' + (tot.n ? 'Comprar ' + tot.n + ' ingredientes · ' + money(tot.t + RC.ship) : 'Elige al menos un ingrediente') + '</button>' +
+      '<p class="sub" style="text-align:center;margin-top:8px">Incluye envío de $' + RC.ship + ' · Demo: no se hace ningún cargo.</p>';
+    openSheet('recipe', html);
+  }
+
   /* ---------- Nave espacial: control clásico (cruceta, A, B, Start) ---------- */
   var P2 = { up: false, down: false, left: false, right: false, a: false, b: false, sent: '' };
   function p2Send() {
@@ -641,6 +687,7 @@
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
     if (/(marea alta|seguir viendo|la serie)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Marea Alta' };
     if (/(que vemos|match de peliculas)/.test(t)) return { cmds: [{ t: 'open', id: 'swipe' }], reply: 'Abriendo ¿Qué vemos?' };
+    if (/(receta|enchiladas|cocina)/.test(t)) return { cmds: [{ t: 'open', id: 'recipe' }], reply: 'Poniendo la receta de enchiladas verdes' };
     if (/(nave|espacial)/.test(t)) return { cmds: [{ t: 'open', id: 'ship' }], reply: 'Abriendo Nave espacial' };
     if (/(big buck|bunny|conejo)/.test(t)) return { cmds: [{ t: 'open', id: 'bunny' }], reply: 'Poniendo Big Buck Bunny' };
     if (/(atrapa estrellas|juego|jugar)/.test(t)) return { cmds: [{ t: 'game' }], reply: 'Abriendo Atrapa estrellas' };
@@ -880,6 +927,17 @@
     else if (act === 'closeBanner') $('banner').hidden = true;
     else if (act === 'offerGo') offerGo(g('data-ch') === 'match' ? 'match' : Number(g('data-ch')));
     else if (act === 'factNext' || act === 'factPrev') openFactsList(C.channel(Number(g('data-ch'))), Number(g('data-i')) + (act === 'factNext' ? 1 : -1));
+    else if (act === 'recipe') { $('banner').hidden = true; S.rcTab = 'ing'; openRecipe(); }
+    else if (g('data-rctab')) { S.rcTab = g('data-rctab'); openRecipe(); }
+    else if (g('data-ing') !== null && el.hasAttribute('data-ing')) { var ii = Number(g('data-ing')); S.rcSel[ii] = !S.rcSel[ii]; var keepTop = $('sheet').scrollTop; openRecipe(); $('sheet').scrollTop = keepTop; }
+    else if (g('data-store') !== null && el.hasAttribute('data-store')) { S.rcStore = Number(g('data-store')); var kt = $('sheet').scrollTop; openRecipe(); $('sheet').scrollTop = kt; }
+    else if (act === 'rcBuy') {
+      var rt = rcTotal(); if (!rt.n) return;
+      openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">🛒</div><h2 style="margin-top:6px">¡Pedido en camino!</h2><p class="sub">' + rt.n + ' ingredientes de ' + esc(rt.st.n) + ' · ' + money(rt.t + C.RECIPE.ship) + ' · llegan en ' + esc(rt.st.eta) + '. Demo: no se hace ningún cargo.</p></div>' +
+        '<button class="btn" data-act="closeSheet">Listo</button>');
+      buzz(); setTimeout(buzz, 160);
+      send({ t: 'notice', text: '🛒 ' + S.name + ' pidió los ingredientes en Shop · llegan en ' + rt.st.eta });
+    }
     else if (act === 'factPlay') { closeSheet(); send({ t: 'play' }); }
     else if (g('data-qty')) { var dc = C.channel(Number(g('data-ch'))), qid = g('data-id'); S.cart[qid] = Math.max(0, Math.min(9, (S.cart[qid] || 0) + Number(g('data-qty')))); openDelivery(dc); }
     else if (g('data-bag') !== null && el.hasAttribute('data-bag')) { var bc = C.channel(Number(g('data-ch'))), bi = g('data-bag'); S.bag[bi] = !S.bag[bi]; openShop(bc); }

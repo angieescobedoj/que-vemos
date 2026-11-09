@@ -46,6 +46,34 @@
 
   /* Corto real con licencia abierta: Big Buck Bunny © Blender Foundation | bigbuckbunny.org · CC BY 3.0.
      Se usa un fragmento de 60 s con un corte a comerciales; durante el corte el celular muestra datos curiosos. */
+  /* Recetas (no es canal: es un contenido de "Para ti"). La TV reproduce la receta paso a paso y al celular le llega
+     la lista de ingredientes para comprarlos en un supermercado de Shop Totalplay sin pausar la TV. Supermercados ficticios. */
+  var RECIPE = { id: 'recipe', kind: 'recipe', title: 'Enchiladas verdes', sub: 'Cocina en casa · 25 min', tag: 'Recetas', dur: 150, sendAt: 4,
+    steps: [
+      { t: 'Cuece los tomates y el chile', d: 'Hierve el tomate verde y los chiles serranos unos 10 minutos.', ic: '🍅' },
+      { t: 'Licúa la salsa', d: 'Licúa con cebolla, ajo, cilantro y un poco del agua de cocción.', ic: '🥣' },
+      { t: 'Sazona la salsa', d: 'Fríela 5 minutos en una cacerola con un poco de aceite y sal.', ic: '🍲' },
+      { t: 'Calienta las tortillas', d: 'Pásalas por aceite caliente para que no se rompan al enrollar.', ic: '🔥' },
+      { t: 'Rellena y enrolla', d: 'Rellena con queso fresco desmoronado y báñalas con la salsa.', ic: '🧀' },
+      { t: 'Sirve', d: 'Decora con crema, cebolla en aros y cilantro. ¡Buen provecho!', ic: '🍽️' }
+    ],
+    ingredients: [
+      { n: 'Tortillas de maíz', q: '1 kg', p: 28, ic: '🌽' },
+      { n: 'Tomate verde', q: '1 kg', p: 32, ic: '🍅' },
+      { n: 'Chile serrano', q: '250 g', p: 14, ic: '🌶️' },
+      { n: 'Cebolla blanca', q: '2 piezas', p: 16, ic: '🧅' },
+      { n: 'Ajo', q: '1 cabeza', p: 10, ic: '🧄' },
+      { n: 'Cilantro', q: '1 manojo', p: 9, ic: '🌿' },
+      { n: 'Queso fresco', q: '400 g', p: 68, ic: '🧀' },
+      { n: 'Crema', q: '250 ml', p: 32, ic: '🥛' }
+    ],
+    stores: [
+      { id: 'valle', n: 'Súper Del Valle', eta: '45 min', f: 1 },
+      { id: 'express', n: 'Mercado Express', eta: '30 min', f: 1.08 },
+      { id: 'ahorro', n: 'Súper Ahorro', eta: '1 h 30 min', f: 0.92 }
+    ], ship: 29 };
+  function recipeStep(pos) { return Math.max(0, Math.min(RECIPE.steps.length - 1, Math.floor(pos / (RECIPE.dur / RECIPE.steps.length)))); }
+
   var BUNNY = { id: 'bunny', kind: 'video', title: 'Big Buck Bunny', sub: 'Corto animado · 2008', tag: 'Seguir viendo', src: 'video/big-buck-bunny.mp4?v=1',
     poster: 'video/bbb-poster.jpg', dur: 60, adAt: 20, adSecs: 20, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0',
     facts: [
@@ -147,11 +175,12 @@
     if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME; if (id === 'swipe') return SWIPE;
     if (id === 'tv') return LIVE;
     if (id === 'bunny') return BUNNY;
+    if (id === 'recipe') return RECIPE;
     if (id === 'ship') return SHIP;
     for (var i = 0; i < APPS.length; i++) if (APPS[i].id === id) return APPS[i];
     return null;
   }
-  function all() { return [SERIES, BUNNY, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
+  function all() { return [SERIES, BUNNY, RECIPE, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

@@ -366,3 +366,10 @@ b{font-weight:700}
 .ad-break{background:radial-gradient(50% 60% at 70% 30%,rgba(255,196,92,.45) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#C2382E 0%,#4A1410 100%)}
 .ad-ic{font-size:6rem;line-height:1;animation:adb 1.4s ease-in-out infinite}
 @keyframes adb{50%{transform:scale(1.12) rotate(-6deg)}}
+/* recetas */
+.tile.wide{width:11rem}
+.tile .t-emoji{position:absolute;right:.7rem;top:.5rem;font-size:2.2rem}
+.recipe-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:1.6rem;width:40rem;background:rgba(14,10,22,.78);border:1px solid var(--line);border-radius:1.6rem;padding:1.6rem 2rem}
+.rc-ic{font-size:5rem;line-height:1;flex:none}
+.rc-t{font-size:2rem;font-weight:700;letter-spacing:-.02em;margin:.3rem 0 .4rem}
+.rc-d{font-size:1.15rem;color:var(--ink-2);line-height:1.4}
