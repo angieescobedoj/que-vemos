@@ -199,6 +199,48 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .pad .ok.pressed{background:#9D6FE6;transform:scale(.96)}
 .sheet button.pressed,.banner button.pressed{filter:brightness(.88)}
 .sheet:not([hidden]) ~ .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top))}
+/* sugerencia al pausar (banner con póster) */
+.banner.offer{flex-wrap:wrap;align-items:flex-start}
+.banner.offer .poster{width:54px;height:80px;border-radius:10px;flex:none;background:#EEE center/cover no-repeat}
+.banner.offer .grow{flex:1;min-width:0}
+.banner.offer .t{font-size:15px;line-height:1.25;margin:2px 0}
+.banner.offer .row{display:flex;gap:8px;width:100%}
+.banner.offer .row button{flex:1;font-size:13px;font-weight:700;border-radius:12px;padding:11px 8px;background:var(--violet);color:#fff}
+.banner.offer .row button.g{flex:0 0 auto;background:#EFE8F7;color:var(--violet)}
+/* datos curiosos */
+.fact{position:relative;background:#F6F1FC;border-radius:16px;padding:18px 16px 18px;font-size:17px;font-weight:600;line-height:1.4;color:#2A1E40;min-height:120px}
+.fact .fn{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:#7A4CC4;margin-bottom:6px}
+.dots{display:flex;gap:6px;justify-content:center;margin:14px 0 4px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#DDD3EA}.dots i.on{background:#7A4CC4}
+/* control clásico */
+.pad2{position:fixed;left:0;top:0;right:0;bottom:0;z-index:38;background:#120E1C;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.p2-in{position:absolute;left:0;top:0;width:100vw;height:100vh;display:flex;flex-direction:column;padding:12px 26px 14px}
+@media (orientation: portrait){.p2-in{width:100vh;height:100vw;transform-origin:top left;transform:translateX(100vw) rotate(90deg)}}
+.p2-top{display:flex;align-items:center;gap:12px}
+.p2-top .me{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.p2-top .av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.p2-info{flex:1;text-align:center;font-size:13px;color:var(--ink-2)}
+.p2-pts{font-size:22px;font-weight:700;min-width:36px;text-align:right}
+.p2-x{width:36px;height:36px;border-radius:50%;background:var(--card-2);border:1px solid var(--line);color:#fff}
+.p2-body{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:0}
+.dpad{position:relative;width:min(44vmin,190px);height:min(44vmin,190px);flex:none}
+.dpad button,.dpad .dc{position:absolute;width:34%;height:34%;background:#2B2340;border:1px solid #3B3155;color:#B9A0D6;font-size:20px;display:flex;align-items:center;justify-content:center}
+.dpad .du{left:33%;top:0;border-radius:12px 12px 0 0}.dpad .dd{left:33%;bottom:0;border-radius:0 0 12px 12px}
+.dpad .dl{left:0;top:33%;border-radius:12px 0 0 12px}.dpad .dr{right:0;top:33%;border-radius:0 12px 12px 0}
+.dpad .dc{left:33%;top:33%;border:0}
+.dpad button.on{background:#7A4CC4;color:#fff}
+.p2-mid{display:flex;flex-direction:column;align-items:center;gap:14px}
+.p2-logo{font-size:12px;font-weight:700;letter-spacing:.2em;text-align:center;color:var(--ink-3)}
+.pill{background:#2B2340;border:1px solid #3B3155;color:#B9A0D6;font-size:11px;font-weight:700;letter-spacing:.14em;border-radius:999px;padding:8px 18px}
+.pill.on{background:#7A4CC4;color:#fff}
+.ab{position:relative;width:min(46vmin,200px);height:min(40vmin,170px);flex:none}
+.ab button{position:absolute;width:46%;height:54%;border-radius:50%;font-size:26px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ab small{font-size:9px;font-weight:600;letter-spacing:.06em;margin-top:3px;opacity:.85}
+.ab .ba{right:0;top:0;background:#D9364F;color:#fff}
+.ab .bb{left:0;bottom:0;background:#E0A93A;color:#1E1A1A}
+.ab button.on{transform:scale(.92);filter:brightness(1.25)}
+.p2-over{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(18,14,28,.9);display:flex;align-items:center;justify-content:center;gap:12px;padding:0 20%}
+.p2-over .btn{flex:1}
 .toast.err{background:var(--red);color:#fff}
 </style>
 </head>
@@ -293,11 +335,30 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   <p class="hint">Mantén presionado para mover tu canasta</p>
 </section>
 
-<script src="../src/services/http.js?v=6.6"></script>
-<script src="../src/services/firestore-rest.js?v=6.6"></script>
-<script src="content.js?v=6.6"></script>
-<script src="logos.js?v=6.6"></script>
-<script src="store.js?v=6.6"></script>
-<script src="phone.js?v=6.6"></script>
+<!-- Nave espacial: el celular se vuelve un control clásico (en vertical se dibuja girado para usarlo de lado) -->
+<section class="pad2" id="pad2" hidden>
+  <div class="p2-in">
+    <div class="p2-top"><div class="me" id="p2Me"></div><span class="p2-info" id="p2Info"></span><span class="p2-pts" id="p2Pts">0</span><button class="p2-x" data-act="exitGame" aria-label="Salir del juego">✕</button></div>
+    <div class="p2-body">
+      <div class="dpad">
+        <button class="du" data-d="up" aria-label="Arriba">▲</button>
+        <button class="dl" data-d="left" aria-label="Izquierda">◀</button>
+        <span class="dc"></span>
+        <button class="dr" data-d="right" aria-label="Derecha">▶</button>
+        <button class="dd" data-d="down" aria-label="Abajo">▼</button>
+      </div>
+      <div class="p2-mid"><div class="p2-logo">NAVE<br>ESPACIAL</div><button class="pill" data-p2="start">START</button></div>
+      <div class="ab"><button class="bb" data-p2="b">B<small>escudo</small></button><button class="ba" data-p2="a">A<small>disparar</small></button></div>
+    </div>
+    <div class="p2-over" id="p2Over" hidden><button class="btn" data-cmd="shipStart">Jugar otra vez</button><button class="btn ghost" data-cmd="home">Salir</button></div>
+  </div>
+</section>
+
+<script src="../src/services/http.js?v=7.0"></script>
+<script src="../src/services/firestore-rest.js?v=7.0"></script>
+<script src="content.js?v=7.0"></script>
+<script src="logos.js?v=7.0"></script>
+<script src="store.js?v=7.0"></script>
+<script src="phone.js?v=7.0"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
 <link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="tv.css?v=6.6">
+<link rel="stylesheet" href="tv.css?v=7.0">
 </head>
 <body>
 <div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
@@ -37,7 +37,7 @@
         <ul class="pair-list" id="pairList"></ul>
       </aside>
     </div>
-    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v6.6</p>
+    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.0</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -54,6 +54,8 @@
   <!-- REPRODUCTOR -->
   <section class="screen player" data-screen="player" hidden>
     <div class="scene" id="scene"><div class="scene-sun"></div><div class="scene-hz"></div><div class="scene-top"></div></div>
+    <video class="vid" id="vid" playsinline preload="none" hidden></video>
+    <div class="vid-shade" id="vidShade" hidden></div>
     <div class="p-top">
       <div>
         <p class="eyebrow" id="pTag"></p>
@@ -70,6 +72,16 @@
     <div class="live-strip" id="liveStrip" hidden><span class="live">EN VIVO</span><span id="liveMin"></span><span class="ch-keys">▲▼ cambiar canal · OK guía</span></div>
     <div class="ch-logo" id="chLogo" hidden></div>
     <div class="ch-banner" id="chBanner" hidden></div>
+
+    <!-- Corte a comerciales del corto (Seguir viendo · Big Buck Bunny) -->
+    <div class="ad-break" id="adBreak" hidden>
+      <div class="ad-card">
+        <p class="eyebrow">Comercial</p>
+        <h1 class="ad-brand">On Demand</h1>
+        <p class="ad-line">Estrenos cada semana · renta desde $39</p>
+      </div>
+      <div class="ad-corner"><b id="adLeft">Volvemos en 0:20</b><span>📱 Mira datos curiosos de la película en tu celular</span></div>
+    </div>
 
     <!-- A2 · Pausa enriquecida -->
     <aside class="pause-panel" id="pausePanel" hidden>
@@ -135,6 +147,50 @@
     <p class="x-sub" id="xSub"></p>
     <div class="x-row" id="xRow"></div>
     <div class="bar-btns" id="xBtns"></div>
+  </section>
+
+  <!-- ON DEMAND · renta (llega desde el aviso del celular al pausar un canal) -->
+  <section class="screen rent" data-screen="rent" hidden>
+    <div class="rent-bg" id="rentBg"></div>
+    <div class="rent-body">
+      <div class="rent-poster" id="rentPoster"></div>
+      <div class="rent-info">
+        <p class="eyebrow">On Demand · Renta</p>
+        <h1 class="rent-title" id="rentTitle"></h1>
+        <p class="rent-meta" id="rentMeta"></p>
+        <p class="rent-ov" id="rentOv"></p>
+        <p class="rent-price" id="rentPrice"></p>
+        <div class="bar-btns"><button class="btn" data-focusable data-action="rentGo">Rentar y ver ahora</button><button class="btn ghost" data-focusable data-action="rentBack">Volver al canal</button></div>
+        <p class="rent-note">Demo: no se hace ningún cargo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVE ESPACIAL · el celular se vuelve control clásico -->
+  <section class="screen game ship" data-screen="ship" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-dot"></span>Nave espacial</div>
+      <div class="top-right"><span class="chip" id="shipTime"></span></div>
+    </header>
+    <div class="game-wrap">
+      <div class="stage space" id="shipStage"></div>
+      <aside class="g-side">
+        <p class="eyebrow">Marcador</p>
+        <div id="shipScores"></div>
+        <p class="g-help">Cruceta: mover<br>A: disparar · B: escudo<br>Start: pausa</p>
+      </aside>
+    </div>
+    <div class="ship-paused" id="shipPaused" hidden>En pausa · Start para seguir</div>
+    <div class="g-over" id="shipOver" hidden>
+      <div class="g-over-card">
+        <p class="eyebrow">Fin de la partida</p>
+        <h1 class="display" id="shipWinner"></h1>
+        <div class="bar-btns">
+          <button class="btn" data-focusable data-action="shipAgain">Jugar otra vez</button>
+          <button class="btn ghost" data-focusable data-action="home">Salir</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="screen boot" data-screen="boot" hidden>
@@ -214,18 +270,18 @@
 <div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
-<script src="../src/platform/totalplay/device.js?v=6.6"></script>
-<script src="../src/platform/totalplay/debug.js?v=6.6"></script>
-<script src="../src/platform/totalplay/keys.js?v=6.6"></script>
-<script src="../src/platform/totalplay/lifecycle.js?v=6.6"></script>
-<script src="../src/platform/totalplay/focus.js?v=6.6"></script>
-<script src="../vendor/qrcode.js?v=6.6"></script>
-<script src="../src/services/http.js?v=6.6"></script>
-<script src="../src/services/firestore-rest.js?v=6.6"></script>
-<script src="../src/services/catalog.js?v=6.6"></script>
-<script src="content.js?v=6.6"></script>
-<script src="logos.js?v=6.6"></script>
-<script src="store.js?v=6.6"></script>
-<script src="tv.js?v=6.6"></script>
+<script src="../src/platform/totalplay/device.js?v=7.0"></script>
+<script src="../src/platform/totalplay/debug.js?v=7.0"></script>
+<script src="../src/platform/totalplay/keys.js?v=7.0"></script>
+<script src="../src/platform/totalplay/lifecycle.js?v=7.0"></script>
+<script src="../src/platform/totalplay/focus.js?v=7.0"></script>
+<script src="../vendor/qrcode.js?v=7.0"></script>
+<script src="../src/services/http.js?v=7.0"></script>
+<script src="../src/services/firestore-rest.js?v=7.0"></script>
+<script src="../src/services/catalog.js?v=7.0"></script>
+<script src="content.js?v=7.0"></script>
+<script src="logos.js?v=7.0"></script>
+<script src="store.js?v=7.0"></script>
+<script src="tv.js?v=7.0"></script>
 </body>
 </html>

@@ -42,16 +42,35 @@
 
   var GAME = { id: 'game', kind: 'game', title: 'Atrapa estrellas', sub: 'Juego · 1 a 4 jugadores con tu celular', tag: 'Juego', seconds: 45 };
 
+  var SHIP = { id: 'ship', kind: 'game', title: 'Nave espacial', sub: 'Juego · tu celular se vuelve control clásico', tag: 'Juego', seconds: 60 };
+
+  /* Corto real con licencia abierta: Big Buck Bunny © Blender Foundation | bigbuckbunny.org · CC BY 3.0.
+     Se usa un fragmento de 60 s con un corte a comerciales; durante el corte el celular muestra datos curiosos. */
+  var BUNNY = { id: 'bunny', kind: 'video', title: 'Big Buck Bunny', sub: 'Corto animado · 2008', tag: 'Seguir viendo', src: 'video/big-buck-bunny.mp4?v=1',
+    poster: 'video/bbb-poster.jpg', dur: 60, adAt: 38, adSecs: 20, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0',
+    facts: [
+      'Lo hizo en 2008 el Blender Institute, en Ámsterdam, como proyecto de la Blender Foundation.',
+      'Se creó completo con software libre: el programa de animación es Blender.',
+      'Su nombre clave durante la producción fue «Proyecto Peach».',
+      'Tiene licencia Creative Commons: cualquiera puede usarlo y compartirlo, como en esta demo.',
+      'Los tres roedores que molestan al conejo se llaman Frank, Rinky y Gimera.'
+    ] };
+
   var SWIPE = { id: 'swipe', kind: 'game', title: '¿Qué vemos?', sub: 'Match de películas · 2 o más', tag: 'Juego' };
 
   /* Canales en vivo (ficticios). Se llega a ellos con el control de la TV (arriba/abajo) o por voz, nunca con una lista en el celular.
      El canal 7 transmite el partido, así que el contenido "En vivo" del inicio es ese canal. */
   var CHANNELS = [
-    { n: 2, name: 'Noticias 2', show: 'Noticiero de la mañana', next: 'Clima y tráfico', art: ['#3D7BE8', '#0E1A3A'] },
-    { n: 5, name: 'Kids 5', show: 'Las aventuras de Pipo', next: 'Caricaturas clásicas', art: ['#FFB547', '#C2582E'] },
-    { n: 7, name: 'Deportes 7', show: 'Halcones vs. Toros', next: 'Resumen de la jornada', match: true, art: ['#2E7D49', '#123A22'] },
-    { n: 9, name: 'Cine 9', show: 'Ciclo de cine de oro', next: 'Función de medianoche', art: ['#C792C9', '#3A2160'] },
-    { n: 11, name: 'Cultura 11', show: 'Documental: ríos y montañas', next: 'Concierto en vivo', art: ['#7CC7A8', '#174536'] }
+    { n: 2, name: 'Noticias 2', show: 'Noticiero de la mañana', next: 'Clima y tráfico', art: ['#3D7BE8', '#0E1A3A'],
+      offer: { kind: 'anytime', title: 'Noticiero de la mañana', min: 60, line: 'Míralo completo desde el inicio' } },
+    { n: 5, name: 'Kids 5', show: 'Shrek', tmdb: 808, next: 'Caricaturas clásicas', art: ['#FFB547', '#C2582E'],
+      offer: { kind: 'rent', tmdb: 809, title: 'Shrek 2', price: 39 } },
+    { n: 7, name: 'Deportes 7', show: 'Halcones vs. Toros', next: 'Resumen de la jornada', match: true, art: ['#2E7D49', '#123A22'],
+      offer: { kind: 'anytime', title: 'Halcones vs. Toros', min: 110, line: 'La repetición completa del partido' } },
+    { n: 9, name: 'Cine 9', show: 'Beetlejuice', tmdb: 4011, next: 'Función de medianoche', art: ['#C792C9', '#3A2160'],
+      offer: { kind: 'rent', tmdb: 917496, title: 'Beetlejuice Beetlejuice', price: 59 } },
+    { n: 11, name: 'Clásicos 11', show: 'Volver al futuro', tmdb: 105, next: 'Concierto en vivo', art: ['#7CC7A8', '#174536'],
+      offer: { kind: 'rent', tmdb: 165, title: 'Volver al futuro II', price: 39 } }
   ];
   function channel(n) { for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].n === n) return CHANNELS[i]; return null; }
 
@@ -108,10 +127,12 @@
   function byId(id) {
     if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME; if (id === 'swipe') return SWIPE;
     if (id === 'tv') return LIVE;
+    if (id === 'bunny') return BUNNY;
+    if (id === 'ship') return SHIP;
     for (var i = 0; i < APPS.length; i++) if (APPS[i].id === id) return APPS[i];
     return null;
   }
-  function all() { return [SERIES, MATCH, LIVE].concat(APPS).concat([GAME, SWIPE]); }
+  function all() { return [SERIES, BUNNY, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, BUNNY: BUNNY, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

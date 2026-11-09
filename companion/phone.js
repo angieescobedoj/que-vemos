@@ -156,9 +156,16 @@
     } else if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
       html = '<span class="thumb" style="background:linear-gradient(150deg,' + sc.art[0] + ',' + sc.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + '</div><div class="t">Marea Alta · T1 E3</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
+    } else if (r.screen === 'player' && r.content === 'video') {
+      var vp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
+      html = '<span class="thumb" style="background:#000 url(' + C.BUNNY.poster + ') center/cover"></span><div><div class="k">' + (r.ad ? 'Comercial · vuelve en ' + Math.max(0, Math.ceil((r.ad.endsAt - Date.now()) / 1000)) + ' s' : (r.playing ? 'Reproduciendo' : 'En pausa')) + '</div><div class="t">Big Buck Bunny</div><div class="s">' + C.fmt(Math.min(vp, C.BUNNY.dur)) + ' / ' + C.fmt(C.BUNNY.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
+    } else if (r.screen === 'rent') {
+      html = '<span class="thumb" style="background:linear-gradient(150deg,#7A4CC4,#2A1E60)"></span><div><div class="k">En la TV · On Demand</div><div class="t">Confirma la renta</div><div class="s">Pulsa OK para rentar y ver</div></div>';
+    } else if (r.screen === 'ship') {
+      html = '<span class="thumb" style="background:linear-gradient(180deg,#070512,#2A1E60)"></span><div><div class="k">En la TV</div><div class="t">Nave espacial</div><div class="s">Tu celular es el control</div></div>';
     } else if (r.screen === 'player' && r.content === 'movie' && r.movie) {
       var mv = r.movie, mp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
-      html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
+      html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(mv.label || APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
     } else if (r.screen === 'player' && r.content === 'match') {
       html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">Canal 7 · en vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
     } else if (r.screen === 'player' && r.content === 'live') {
@@ -208,7 +215,7 @@
   function render() {
     var r = S.room; if (!r) return;
     if (S.fake) { renderHeader(); renderNow(); return; }
-    renderHeader(); renderNow(); renderGame();
+    renderHeader(); renderNow(); renderGame(); renderPad2();
     /* si el tiempo de apagado se eligió en la TV, la hoja del celular se cierra sola */
     if (S.sheet === 'sleep' && S.sleepAsk) {
       if (r.dialog === 'sleep') S.sleepAsk.seen = true;
@@ -219,6 +226,12 @@
     /* A4 · aviso de "Está sonando" */
     if (S.songSeen === null) S.songSeen = r.songSeq || 0;
     if ((r.songSeq || 0) > S.songSeen) { S.songSeen = r.songSeq; if (r.content === 'series') showSongBanner(sceneNow().song); }
+    /* corte a comerciales: datos curiosos de la película mientras dura */
+    if (r.ad && r.ad.seq !== S.adSeen) { S.adSeen = r.ad.seq; showFacts(r.ad); }
+    if (!r.ad && S.sheet === 'facts' && !S.factsEnding) endFacts();
+    /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
+    if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
+    if (r.offer && r.offer.seq !== S.offerSeen) { S.offerSeen = r.offer.seq; showOffer(r.offer); }
   }
   function renderAhora() {
     var r = S.room, el = $('ahora'), html = '';
@@ -282,6 +295,11 @@
       (onTv ? '<button class="btn ghost" data-go="ahora">Ver qué hay en esta escena</button>'
             : '<div class="stack"><button class="btn" data-open="series" data-from="resume">Continuar en la TV</button><button class="btn ghost" data-open="series" data-from="start">Desde el inicio</button></div>') +
       '</div></div>';
+    var bOn = r.screen === 'player' && r.content === 'video', bs = r.vsaved || 0;
+    html += '<div class="series-card" style="margin-top:14px"><div class="art" style="background:#000 url(' + C.BUNNY.poster + ') center/cover"><span>Big Buck Bunny</span></div><div class="body">' +
+      '<div style="font-weight:700">Corto animado · 2008</div><div class="muted" style="font-size:13px">' + esc(C.BUNNY.credit) + '</div>' +
+      '<div class="prog"><i style="width:' + ((bOn ? pos() : bs) / C.BUNNY.dur * 100) + '%"></i></div><div class="muted" style="font-size:12px;margin-bottom:14px">' + (bOn ? 'Reproduciéndose en la TV' : bs > 1 ? 'Te quedaste en ' + C.fmt(bs) : 'Fragmento de 1 minuto con corte a comerciales') + '</div>' +
+      (bOn ? '' : '<div class="stack"><button class="btn" data-open="bunny">' + (bs > 1 ? 'Continuar en la TV' : 'Ver en la TV') + '</button></div>') + '</div></div>';
     $('seguir').innerHTML = html;
   }
 
@@ -316,7 +334,7 @@
   /* ---------- banner y hoja ---------- */
   var bannerTimer = null;
   function showSongBanner(song) {
-    var b = $('banner');
+    var b = $('banner'); b.className = 'banner';
     b.innerHTML = '<span class="ic">♪</span><div><div class="k">Está sonando en la TV</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
     b.hidden = false; b._song = song; buzz();
     clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 9000);
@@ -325,6 +343,101 @@
     $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Marea Alta</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
+  }
+
+  /* ---------- datos curiosos durante el comercial ---------- */
+  var factsTimer = null;
+  function showFacts(ad) {
+    var facts = C.BUNNY.facts, i = 0;
+    S.factsEnding = false;
+    openSheet('facts', '<p class="eyebrow" style="color:#7A4CC4">Mientras ves el comercial</p><h2>Datos curiosos de Big Buck Bunny</h2><p class="sub" id="fLeft"></p>' +
+      '<div class="fact" id="fact"></div><div class="dots" id="fDots"></div>');
+    function paint() {
+      if (S.sheet !== 'facts') return;
+      $('fact').innerHTML = '<span class="fn">' + (i + 1) + '/' + facts.length + '</span>' + esc(facts[i]);
+      var d = ''; for (var k = 0; k < facts.length; k++) d += '<i class="' + (k === i ? 'on' : '') + '"></i>'; $('fDots').innerHTML = d;
+      buzz();
+    }
+    function left() { var l = Math.max(0, Math.ceil((ad.endsAt - Date.now()) / 1000)); if ($('fLeft')) $('fLeft').textContent = 'La película vuelve en ' + l + ' s'; }
+    paint(); left();
+    clearInterval(factsTimer);
+    var per = Math.max(3000, Math.floor((ad.secs || 20) * 1000 / facts.length)), last = Date.now();
+    factsTimer = setInterval(function () {
+      if (S.sheet !== 'facts') { clearInterval(factsTimer); return; }
+      left();
+      if (Date.now() - last >= per && i < facts.length - 1) { last = Date.now(); i++; paint(); }
+    }, 500);
+  }
+  function endFacts() {
+    S.factsEnding = true; clearInterval(factsTimer);
+    if ($('fLeft')) $('fLeft').textContent = '¡Ya volvió la película! Mira la TV';
+    setTimeout(function () { if (S.sheet === 'facts') closeSheet(); S.factsEnding = false; }, 2200);
+  }
+
+  /* ---------- sugerencia al pausar un canal ---------- */
+  var KEY = 'a7795e812c110c40515e414ceb379fac';
+  function showOffer(o) {
+    var ch = C.channel(o.ch); if (!ch || !ch.offer) return;
+    var of = ch.offer, b = $('banner'), rent = of.kind === 'rent';
+    b.className = 'banner offer';
+    b.innerHTML = '<span class="poster" id="ofPoster"></span><div class="grow"><div class="k">' + (rent ? 'Estabas viendo ' + esc(ch.show) : 'Pausaste ' + esc(ch.show)) + '</div>' +
+      '<div class="t">' + (rent ? esc(of.title) + ' ya está en On Demand' : esc(of.line)) + '</div>' +
+      '<div class="s">' + (rent ? 'Renta por 48 horas · $' + of.price + ' MXN' : 'Disponible en Anytime · desde el inicio') + '</div></div>' +
+      '<div class="row"><button data-act="offerGo" data-ch="' + ch.n + '">' + (rent ? 'Rentar y ver en la TV' : 'Ver en la TV') + '</button><button class="g" data-act="closeBanner">Ahora no</button></div>';
+    b.hidden = false; buzz(); setTimeout(buzz, 180);
+    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 30000);
+    if (rent && of.tmdb) QV.http.get('https://api.themoviedb.org/3/movie/' + of.tmdb + '?api_key=' + KEY + '&language=es-MX', function (err, d) {
+      var p = $('ofPoster'); if (!err && d && d.poster_path && p) p.style.backgroundImage = 'url(https://image.tmdb.org/t/p/w154' + d.poster_path + ')';
+      if (!err && d && d.title && b.querySelector('.t')) b.querySelector('.t').textContent = d.title + ' ya está en On Demand';
+    });
+    else $('ofPoster').style.background = 'linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')';
+  }
+
+  /* ---------- Nave espacial: control clásico (cruceta, A, B, Start) ---------- */
+  var P2 = { up: false, down: false, left: false, right: false, a: false, b: false, sent: '' };
+  function p2Send() {
+    var c = { t: 'ship', dx: (P2.right ? 1 : 0) - (P2.left ? 1 : 0), dy: (P2.down ? 1 : 0) - (P2.up ? 1 : 0), a: P2.a, b: P2.b }, k = [c.dx, c.dy, c.a, c.b].join();
+    if (k === P2.sent) return; P2.sent = k; send(c);
+  }
+  function p2Reset() { P2.up = P2.down = P2.left = P2.right = P2.a = P2.b = false; var on = document.querySelectorAll('#pad2 .on'); for (var i = 0; i < on.length; i++) on[i].classList.remove('on'); p2Send(); }
+  (function wireP2() {
+    var bs = document.querySelectorAll('#pad2 [data-d],#pad2 [data-p2]');
+    for (var i = 0; i < bs.length; i++) (function (b) {
+      var key = b.getAttribute('data-d') || b.getAttribute('data-p2');
+      b.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); tryLandscape();
+        if (key === 'start') { buzz(); send({ t: 'shipStart' }); b.classList.add('on'); setTimeout(function () { b.classList.remove('on'); }, 150); return; }
+        P2[key] = true; b.classList.add('on'); buzz(); p2Send();
+      });
+      var up = function () { if (key === 'start' || !P2[key]) return; P2[key] = false; b.classList.remove('on'); p2Send(); };
+      b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
+    })(bs[i]);
+  })();
+  var triedLand = false;
+  function tryLandscape() {
+    if (triedLand) return; triedLand = true;
+    try {
+      var el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (rq && screen.orientation && screen.orientation.lock) { var p = rq.call(el); if (p && p.then) p.then(function () { return screen.orientation.lock('landscape'); }).catch(function () {}); }
+    } catch (e) { /* iPhone: se gira a mano */ }
+  }
+  function leaveLandscape() {
+    triedLand = false;
+    try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { /* ignore */ }
+  }
+  function renderPad2() {
+    var r = S.room, sh = r.ship || {}, on = r.screen === 'ship' && (sh.state === 'running' || sh.state === 'paused' || sh.state === 'over');
+    var was = !$('pad2').hidden;
+    $('pad2').hidden = !on;
+    if (!on) { if (was) { p2Reset(); leaveLandscape(); } return; }
+    $('tabs').style.display = 'none';
+    var scores = sh.scores || {}, mine = scores[S.pid] || 0;
+    $('p2Me').innerHTML = '<span class="av" style="background:' + ((sh.colors && sh.colors[S.pid]) || COLORS[0]) + '">' + esc((S.name || '?').charAt(0).toUpperCase()) + '</span>' + esc(S.name);
+    $('p2Pts').textContent = mine;
+    var left = Math.max(0, Math.ceil((sh.state === 'paused' ? (sh.left || 0) : (sh.endsAt || 0) - Date.now()) / 1000));
+    $('p2Info').textContent = sh.state === 'running' ? 'Quedan ' + left + ' s' : sh.state === 'paused' ? 'En pausa · Start para seguir' : 'Fin · hiciste ' + mine + ' puntos';
+    $('p2Over').hidden = sh.state !== 'over';
+    if (sh.state === 'over' && (P2.a || P2.b || P2.up || P2.down || P2.left || P2.right)) p2Reset();
   }
 
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
@@ -461,6 +574,8 @@
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'channel', n: 7 }], reply: 'Poniendo el partido en el canal 7' };
     if (/(marea alta|seguir viendo|la serie)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Marea Alta' };
     if (/(que vemos|match de peliculas)/.test(t)) return { cmds: [{ t: 'open', id: 'swipe' }], reply: 'Abriendo ¿Qué vemos?' };
+    if (/(nave|espacial)/.test(t)) return { cmds: [{ t: 'open', id: 'ship' }], reply: 'Abriendo Nave espacial' };
+    if (/(big buck|bunny|conejo)/.test(t)) return { cmds: [{ t: 'open', id: 'bunny' }], reply: 'Poniendo Big Buck Bunny' };
     if (/(atrapa estrellas|juego|jugar)/.test(t)) return { cmds: [{ t: 'game' }], reply: 'Abriendo Atrapa estrellas' };
     if (/(adelanta)/.test(t)) return { cmds: [{ t: 'key', k: 'FF' }], reply: 'Adelantando 30 segundos' };
     if (/(retrocede|rebobina)/.test(t)) return { cmds: [{ t: 'key', k: 'REW' }], reply: 'Regresando 30 segundos' };
@@ -696,6 +811,7 @@
     else if (act === 'product') openProduct(sceneNow().products[Number(g('data-i'))]);
     else if (act === 'saveBanner') { saveSong($('banner')._song); $('banner').hidden = true; }
     else if (act === 'closeBanner') $('banner').hidden = true;
+    else if (act === 'offerGo') { send({ t: 'offer', ch: Number(g('data-ch')) }); $('banner').hidden = true; var oc = C.channel(Number(g('data-ch'))); toast(oc && oc.offer.kind === 'rent' ? 'Confirma la renta en la TV con OK' : 'Abriendo en la TV desde el inicio'); }
     else if (act === 'closeSheet') closeSheet();
     else if (act === 'exitGame') {
       if (S.padDir) setDir(0);
