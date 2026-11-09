@@ -214,8 +214,8 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .dots i{width:8px;height:8px;border-radius:50%;background:#DDD3EA}.dots i.on{background:#7A4CC4}
 /* control clásico */
 .pad2{position:fixed;left:0;top:0;right:0;bottom:0;z-index:38;background:#120E1C;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
-.p2-in{position:absolute;left:0;top:0;width:100vw;height:100vh;display:flex;flex-direction:column;padding:12px 26px 14px}
-@media (orientation: portrait){.p2-in{width:100vh;height:100vw;transform-origin:top left;transform:translateX(100vw) rotate(90deg)}}
+.p2-in{position:absolute;left:0;top:0;width:100vw;height:100vh;display:flex;flex-direction:column;padding:10px max(22px,env(safe-area-inset-right)) 10px max(22px,env(safe-area-inset-left));transform-origin:top left;box-sizing:border-box}
+.p2-in.rot{padding:12px 30px 12px 54px}
 .p2-top{display:flex;align-items:center;gap:12px}
 .p2-top .me{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
 .p2-top .av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
@@ -223,7 +223,7 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .p2-pts{font-size:22px;font-weight:700;min-width:36px;text-align:right}
 .p2-x{width:36px;height:36px;border-radius:50%;background:var(--card-2);border:1px solid var(--line);color:#fff}
 .p2-body{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:0}
-.dpad{position:relative;width:min(44vmin,190px);height:min(44vmin,190px);flex:none}
+.dpad{position:relative;width:min(42vmin,180px);height:min(42vmin,180px);flex:none}
 .dpad button,.dpad .dc{position:absolute;width:34%;height:34%;background:#2B2340;border:1px solid #3B3155;color:#B9A0D6;font-size:20px;display:flex;align-items:center;justify-content:center}
 .dpad .du{left:33%;top:0;border-radius:12px 12px 0 0}.dpad .dd{left:33%;bottom:0;border-radius:0 0 12px 12px}
 .dpad .dl{left:0;top:33%;border-radius:12px 0 0 12px}.dpad .dr{right:0;top:33%;border-radius:0 12px 12px 0}
@@ -233,7 +233,7 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .p2-logo{font-size:12px;font-weight:700;letter-spacing:.2em;text-align:center;color:var(--ink-3)}
 .pill{background:#2B2340;border:1px solid #3B3155;color:#B9A0D6;font-size:11px;font-weight:700;letter-spacing:.14em;border-radius:999px;padding:8px 18px}
 .pill.on{background:#7A4CC4;color:#fff}
-.ab{position:relative;width:min(46vmin,200px);height:min(40vmin,170px);flex:none}
+.ab{position:relative;width:min(44vmin,190px);height:min(38vmin,160px);flex:none}
 .ab button{position:absolute;width:46%;height:54%;border-radius:50%;font-size:26px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .ab small{font-size:9px;font-weight:600;letter-spacing:.06em;margin-top:3px;opacity:.85}
 .ab .ba{right:0;top:0;background:#D9364F;color:#fff}
@@ -241,6 +241,12 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .ab button.on{transform:scale(.92);filter:brightness(1.25)}
 .p2-over{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(18,14,28,.9);display:flex;align-items:center;justify-content:center;gap:12px;padding:0 20%}
 .p2-over .btn{flex:1}
+.qty{display:flex;align-items:center;gap:8px;flex:none}
+.qty button{width:32px;height:32px;border-radius:10px;background:#F1EDF6;color:#4A2E7A;font-size:18px;font-weight:700}
+.qty b{min-width:14px;text-align:center}
+.chipb{flex:none;background:#F1EDF6;color:#4A2E7A;font-size:12.5px;font-weight:700;border-radius:999px;padding:8px 12px}
+.chipb.on{background:var(--violet);color:#fff}
+.pairb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .toast.err{background:var(--red);color:#fff}
 </style>
 </head>
@@ -354,11 +360,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.0"></script>
-<script src="../src/services/firestore-rest.js?v=7.0"></script>
-<script src="content.js?v=7.0"></script>
-<script src="logos.js?v=7.0"></script>
-<script src="store.js?v=7.0"></script>
-<script src="phone.js?v=7.0"></script>
+<script src="../src/services/http.js?v=7.1"></script>
+<script src="../src/services/firestore-rest.js?v=7.1"></script>
+<script src="content.js?v=7.1"></script>
+<script src="logos.js?v=7.1"></script>
+<script src="store.js?v=7.1"></script>
+<script src="phone.js?v=7.1"></script>
 </body>
 </html>

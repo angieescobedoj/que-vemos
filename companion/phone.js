@@ -167,7 +167,7 @@
       var mv = r.movie, mp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
       html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(mv.label || APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
     } else if (r.screen === 'player' && r.content === 'match') {
-      html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">Canal 7 · en vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
+      html = '<span class="thumb" style="background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)"></span><div><div class="k">En vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
     } else if (r.screen === 'player' && r.content === 'live') {
       var ch = C.channel(r.channel) || C.CHANNELS[0];
       html = '<span class="thumb" style="background:linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')"></span><div><div class="k">Canal ' + ch.n + ' · en vivo</div><div class="t">' + esc(ch.show) + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
@@ -376,21 +376,78 @@
 
   /* ---------- sugerencia al pausar un canal ---------- */
   var KEY = 'a7795e812c110c40515e414ceb379fac';
+  function money(n) { return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function tmdbPoster(id, cb) {
+    QV.http.get('https://api.themoviedb.org/3/movie/' + id + '?api_key=' + KEY + '&language=es-MX', function (err, d) { if (!err && d) cb(d); });
+  }
+  /* Al pausar en la TV llega una sugerencia distinta según lo que se está viendo */
   function showOffer(o) {
-    var ch = C.channel(o.ch); if (!ch || !ch.offer) return;
-    var of = ch.offer, b = $('banner'), rent = of.kind === 'rent';
+    var ch = C.offerSource(o.ch); if (!ch || !ch.offer) return;
+    var of = ch.offer, b = $('banner'), k, t, s, btn;
+    if (of.kind === 'rent') { k = 'Estabas viendo ' + ch.show; t = of.title + ' ya está en On Demand'; s = 'Renta por 48 horas · $' + of.price + ' MXN'; btn = 'Rentar y ver en la TV'; }
+    else if (of.kind === 'anytime') { k = 'Pausaste ' + ch.show; t = of.line; s = 'Disponible en Anytime · desde el inicio'; btn = 'Ver en la TV'; }
+    else if (of.kind === 'delivery') { k = 'Estabas viendo ' + ch.show; t = '¿Se antoja una pizza como la de Kevin?'; s = 'Pídela desde aquí sin dejar la película · ' + of.place; btn = 'Pedir pizza'; }
+    else if (of.kind === 'facts') { k = 'Pausaste ' + ch.show; t = of.facts.length + ' datos curiosos de la película'; s = 'Para leer mientras está en pausa'; btn = 'Ver datos'; }
+    else { k = 'Estabas viendo ' + ch.show; t = 'Compra el look de ' + of.who; s = of.products.length + ' prendas de la película en Shop'; btn = 'Ver en Shop'; }
     b.className = 'banner offer';
-    b.innerHTML = '<span class="poster" id="ofPoster"></span><div class="grow"><div class="k">' + (rent ? 'Estabas viendo ' + esc(ch.show) : 'Pausaste ' + esc(ch.show)) + '</div>' +
-      '<div class="t">' + (rent ? esc(of.title) + ' ya está en On Demand' : esc(of.line)) + '</div>' +
-      '<div class="s">' + (rent ? 'Renta por 48 horas · $' + of.price + ' MXN' : 'Disponible en Anytime · desde el inicio') + '</div></div>' +
-      '<div class="row"><button data-act="offerGo" data-ch="' + ch.n + '">' + (rent ? 'Rentar y ver en la TV' : 'Ver en la TV') + '</button><button class="g" data-act="closeBanner">Ahora no</button></div>';
+    b.innerHTML = '<span class="poster" id="ofPoster"></span><div class="grow"><div class="k">' + esc(k) + '</div><div class="t">' + esc(t) + '</div><div class="s">' + esc(s) + '</div></div>' +
+      '<div class="row"><button data-act="offerGo" data-ch="' + ch.n + '">' + esc(btn) + '</button><button class="g" data-act="closeBanner">Ahora no</button></div>';
     b.hidden = false; buzz(); setTimeout(buzz, 180);
     clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 30000);
-    if (rent && of.tmdb) QV.http.get('https://api.themoviedb.org/3/movie/' + of.tmdb + '?api_key=' + KEY + '&language=es-MX', function (err, d) {
-      var p = $('ofPoster'); if (!err && d && d.poster_path && p) p.style.backgroundImage = 'url(https://image.tmdb.org/t/p/w154' + d.poster_path + ')';
-      if (!err && d && d.title && b.querySelector('.t')) b.querySelector('.t').textContent = d.title + ' ya está en On Demand';
+    var pid = of.kind === 'rent' ? of.tmdb : ch.tmdb;
+    $('ofPoster').style.background = 'linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')';
+    if (pid) tmdbPoster(pid, function (d) {
+      var p = $('ofPoster'); if (d.poster_path && p) p.style.background = '#EEE url(https://image.tmdb.org/t/p/w154' + d.poster_path + ') center/cover';
+      if (of.kind === 'rent' && d.title && b.querySelector('.t')) b.querySelector('.t').textContent = d.title + ' ya está en On Demand';
     });
-    else $('ofPoster').style.background = 'linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')';
+  }
+  function offerGo(id) {
+    var ch = C.offerSource(id); if (!ch) return;
+    var of = ch.offer;
+    $('banner').hidden = true;
+    if (of.kind === 'rent' || of.kind === 'anytime') { send({ t: 'offer', ch: ch.n }); toast(of.kind === 'rent' ? 'Confirma la renta en la TV con OK' : 'Abriendo en la TV desde el inicio'); return; }
+    if (of.kind === 'facts') { openFactsList(ch); send({ t: 'notice', text: '📱 ' + S.name + ' está leyendo datos curiosos de ' + ch.show }); return; }
+    if (of.kind === 'delivery') { S.cart = {}; openDelivery(ch); return; }
+    if (of.kind === 'shop') { S.bag = {}; openShop(ch); }
+  }
+  /* Datos curiosos (pausa en Clásicos 7) */
+  function openFactsList(ch, i) {
+    var f = ch.offer.facts; i = i || 0;
+    var d = ''; for (var k = 0; k < f.length; k++) d += '<i class="' + (k === i ? 'on' : '') + '"></i>';
+    openSheet('factsList', '<p class="eyebrow" style="color:#7A4CC4">Mientras está en pausa</p><h2>Datos curiosos de ' + esc(ch.show) + '</h2><p class="sub">Dato ' + (i + 1) + ' de ' + f.length + '</p>' +
+      '<div class="fact"><span class="fn">' + (i + 1) + '/' + f.length + '</span>' + esc(f[i]) + '</div><div class="dots">' + d + '</div>' +
+      '<div class="pairb" style="margin-top:12px">' + (i > 0 ? '<button class="btn ghost" data-act="factPrev" data-ch="' + ch.n + '" data-i="' + i + '">Anterior</button>' : '<button class="btn ghost" data-act="closeSheet">Cerrar</button>') +
+      (i < f.length - 1 ? '<button class="btn" data-act="factNext" data-ch="' + ch.n + '" data-i="' + i + '">Siguiente</button>' : '<button class="btn" data-act="factPlay">Seguir viendo</button>') + '</div>');
+  }
+  /* Delivery (pausa en Familia 5) */
+  function cartTotal(menu, cart) { var t = 0, n = 0; for (var i = 0; i < menu.length; i++) { var q = cart[menu[i].id] || 0; t += q * menu[i].p; n += q; } return { t: t, n: n }; }
+  function openDelivery(ch) {
+    var of = ch.offer, html = '<p class="eyebrow" style="color:#7A4CC4">Delivery · ' + esc(of.place) + '</p><h2>Pide sin pausar la película</h2><p class="sub">Llega en unos ' + of.eta + ' minutos.</p>';
+    for (var i = 0; i < of.menu.length; i++) {
+      var m = of.menu[i], q = S.cart[m.id] || 0;
+      html += '<div class="opt"><span class="ic">' + m.ic + '</span><span class="grow"><span class="t">' + esc(m.n) + '</span><span class="s" style="display:block">' + esc(m.d) + ' · ' + money(m.p) + '</span></span>' +
+        '<span class="qty"><button data-qty="-1" data-id="' + m.id + '" data-ch="' + ch.n + '">−</button><b>' + q + '</b><button data-qty="1" data-id="' + m.id + '" data-ch="' + ch.n + '">＋</button></span></div>';
+    }
+    var tot = cartTotal(of.menu, S.cart);
+    html += '<button class="btn" data-act="orderGo" data-ch="' + ch.n + '"' + (tot.n ? '' : ' disabled style="opacity:.45"') + '>' + (tot.n ? 'Pedir ' + tot.n + ' · ' + money(tot.t + 29) + ' con envío' : 'Elige qué se te antoja') + '</button>';
+    openSheet('delivery', html);
+  }
+  /* Shop (pausa en Estilo 9) */
+  function openShop(ch) {
+    var of = ch.offer, html = '<p class="eyebrow" style="color:#7A4CC4">Shop · de la escena</p><h2>El look de ' + esc(of.who) + '</h2><p class="sub">Prendas como las que salen en ' + esc(ch.show) + '.</p>';
+    for (var i = 0; i < of.products.length; i++) {
+      var pr = of.products[i], inBag = S.bag[i];
+      html += '<div class="opt"><span class="ic" style="background:linear-gradient(150deg,' + pr.c[0] + ',' + pr.c[1] + ');font-size:22px">' + pr.ic + '</span><span class="grow"><span class="t">' + esc(pr.n) + '</span><span class="s" style="display:block">' + esc(pr.d) + ' · ' + money(pr.p) + '</span></span>' +
+        '<button class="chipb' + (inBag ? ' on' : '') + '" data-bag="' + i + '" data-ch="' + ch.n + '">' + (inBag ? '✓ En bolsa' : 'Agregar') + '</button></div>';
+    }
+    var t = 0, n = 0; for (var k in S.bag) if (S.bag.hasOwnProperty(k) && S.bag[k]) { t += of.products[k].p; n++; }
+    html += '<button class="btn" data-act="buyGo" data-ch="' + ch.n + '"' + (n ? '' : ' disabled style="opacity:.45"') + '>' + (n ? 'Comprar ' + n + ' · ' + money(t) : 'Agrega algo a tu bolsa') + '</button><p class="sub" style="text-align:center;margin-top:8px">Demo: no se hace ningún cargo.</p>';
+    openSheet('shop', html);
+  }
+  function doneSheet(icon, title, sub) {
+    openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">' + icon + '</div><h2 style="margin-top:6px">' + esc(title) + '</h2><p class="sub">' + esc(sub) + '</p></div>' +
+      '<button class="btn" data-act="factPlay">Seguir viendo</button>');
+    buzz(); setTimeout(buzz, 160);
   }
 
   /* ---------- Nave espacial: control clásico (cruceta, A, B, Start) ---------- */
@@ -425,12 +482,22 @@
     triedLand = false;
     try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { /* ignore */ }
   }
+  /* Tamaño real visible (en iPhone 100vh incluye la barra de Safari y cortaba el control): se mide con innerWidth/innerHeight.
+     En vertical el control se dibuja girado para usar el celular de lado. */
+  function sizePad2() {
+    var el = $('pad2').firstElementChild, w = window.innerWidth, h = window.innerHeight;
+    if (h > w) { el.style.width = h + 'px'; el.style.height = w + 'px'; el.style.transform = 'translateX(' + w + 'px) rotate(90deg)'; el.classList.add('rot'); }
+    else { el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.transform = 'none'; el.classList.remove('rot'); }
+  }
+  window.addEventListener('resize', function () { if (!$('pad2').hidden) sizePad2(); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { if (!$('pad2').hidden) sizePad2(); }, 250); });
   function renderPad2() {
     var r = S.room, sh = r.ship || {}, on = r.screen === 'ship' && (sh.state === 'running' || sh.state === 'paused' || sh.state === 'over');
     var was = !$('pad2').hidden;
     $('pad2').hidden = !on;
     if (!on) { if (was) { p2Reset(); leaveLandscape(); } return; }
     $('tabs').style.display = 'none';
+    if (!was) sizePad2();
     var scores = sh.scores || {}, mine = scores[S.pid] || 0;
     $('p2Me').innerHTML = '<span class="av" style="background:' + ((sh.colors && sh.colors[S.pid]) || COLORS[0]) + '">' + esc((S.name || '?').charAt(0).toUpperCase()) + '</span>' + esc(S.name);
     $('p2Pts').textContent = mine;
@@ -562,7 +629,7 @@
     }
     if (/(canal|pon el|cambia al)/.test(t) && (n = numIn(t)) !== null) {
       if (C.channel(n)) return { cmds: [{ t: 'channel', n: n }], reply: 'Cambiando al canal ' + n };
-      return { reply: 'No hay canal ' + n + '. Prueba con el 2, 5, 7, 9 u 11.' };
+      return { reply: 'No hay canal ' + n + '. Prueba con el 2, 5, 7 o 9.' };
     }
     if (/(siguiente canal|canal siguiente|sube (de |el )?canal)/.test(t)) return { cmds: [{ t: 'chstep', d: 1 }], reply: 'Siguiente canal' };
     if (/(canal anterior|baja (de |el )?canal)/.test(t)) return { cmds: [{ t: 'chstep', d: -1 }], reply: 'Canal anterior' };
@@ -571,7 +638,7 @@
     if (/(prime|amazon)/.test(t)) return { cmds: [{ t: 'app', id: 'prime' }], reply: 'Abriendo Prime Video' };
     if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
     if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
-    if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'channel', n: 7 }], reply: 'Poniendo el partido en el canal 7' };
+    if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
     if (/(marea alta|seguir viendo|la serie)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Marea Alta' };
     if (/(que vemos|match de peliculas)/.test(t)) return { cmds: [{ t: 'open', id: 'swipe' }], reply: 'Abriendo ¿Qué vemos?' };
     if (/(nave|espacial)/.test(t)) return { cmds: [{ t: 'open', id: 'ship' }], reply: 'Abriendo Nave espacial' };
@@ -811,7 +878,21 @@
     else if (act === 'product') openProduct(sceneNow().products[Number(g('data-i'))]);
     else if (act === 'saveBanner') { saveSong($('banner')._song); $('banner').hidden = true; }
     else if (act === 'closeBanner') $('banner').hidden = true;
-    else if (act === 'offerGo') { send({ t: 'offer', ch: Number(g('data-ch')) }); $('banner').hidden = true; var oc = C.channel(Number(g('data-ch'))); toast(oc && oc.offer.kind === 'rent' ? 'Confirma la renta en la TV con OK' : 'Abriendo en la TV desde el inicio'); }
+    else if (act === 'offerGo') offerGo(g('data-ch') === 'match' ? 'match' : Number(g('data-ch')));
+    else if (act === 'factNext' || act === 'factPrev') openFactsList(C.channel(Number(g('data-ch'))), Number(g('data-i')) + (act === 'factNext' ? 1 : -1));
+    else if (act === 'factPlay') { closeSheet(); send({ t: 'play' }); }
+    else if (g('data-qty')) { var dc = C.channel(Number(g('data-ch'))), qid = g('data-id'); S.cart[qid] = Math.max(0, Math.min(9, (S.cart[qid] || 0) + Number(g('data-qty')))); openDelivery(dc); }
+    else if (g('data-bag') !== null && el.hasAttribute('data-bag')) { var bc = C.channel(Number(g('data-ch'))), bi = g('data-bag'); S.bag[bi] = !S.bag[bi]; openShop(bc); }
+    else if (act === 'orderGo') {
+      var oc2 = C.channel(Number(g('data-ch'))), tot = cartTotal(oc2.offer.menu, S.cart); if (!tot.n) return;
+      doneSheet('🛵', '¡Pedido confirmado!', oc2.offer.place + ' · ' + tot.n + (tot.n === 1 ? ' producto' : ' productos') + ' · ' + money(tot.t + 29) + ' · llega en unos ' + oc2.offer.eta + ' min. Demo: no se hace ningún cargo.');
+      send({ t: 'notice', text: '🍕 ' + S.name + ' pidió pizza · llega en unos ' + oc2.offer.eta + ' min' });
+    }
+    else if (act === 'buyGo') {
+      var sc2 = C.channel(Number(g('data-ch'))), nb = 0, tb = 0; for (var bk in S.bag) if (S.bag.hasOwnProperty(bk) && S.bag[bk]) { nb++; tb += sc2.offer.products[bk].p; } if (!nb) return;
+      doneSheet('🛍️', '¡Compra lista!', nb + (nb === 1 ? ' prenda' : ' prendas') + ' · ' + money(tb) + ' · llega en 2 a 3 días.');
+      send({ t: 'notice', text: '🛍️ ' + S.name + ' compró el look de ' + sc2.offer.who + ' en Shop' });
+    }
     else if (act === 'closeSheet') closeSheet();
     else if (act === 'exitGame') {
       if (S.padDir) setDir(0);

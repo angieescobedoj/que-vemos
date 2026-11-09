@@ -177,7 +177,7 @@
     if (id === 'bunny') { playBunny(from === 'start'); return; }
     if (item.kind === 'app') { openApp(id); return; }
     if (id === 'tv') { tune(S.channel); return; }
-    if (id === 'match') { tune(7); return; }
+    if (id === 'match') { openMatch(); return; }
     closeOverlays();
     if (id === 'series') {
       if (!from && S.saved > 60) { openResume(); return; }
@@ -197,11 +197,21 @@
     closeOverlays(); stopVideo(); S.offer = null;
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
-    S.channel = n; S.content = ch.match ? 'match' : 'live'; S.playing = true;
-    if (ch.match && !S.matchStart) S.matchStart = now();
+    S.channel = n; S.content = 'live'; S.playing = true;
     $('pausePanel').hidden = true;
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer(); showChBanner();
+  }
+  /* El partido: evento en vivo propio (no es canal). ▲▼ desde aquí llevan a los canales. */
+  function openMatch() {
+    closeOverlays(); stopVideo(); S.offer = null;
+    if (S.screen === 'game') stopGame();
+    if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
+    S.content = 'match'; S.playing = true;
+    if (!S.matchStart) S.matchStart = now();
+    $('pausePanel').hidden = true;
+    if (S.screen !== 'player') show('player'); else pushState();
+    paintPlayer();
   }
   function stepChannel(d) {
     var list = C.CHANNELS, i = 0;
@@ -387,13 +397,14 @@
     });
   }
   function sendOffer() {
-    var ch = C.channel(S.channel); if (!ch || !ch.offer) return;
+    var ch = S.content === 'match' ? C.offerSource('match') : C.channel(S.channel); if (!ch || !ch.offer) return;
     S.offer = { seq: now(), ch: ch.n }; pushState();
     if (connected().length) setTimeout(function () { toast('📱 Te enviamos una sugerencia a tu celular', 3500); }, 700);
   }
   var R = { ch: null, info: null };
   function goOffer(n) {
-    var ch = C.channel(n); if (!ch || !ch.offer) return;
+    var ch = C.offerSource(n); if (!ch || !ch.offer) return;
+    if (ch.offer.kind !== 'rent' && ch.offer.kind !== 'anytime') return;   /* delivery, datos y Shop pasan en el celular */
     closeOverlays(); S.offer = null;
     if (ch.offer.kind === 'anytime') { playAnytime(ch); return; }
     R.ch = ch; R.info = null;
@@ -429,7 +440,7 @@
     if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
     var bg = '';
     if (ch.tmdb && TMDB[ch.tmdb] && TMDB[ch.tmdb].backdrop) bg = QV.catalog.img(TMDB[ch.tmdb].backdrop, 'w1280');
-    S.movie = { title: ch.offer.title, min: ch.offer.min, art: ch.art, genres: [], label: 'Anytime · desde el inicio', sub: 'Se transmitió en ' + ch.name, bg: bg };
+    S.movie = { title: ch.offer.title, min: ch.offer.min, art: ch.art, genres: [], label: 'Anytime · desde el inicio', sub: ch.n === 'match' ? 'Se transmitió en vivo' : 'Se transmitió en ' + ch.name, bg: bg };
     S.content = 'movie'; setPos(0, true);
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer();
@@ -805,12 +816,12 @@
     if (S.content === 'match') {
       var m = C.MATCH;
       scene.className = 'scene pitch'; scene.style.background = '';
-      $('pTag').textContent = 'Canal 7 · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
+      $('pTag').textContent = 'En vivo · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
       $('scorebug').hidden = false;
       $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + m.score[0] + ' – ' + m.score[1] +
         '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + matchMinute() + '\'</span>';
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
-      $('liveMin').textContent = S.playing ? 'Canal 7 · minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
+      $('liveMin').textContent = S.playing ? 'Minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
       $('pausePanel').hidden = true;
       return;
     }
@@ -1074,7 +1085,8 @@
     else if (c.t === 'game') startGame();
     else if (c.t === 'ship') shipInput(p.id, c);
     else if (c.t === 'shipStart') { if (S.screen === 'ship') pauseShip(); else startShip(); }
-    else if (c.t === 'offer') goOffer(Number(c.ch));
+    else if (c.t === 'offer') goOffer(c.ch === 'match' ? 'match' : Number(c.ch));
+    else if (c.t === 'notice') toast(c.text || '', 4500);
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
     else if (c.t === 'save') toast(name + ' guardó «' + c.what + '» en su soundtrack', 3500);
     else if (c.t === 'product') toast(name + ' abrió «' + c.what + '» en su celular', 3500);

@@ -4,7 +4,7 @@
   'use strict';
 
   var MATCH = {
-    id: 'match', kind: 'live', title: 'Halcones vs. Toros', sub: 'Deportes 7 · Liga de la Ciudad', tag: 'En vivo',
+    id: 'match', kind: 'live', title: 'Halcones vs. Toros', sub: 'Liga de la Ciudad · Jornada 12', tag: 'En vivo',
     home: { name: 'Halcones', short: 'HAL', color: '#2F6FE0' },
     away: { name: 'Toros', short: 'TOR', color: '#D9364F' },
     score: [1, 0], startMinute: 12,
@@ -47,7 +47,7 @@
   /* Corto real con licencia abierta: Big Buck Bunny © Blender Foundation | bigbuckbunny.org · CC BY 3.0.
      Se usa un fragmento de 60 s con un corte a comerciales; durante el corte el celular muestra datos curiosos. */
   var BUNNY = { id: 'bunny', kind: 'video', title: 'Big Buck Bunny', sub: 'Corto animado · 2008', tag: 'Seguir viendo', src: 'video/big-buck-bunny.mp4?v=1',
-    poster: 'video/bbb-poster.jpg', dur: 60, adAt: 38, adSecs: 20, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0',
+    poster: 'video/bbb-poster.jpg', dur: 60, adAt: 20, adSecs: 20, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0',
     facts: [
       'Lo hizo en 2008 el Blender Institute, en Ámsterdam, como proyecto de la Blender Foundation.',
       'Se creó completo con software libre: el programa de animación es Blender.',
@@ -61,17 +61,36 @@
   /* Canales en vivo (ficticios). Se llega a ellos con el control de la TV (arriba/abajo) o por voz, nunca con una lista en el celular.
      El canal 7 transmite el partido, así que el contenido "En vivo" del inicio es ese canal. */
   var CHANNELS = [
-    { n: 2, name: 'Noticias 2', show: 'Noticiero de la mañana', next: 'Clima y tráfico', art: ['#3D7BE8', '#0E1A3A'],
-      offer: { kind: 'anytime', title: 'Noticiero de la mañana', min: 60, line: 'Míralo completo desde el inicio' } },
-    { n: 5, name: 'Kids 5', show: 'Shrek', tmdb: 808, next: 'Caricaturas clásicas', art: ['#FFB547', '#C2582E'],
-      offer: { kind: 'rent', tmdb: 809, title: 'Shrek 2', price: 39 } },
-    { n: 7, name: 'Deportes 7', show: 'Halcones vs. Toros', next: 'Resumen de la jornada', match: true, art: ['#2E7D49', '#123A22'],
-      offer: { kind: 'anytime', title: 'Halcones vs. Toros', min: 110, line: 'La repetición completa del partido' } },
-    { n: 9, name: 'Cine 9', show: 'Beetlejuice', tmdb: 4011, next: 'Función de medianoche', art: ['#C792C9', '#3A2160'],
+    { n: 2, name: 'Cine 2', show: 'Beetlejuice', tmdb: 4011, next: 'Función de medianoche', art: ['#C792C9', '#3A2160'],
       offer: { kind: 'rent', tmdb: 917496, title: 'Beetlejuice Beetlejuice', price: 59 } },
-    { n: 11, name: 'Clásicos 11', show: 'Volver al futuro', tmdb: 105, next: 'Concierto en vivo', art: ['#7CC7A8', '#174536'],
-      offer: { kind: 'rent', tmdb: 165, title: 'Volver al futuro II', price: 39 } }
+    { n: 5, name: 'Familia 5', show: 'Mi pobre angelito', tmdb: 771, next: 'Caricaturas clásicas', art: ['#E5484D', '#4A1420'],
+      offer: { kind: 'delivery', place: 'Pizzería Rayo', eta: 35,
+        menu: [
+          { id: 'queso', n: 'Pizza de queso', d: 'Grande · como la de Kevin', p: 199, ic: '🍕' },
+          { id: 'pep', n: 'Pizza de pepperoni', d: 'Grande · 8 rebanadas', p: 229, ic: '🍕' },
+          { id: 'veg', n: 'Pizza vegetariana', d: 'Grande · pimiento, champiñón y aceituna', p: 219, ic: '🥗' },
+          { id: 'ref', n: 'Refresco 2 L', d: 'Bien frío', p: 45, ic: '🥤' }
+        ] } },
+    { n: 7, name: 'Clásicos 7', show: 'Volver al futuro', tmdb: 105, next: 'Concierto en vivo', art: ['#7CC7A8', '#174536'],
+      offer: { kind: 'facts', facts: [
+        'Eric Stoltz fue el primer Marty McFly: filmó varias semanas antes de que lo reemplazara Michael J. Fox.',
+        'En los primeros borradores del guion, la máquina del tiempo era un refrigerador, no un DeLorean.',
+        'Michael J. Fox grababa la serie Family Ties de día y la película de noche.',
+        'El DeLorean tiene que llegar a 88 millas por hora (unos 141 km/h) para viajar en el tiempo.',
+        'El condensador de flujo necesita 1.21 gigawatts para funcionar.',
+        'Fue la película más taquillera de 1985 en Estados Unidos.'
+      ] } },
+    { n: 9, name: 'Estilo 9', show: 'El diablo viste a la moda', tmdb: 350, next: 'Desfile de temporada', art: ['#F0A6C8', '#5A2440'],
+      offer: { kind: 'shop', who: 'Andy', products: [
+        { n: 'Abrigo largo color camel', d: 'Tallas CH a G', p: 1899, ic: '🧥', c: ['#C8A27A', '#7A5A3A'] },
+        { n: 'Botas altas negras', d: 'Piel sintética · del 23 al 27', p: 1499, ic: '👢', c: ['#3A3440', '#141018'] },
+        { n: 'Bolso estructurado', d: 'Color vino', p: 1299, ic: '👜', c: ['#9A2A4A', '#4A1020'] }
+      ] } }
   ];
+  /* El partido ya no es canal: es un evento en vivo propio (con sus estadísticas en el celular). Al pausarlo sugiere la repetición en Anytime. */
+  var MATCH_SRC = { n: 'match', name: 'En vivo', show: 'Halcones vs. Toros', art: ['#2E7D49', '#123A22'],
+    offer: { kind: 'anytime', title: 'Halcones vs. Toros', min: 110, line: 'La repetición completa del partido' } };
+  function offerSource(id) { return id === 'match' ? MATCH_SRC : channel(Number(id)); }
   function channel(n) { for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].n === n) return CHANNELS[i]; return null; }
 
   /* Apps de streaming instaladas en el decodificador. Abrirlas se simula (la API de Totalplay para lanzar apps está pendiente). */
@@ -80,7 +99,7 @@
     { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
     { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' }
   ];
-  var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9 · 11', tag: 'Canales' };
+  var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9', tag: 'Canales' };
 
   /* Catálogo simulado de películas para "Noche de películas" (mismo enfoque que el modo demo del juego ¿Qué vemos?):
      títulos inventados, portadas en degradado, cada una disponible en una de las apps del decodificador. */
@@ -134,5 +153,5 @@
   }
   function all() { return [SERIES, BUNNY, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, BUNNY: BUNNY, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

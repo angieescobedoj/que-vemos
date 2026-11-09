@@ -363,3 +363,6 @@ b{font-weight:700}
 .g-help{font-size:.9rem;color:var(--ink-2);line-height:1.5;margin-top:.6rem}
 .ship-paused{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:rgba(14,10,22,.92);border:1px solid var(--line);border-radius:1rem;padding:1rem 1.6rem;font-size:1.4rem;font-weight:700;z-index:4}
 .x-game{width:19rem}
+.ad-break{background:radial-gradient(50% 60% at 70% 30%,rgba(255,196,92,.45) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#C2382E 0%,#4A1410 100%)}
+.ad-ic{font-size:6rem;line-height:1;animation:adb 1.4s ease-in-out infinite}
+@keyframes adb{50%{transform:scale(1.12) rotate(-6deg)}}
