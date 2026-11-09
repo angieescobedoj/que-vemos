@@ -373,3 +373,5 @@ b{font-weight:700}
 .rc-ic{font-size:5rem;line-height:1;flex:none}
 .rc-t{font-size:2rem;font-weight:700;letter-spacing:-.02em;margin:.3rem 0 .4rem}
 .rc-d{font-size:1.15rem;color:var(--ink-2);line-height:1.4}
+.tile.wide .t-live{display:none}
+.tile.wide .t-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

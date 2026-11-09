@@ -479,7 +479,7 @@
       '<div class="seg2"><button class="' + (tab === 'ing' ? 'on' : '') + '" data-rctab="ing">Ingredientes</button><button class="' + (tab === 'pasos' ? 'on' : '') + '" data-rctab="pasos">Pasos</button></div>';
     if (tab === 'pasos') {
       var cur = (S.room && S.room.recipeStep) || 0; S.rcStepShown = cur;
-      for (var k = 0; k < RC.steps.length; k++) html += '<div class="opt' + (k === cur ? ' on' : '') + '"><span class="ic">' + RC.steps[k].ic + '</span><span class="grow"><span class="t">' + (k + 1) + '. ' + esc(RC.steps[k].t) + (k === cur ? ' <span class="tag" style="background:#E3F4EA;color:#1F6B43">En la TV</span>' : '') + '</span><span class="s" style="display:block">' + esc(RC.steps[k].d) + '</span></span></div>';
+      for (var k = 0; k < RC.steps.length; k++) html += '<div class="opt' + (k === cur ? ' on' : '') + '"><span class="ic">' + RC.steps[k].ic + '</span><span class="grow">' + (k === cur ? '<span class="nowtv">▶ En la TV ahora</span>' : '') + '<span class="t">' + (k + 1) + '. ' + esc(RC.steps[k].t) + '</span><span class="s" style="display:block">' + esc(RC.steps[k].d) + '</span></span></div>';
       openSheet('recipe', html); return;
     }
     var st = RC.stores[S.rcStore || 0];
