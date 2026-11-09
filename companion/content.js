@@ -18,27 +18,31 @@
     facts: ['Halcones no pierde en casa desde hace 8 partidos.', 'E. Salcedo lleva 6 goles en la temporada.', 'Es el clásico número 41 entre ambos equipos.']
   };
 
+  /* Película real para "Seguir viendo": Los Pecadores (Sinners, 2025). Las imágenes salen del catálogo de TMDB en tiempo real.
+     Elenco, lugares y canciones son los de la película; los productos son genéricos (sin marcas). */
   var SERIES = {
-    id: 'series', kind: 'vod', title: 'Marea Alta', sub: 'Temporada 1 · Episodio 3 · La isla', tag: 'Serie',
-    duration: 2880, saved: 1395,
+    id: 'series', kind: 'vod', title: 'Los Pecadores', sub: 'Película · 2025 · Ryan Coogler', tag: 'Película',
+    tmdbQuery: 'Sinners', tmdbYear: 2025,
+    duration: 8220, saved: 3900,
     scenes: [
-      { from: 0, to: 960, place: 'El muelle al amanecer',
-        cast: [['Lucía Ferrer', 'Sofía Lara'], ['Mateo Ríos', 'Diego Anaya']],
-        song: { t: 'Luces de neón', a: 'Banda Aurora' },
-        products: [['Chamarra de mezclilla', '$1,299'], ['Lentes de sol redondos', '$649']],
-        art: ['#F2B5A0', '#7A3A5A', '#1E1020'] },
-      { from: 960, to: 1920, place: 'El faro abandonado',
-        cast: [['Lucía Ferrer', 'Sofía Lara'], ['Inés Valdés', 'Carmen Ruiz']],
-        song: { t: 'Marea', a: 'Valentina Sol' },
-        products: [['Bolsa de piel', '$1,890'], ['Reloj plateado', '$2,450']],
-        art: ['#9FC3E8', '#2C4A7A', '#0E1626'] },
-      { from: 1920, to: 2880, place: 'La fiesta en la playa',
-        cast: [['Mateo Ríos', 'Diego Anaya'], ['Inés Valdés', 'Carmen Ruiz'], ['El capitán', 'Ramón Félix']],
-        song: { t: 'Fuego lento', a: 'Los Atardeceres' },
-        products: [['Camisa de lino', '$899'], ['Sandalias de piel', '$1,150']],
-        art: ['#F5C76B', '#B5683A', '#2A120A'] }
+      { from: 0, to: 2740, place: 'Clarksdale, Mississippi · 1932',
+        cast: [['Smoke y Stack', 'Michael B. Jordan'], ['Pearline', 'Jayme Lawson']],
+        song: { t: 'Pale, Pale Moon', a: 'Jayme Lawson' },
+        products: [['Sombrero fedora de fieltro', '$899'], ['Traje de tres piezas', '$3,450']],
+        art: ['#B07A4A', '#4A2A1A', '#140A06'] },
+      { from: 2740, to: 5480, place: 'El juke joint, noche de apertura',
+        cast: [['Sammie', 'Miles Caton'], ['Delta Slim', 'Delroy Lindo'], ['Annie', 'Wunmi Mosaku']],
+        song: { t: 'I Lied to You', a: 'Miles Caton' },
+        products: [['Guitarra acústica de acero', '$4,290'], ['Armónica en Do', '$399']],
+        art: ['#C9873A', '#5A2A12', '#1A0A06'] },
+      { from: 5480, to: 8220, place: 'Los visitantes de la noche',
+        cast: [['Remmick', "Jack O'Connell"], ['Mary', 'Hailee Steinfeld'], ['Smoke y Stack', 'Michael B. Jordan']],
+        song: { t: 'Rocky Road to Dublin', a: "Jack O'Connell y elenco" },
+        products: [['Chamarra de cuero café', '$2,199'], ['Botas de trabajo', '$1,599']],
+        art: ['#5A6A8A', '#1A2238', '#06080E'] }
     ]
   };
+
 
   var GAME = { id: 'game', kind: 'game', title: 'Atrapa estrellas', sub: 'Juego · 1 a 4 jugadores con tu celular', tag: 'Juego', seconds: 45 };
 

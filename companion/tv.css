@@ -375,3 +375,7 @@ b{font-weight:700}
 .rc-d{font-size:1.15rem;color:var(--ink-2);line-height:1.4}
 .tile.wide .t-live{display:none}
 .tile.wide .t-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scene.img .scene-sun{display:none}
+.tile .t-emo{position:absolute;left:.9rem;top:.7rem;font-size:1.35rem;letter-spacing:.1rem}
+.tile .t-emo{left:auto;right:.6rem;top:.45rem;font-size:1.3rem;letter-spacing:0}
+.tile .t-body .t-emo{top:auto;bottom:calc(100% + .2rem);right:0;font-size:1.6rem}

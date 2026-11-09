@@ -154,8 +154,8 @@
     } else if (r.app) {
       html = '<span class="thumb" style="background:#0B0910;border-top:5px solid ' + appColor(r.app) + '"></span><div><div class="k">En la TV</div><div class="t">' + esc(APP_NAMES[r.app] || 'App') + '</div><div class="s">App abierta · Regresar vuelve al inicio</div></div>';
     } else if (r.screen === 'player' && r.content === 'series') {
-      var sc = sceneNow();
-      html = '<span class="thumb" style="background:linear-gradient(150deg,' + sc.art[0] + ',' + sc.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + '</div><div class="t">Marea Alta · T1 E3</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
+      var sc = sceneNow(); loadSin();
+      html = '<span class="thumb" style="' + sinArt(sc.art) + '"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(sc.place) + '</div><div class="t">Los Pecadores</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
     } else if (r.screen === 'player' && r.content === 'recipe') {
       var RC = C.RECIPE, si = r.recipeStep || 0;
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3E7A3A,#1E3A1C);display:flex;align-items:center;justify-content:center;font-size:24px">' + RC.steps[si].ic + '</span><div class="grow"><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · paso ' + (si + 1) + ' de ' + RC.steps.length + '</div><div class="t">' + esc(RC.title) + '</div><div class="s">' + esc(RC.steps[si].t) + '</div></div>' +
@@ -184,7 +184,7 @@
     } else if (r.screen === 'game') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
     } else {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV' + (r.exp ? ' · ✨ ' + esc(r.exp) : '') + '</div><div class="t">' + (r.menu ? 'Menú abierto' : r.dialog === 'resume' ? '¿Continuar Marea Alta?' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
+      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV' + (r.exp ? ' · ✨ ' + esc(r.exp) : '') + '</div><div class="t">' + (r.menu ? 'Menú abierto' : r.dialog === 'resume' ? '¿Continuar Los Pecadores?' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
     }
     el.innerHTML = html;
   }
@@ -262,14 +262,14 @@
     }
     if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
-      html += '<p class="eyebrow">En esta escena · ' + esc(sc.place) + '</p><h2 style="margin-top:4px">Marea Alta</h2>';
+      html += '<p class="eyebrow">En esta escena · ' + esc(sc.place) + '</p><h2 style="margin-top:4px">Los Pecadores</h2>';
       html += '<div style="margin-top:12px">' + (r.playing
         ? '<button class="btn" data-act="pause">❚❚  Pausar y descubrir en la TV</button>'
         : '<button class="btn ghost" data-act="play">▶  Seguir viendo</button>') + '</div>';
       html += '<div class="sec"><p class="sec-h">Personajes</p><div class="card">';
       for (var c = 0; c < sc.cast.length; c++) html += '<div class="item"><span class="av">' + esc(sc.cast[c][0].charAt(0)) + '</span><div class="grow"><div class="t">' + esc(sc.cast[c][0]) + '</div><div class="s">Interpretado por ' + esc(sc.cast[c][1]) + '</div></div></div>';
       html += '</div></div>';
-      html += '<div class="sec"><p class="sec-h">Está sonando</p><div class="card"><div class="item"><span class="av">♪</span><div class="grow"><div class="t">' + esc(sc.song.t) + '</div><div class="s">' + esc(sc.song.a) + '</div></div><button class="btn sm" data-act="saveSong">Guardar</button></div></div></div>';
+      html += '<div class="sec"><p class="sec-h">Está sonando</p><div class="card"><div class="item"><span class="av">♪</span><div class="grow"><div class="t">' + esc(sc.song.t) + '</div><div class="s">' + esc(sc.song.a) + ' · de la película</div></div></div><div class="songbtns"><a class="btn sm" href="' + listenUrl(sc.song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button class="btn sm ghost" data-act="saveSong">Guardar</button></div></div></div>';
       html += '<div class="sec"><p class="sec-h">Productos de la escena</p><div class="card">';
       for (var p = 0; p < sc.products.length; p++) html += '<div class="item"><span class="av">🛍</span><div class="grow"><div class="t">' + esc(sc.products[p][0]) + '</div><div class="s">' + esc(sc.products[p][1]) + '</div></div><button class="btn sm ghost" data-act="product" data-i="' + p + '">Ver</button></div>';
       html += '</div></div>';
@@ -277,7 +277,7 @@
       el.innerHTML = html; return;
     }
     html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:6px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
-      '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Marea Alta</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
+      '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
     html += soundtrackHtml();
     el.innerHTML = html;
   }
@@ -295,9 +295,10 @@
 
   function renderSeguir() {
     var r = S.room, sv = C.SERIES, a = sv.scenes[0].art;
+    loadSin();
     var onTv = r.screen === 'player' && r.content === 'series', p = onTv ? pos() : (r.saved || sv.saved);
-    var html = '<p class="eyebrow">Seguir viendo</p><div class="series-card" style="margin-top:8px"><div class="art" style="background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')"><span>Marea Alta</span></div><div class="body">' +
-      '<div style="font-weight:700">Temporada 1 · Episodio 3</div><div class="muted" style="font-size:13px">La isla</div>' +
+    var html = '<p class="eyebrow">Seguir viendo</p><div class="series-card" style="margin-top:8px"><div class="art" style="' + sinArt(a, true) + '"><span>Los Pecadores</span></div><div class="body">' +
+      '<div style="font-weight:700">Película · 2025</div><div class="muted" style="font-size:13px">Ryan Coogler · 2 h 17 min</div>' +
       '<div class="prog"><i style="width:' + (p / sv.duration * 100) + '%"></i></div><div class="muted" style="font-size:12px;margin-bottom:14px">' +
       (onTv ? 'Reproduciéndose en la TV · ' + C.fmt(p) : 'Te quedaste en ' + C.fmt(p) + ' · quedan ' + C.fmt(sv.duration - p)) + '</div>' +
       (onTv ? '<button class="btn ghost" data-go="ahora">Ver qué hay en esta escena</button>'
@@ -341,14 +342,29 @@
 
   /* ---------- banner y hoja ---------- */
   var bannerTimer = null;
+  /* La canción real se escucha en el servicio de música (no se reproduce aquí: tiene derechos) */
+  function listenUrl(song) { return 'https://music.youtube.com/search?q=' + encodeURIComponent(song.t + ' ' + song.a + ' Sinners'); }
+  /* Imagen real de Los Pecadores (TMDB) para miniaturas; mientras carga, el degradado de la escena */
+  var SINP = { b: '', p: '', loading: false };
+  function loadSin() {
+    if (SINP.b || SINP.loading) return; SINP.loading = true;
+    QV.http.get('https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(C.SERIES.tmdbQuery) + '&year=' + C.SERIES.tmdbYear, function (err, d) {
+      var m = !err && d && d.results && d.results[0]; SINP.loading = false;
+      if (m) { SINP.b = m.backdrop_path || ''; SINP.p = m.poster_path || ''; if (S.room) render(); }
+    });
+  }
+  function sinArt(a, wide) {
+    var path = wide ? SINP.b : (SINP.p || SINP.b);
+    return path ? 'background:#000 url(https://image.tmdb.org/t/p/' + (wide ? 'w780' : 'w154') + path + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ')';
+  }
   function showSongBanner(song) {
     var b = $('banner'); b.className = 'banner';
-    b.innerHTML = '<span class="ic">♪</span><div><div class="k">Está sonando en la TV</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
+    b.innerHTML = '<span class="ic">♪</span><div><div class="k">Está sonando en Los Pecadores</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><a class="lk" href="' + listenUrl(song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
     b.hidden = false; b._song = song; buzz();
     clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 9000);
   }
   function openProduct(prod) {
-    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Marea Alta</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
+    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
   }
@@ -608,7 +624,7 @@
   function openSearch() {
     openSheet('search', '<h2>Buscar en la TV</h2><p class="sub">Escribe aquí; los resultados aparecen en la pantalla.</p>' +
       '<input class="in-l" id="sq" type="search" placeholder="Película, serie, app o canal" enterkeyhint="search" autocomplete="off">' +
-      '<div class="chips"><button data-q="Marea">Marea</button><button data-q="Netflix">Netflix</button><button data-q="Partido">Partido</button><button data-q="Canal">Canales</button><button data-q="Estrellas">Estrellas</button></div>' +
+      '<div class="chips"><button data-q="Pecadores">Pecadores</button><button data-q="Netflix">Netflix</button><button data-q="Partido">Partido</button><button data-q="Canal">Canales</button><button data-q="Estrellas">Estrellas</button></div>' +
       '<button class="btn" data-act="closeSheet">Listo, elegir con el control</button>');
     var q = $('sq'); q.value = S.room && S.room.screen === 'search' ? (S.room.query || '') : '';
     setTimeout(function () { try { q.focus(); } catch (e) { /* ignore */ } }, 60);
@@ -624,7 +640,7 @@
       '<button class="mic" id="micBtn" data-act="listen" aria-label="Hablar">🎤</button>' +
       '<p class="vtext" id="vText">' + (SR ? 'Toca el micrófono y habla' : 'Escribe lo que dirías') + '</p><p class="vreply" id="vReply"></p>' +
       '<div class="chips"><button data-say="Abre Netflix">«Abre Netflix»</button><button data-say="Cambia al canal 5">«Cambia al canal 5»</button><button data-say="Sube el volumen">«Sube el volumen»</button>' +
-      '<button data-say="Busca Marea Alta">«Busca Marea Alta»</button><button data-say="Pausa">«Pausa»</button><button data-say="Modo noche">«Modo noche»</button><button data-say="Apaga la tele">«Apaga la tele»</button></div>' +
+      '<button data-say="Busca Los Pecadores">«Busca Los Pecadores»</button><button data-say="Pausa">«Pausa»</button><button data-say="Modo noche">«Modo noche»</button><button data-say="Apaga la tele">«Apaga la tele»</button></div>' +
       '<form class="vform" id="vForm"><input class="in-l" id="vIn" placeholder="o escríbelo aquí" autocomplete="off"><button>Enviar</button></form>');
     $('vForm').onsubmit = function (e) { e.preventDefault(); var v = $('vIn').value.trim(); if (v) { $('vIn').value = ''; runVoice(v); } };
     if (SR) listen();
@@ -685,7 +701,7 @@
     if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
     if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
-    if (/(marea alta|seguir viendo|la serie)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Marea Alta' };
+    if (/(pecadores|sinners|seguir viendo)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Los Pecadores' };
     if (/(que vemos|match de peliculas)/.test(t)) return { cmds: [{ t: 'open', id: 'swipe' }], reply: 'Abriendo ¿Qué vemos?' };
     if (/(receta|enchiladas|cocina)/.test(t)) return { cmds: [{ t: 'open', id: 'recipe' }], reply: 'Poniendo la receta de enchiladas verdes' };
     if (/(nave|espacial)/.test(t)) return { cmds: [{ t: 'open', id: 'ship' }], reply: 'Abriendo Nave espacial' };

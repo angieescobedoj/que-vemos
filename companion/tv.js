@@ -97,6 +97,7 @@
   /* --- inicio --- */
   function artFor(item) {
     if (item.id === 'match') return 'background:repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
+    if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w780') + ') center/cover no-repeat';
     if (item.id === 'series' || item.id === 'bunny') { if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat'; var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
     if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
     if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat';
@@ -114,15 +115,16 @@
         (logo ? '' : ' style="background:' + item.color + '"') + '><span class="t-name">' + esc(item.title) + '</span>' + logo + '</button>';
     }
     if (item.n) {
-      return '<button class="tile sm" data-focusable data-action="channel" data-id="ch' + item.n + '" data-n="' + item.n + '"><span class="t-art" style="background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')"></span><span class="t-shade"></span>' +
+      var cb = item.tmdb && TMDB[item.tmdb] && TMDB[item.tmdb].backdrop;
+      return '<button class="tile sm" data-focusable data-action="channel" data-id="ch' + item.n + '" data-n="' + item.n + '"><span class="t-art" style="' + (cb ? 'background:#000 url(' + QV.catalog.img(cb, 'w300') + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')') + '"></span><span class="t-shade"></span>' +
         '<span class="t-num">' + item.n + '</span>' +
         '<span class="t-body"><span class="t-tag t-red">● En vivo</span><span class="t-title" style="display:block">' + esc(item.name.replace(/ \d+$/, '')) + '</span></span></button>';
     }
     var extra = '';
     if (item.id === 'series') extra = '<div class="t-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></div>';
-    if (item.id === 'recipe') extra = (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
+    if (item.id === 'recipe') extra = '<span class="t-emo">🌮</span>' + (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
     if (item.id === 'bunny' && S.vsaved > 1) extra = '<div class="t-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></div>';
-    var sub = item.id === 'series' ? 'T1 E3 · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
+    var sub = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     return '<button class="tile' + (wide ? ' wide' : '') + '" data-focusable data-action="open" data-id="' + item.id + '">' +
       '<span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
       (item.kind === 'live' ? '<span class="t-live"><span class="live">EN VIVO</span></span>' : '') +
@@ -421,6 +423,27 @@
       TMDB[id] = { title: d.title, overview: d.overview, poster: d.poster_path, backdrop: d.backdrop_path, year: (d.release_date || '').substring(0, 4), runtime: d.runtime, vote: d.vote_average };
       for (var i = 0; i < w.length; i++) { try { w[i](TMDB[id]); } catch (e) { /* ignore */ } }
     });
+  }
+  /* Los Pecadores: se busca en TMDB y se usan sus fondos (sin texto) para la portada y las escenas */
+  var SIN = { backdrops: [], loading: false };
+  function loadSinners(cb) {
+    if (SIN.backdrops.length || SIN.loading) return; SIN.loading = true;
+    QV.http.get('https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(C.SERIES.tmdbQuery) + '&year=' + C.SERIES.tmdbYear, function (err, d) {
+      var m = !err && d && d.results && d.results[0];
+      if (!m) { SIN.loading = false; return; }
+      QV.http.get('https://api.themoviedb.org/3/movie/' + m.id + '/images?api_key=' + KEY + '&include_image_language=null', function (e2, im) {
+        var list = (!e2 && im && im.backdrops) || [], out = [];
+        for (var i = 0; i < list.length && out.length < 3; i++) if (list[i].file_path) out.push(list[i].file_path);
+        if (!out.length && m.backdrop_path) out.push(m.backdrop_path);
+        SIN.backdrops = out; SIN.loading = false; if (cb) cb();
+      });
+    });
+  }
+  /* Portadas reales para el inicio: Los Pecadores y las películas de los canales */
+  function loadCovers() {
+    var redraw = function () { if (S.screen === 'home') renderHome(); };
+    loadSinners(redraw);
+    for (var i = 0; i < C.CHANNELS.length; i++) if (C.CHANNELS[i].tmdb) tmdbMovie(C.CHANNELS[i].tmdb, redraw);
   }
   function sendOffer() {
     var ch = S.content === 'match' ? C.offerSource('match') : C.channel(S.channel); if (!ch || !ch.offer) return;
@@ -846,6 +869,7 @@
       var tm = ch.tmdb && TMDB[ch.tmdb] && TMDB[ch.tmdb].backdrop;
       if (ch.tmdb && !TMDB[ch.tmdb]) tmdbMovie(ch.tmdb, function () { if (S.content === 'live' && S.channel === ch.n) paintPlayer(); });
       scene.className = 'scene';
+      if (tm) scene.className = 'scene img';
       scene.style.background = tm ? 'linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 65%,rgba(0,0,0,.6) 100%),#000 url(' + QV.catalog.img(tm, 'w1280') + ') center/cover no-repeat'
         : 'linear-gradient(160deg,' + ch.art[0] + ' 0%,' + ch.art[1] + ' 100%)';
       $('pTag').textContent = 'Canal ' + ch.n + ' · ' + ch.name; $('pTitle').textContent = ch.show; $('pSub').textContent = 'A continuación: ' + ch.next;
@@ -870,6 +894,7 @@
       var mv = S.movie, mp = curPos(), names = [];
       for (var gi = 0; gi < mv.genres.length; gi++) names.push(C.GENRE_NAMES[mv.genres[gi]]);
       scene.className = 'scene';
+      if (mv.bg) scene.className = 'scene img';
       scene.style.background = mv.bg ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 65%,rgba(0,0,0,.65) 100%),#000 url(' + mv.bg + ') center/cover no-repeat'
         : 'radial-gradient(35% 45% at 65% 40%,' + (mv.art[2] || 'rgba(255,255,255,.2)') + ' 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,' + mv.art[0] + ' 0%,' + mv.art[1] + ' 100%)';
       $('pTag').textContent = mv.label || ('Película · en ' + appTitle(mv.app)); $('pTitle').textContent = mv.title;
@@ -882,7 +907,10 @@
     }
     var p = curPos(), idx = C.sceneAt(p), sc = C.SERIES.scenes[idx];
     scene.className = 'scene';
-    scene.style.background = 'linear-gradient(170deg,' + sc.art[0] + ' 0%,' + sc.art[1] + ' 55%,' + sc.art[2] + ' 100%)';
+    var sb = SIN.backdrops.length ? SIN.backdrops[idx % SIN.backdrops.length] : '';
+    scene.className = sb ? 'scene img' : 'scene';
+    scene.style.background = sb ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.65) 100%),#000 url(' + QV.catalog.img(sb, 'w1280') + ') center/cover no-repeat'
+      : 'linear-gradient(170deg,' + sc.art[0] + ' 0%,' + sc.art[1] + ' 55%,' + sc.art[2] + ' 100%)';
     $('pTag').textContent = C.SERIES.tag + ' · ' + sc.place; $('pTitle').textContent = C.SERIES.title; $('pSub').textContent = C.SERIES.sub;
     $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
     $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
@@ -1226,7 +1254,7 @@
       });
     }
     function ready(code) {
-      S.code = code; keepCode(code); renderQR(); show('home'); renderHome(); renderPairing(); startPolling(); poll(); pushState();
+      S.code = code; keepCode(code); renderQR(); show('home'); renderHome(); renderPairing(); startPolling(); poll(); pushState(); loadCovers();
       /* latido: los celulares ven si esta TV está encendida, en reposo o desconectada */
       setInterval(function () { if (!S.standby) store.updateRoom(S.code, { aliveAt: now(), tvLat: S.lat, off: S.off, tvName: S.tvName }, function () {}); }, 20000);
     }
