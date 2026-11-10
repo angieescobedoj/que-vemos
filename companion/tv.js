@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, pong: '', ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
+    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -57,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
-      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), pong: S.pong, ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
+      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }, sleepLeft: S.sleepAt ? Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) : 0
     };
   }
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.pong, snap.sleepLeft, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.sleepLeft, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -1150,8 +1150,6 @@
     else if (c.t === 'find') { if (c.on === false) stopFind(); else startFind(); }
     else if (c.t === 'say') showSay(c.text || '', c.reply || '');
     else if (c.t === 'sleep') setSleep(Number(c.min) || 0, name);
-    else if (c.t === 'ping') { S.pong = c.id || ''; pushState(); }
-    else if (c.t === 'diag') toast(name + ' revisó la conexión · la TV responde en ' + (S.lat || '—') + ' ms', 4200);
     else if (c.t === 'pad') { var b = S.game.baskets[p.id]; if (b) b.dir = c.dir || 0; }
     else if (c.t === 'game') startGame();
     else if (c.t === 'ship') shipInput(p.id, c);

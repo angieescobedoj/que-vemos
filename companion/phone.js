@@ -193,7 +193,7 @@
   /* ---------- decodificador simulado: responde con feedback, sin TV detrás ---------- */
   function fakeCommand(cmd) {
     var f = S.fake, n = f.name;
-    if (cmd.t === 'say' || cmd.t === 'peek' || cmd.t === 'diag') return;
+    if (cmd.t === 'say' || cmd.t === 'peek') return;
     if (cmd.t === 'power') { f.state = f.state === 'sleep' ? 'on' : 'sleep'; toast(n + (f.state === 'sleep' ? ' en reposo' : ' encendida') + ' (simulado)'); renderHeader(); renderNow(); return; }
     if (f.state === 'sleep') { toast(n + ' está en reposo · toca ⏻'); return; }
     if (cmd.t === 'vol') { f.vol = Math.max(0, Math.min(100, typeof cmd.v === 'number' ? cmd.v : f.vol + cmd.d)); f.muted = false; toast(n + ' · volumen ' + f.vol + ' (simulado)'); renderHeader(); return; }
@@ -798,92 +798,6 @@
       '<button class="btn" data-act="closeSheet">Ya lo encontré</button>');
   }
 
-  /* ---------- diagnóstico de conexión ---------- */
-  /* Revisa paso a paso la cadena celular → internet → nube → TV y dice qué falla y cómo arreglarlo. */
-  var DG = null;
-  function dgRow(id, label) { return '<div class="chk" id="dg-' + id + '"><span class="ck wait">…</span><div class="grow"><div class="t">' + label + '</div><div class="s">Revisando…</div></div></div>'; }
-  function dgSet(id, st, detail, fix) {
-    var el = $('dg-' + id); if (!el) return;
-    el.querySelector('.ck').className = 'ck ' + st; el.querySelector('.ck').textContent = st === 'ok' ? '✓' : st === 'warn' ? '!' : st === 'bad' ? '✕' : '–';
-    el.querySelector('.s').innerHTML = esc(detail) + (fix ? '<span class="fix">Qué hacer: ' + esc(fix) + '</span>' : '');
-    DG.results.push({ id: id, st: st, label: el.querySelector('.t').textContent, detail: detail, fix: fix });
-  }
-  function openDiag() {
-    openSheet('diag', '<h2>Diagnóstico de conexión</h2><p class="sub" id="dgSub">Revisando cada paso entre tu celular y la TV…</p><div id="dgV"></div>' +
-      dgRow('net', 'Internet de tu celular') + dgRow('cloud', 'Servidor de Sala TV') + dgRow('room', 'Tu TV en el servidor') + dgRow('tv', 'TV encendida y conectada') +
-      dgRow('link', 'Tu celular vinculado') + dgRow('e2e', 'Los comandos llegan a la TV') +
-      '<div class="diag" id="dgInfo"></div><button class="btn ghost" data-act="diag" style="margin-top:12px">Probar de nuevo</button>');
-    DG = { results: [], run: Date.now() };
-    var run = DG.run, alive = function () { return S.sheet === 'diag' && DG && DG.run === run; };
-    if (S.fake) {
-      var names = ['net', 'cloud', 'room', 'tv', 'link', 'e2e'];
-      for (var i = 0; i < names.length; i++) dgSet(names[i], 'skip', 'No aplica: ' + S.fake.name + ' es un decodificador simulado.');
-      return verdict();
-    }
-    var conn = navigator.connection || navigator.webkitConnection, net = conn ? ((conn.type && conn.type !== 'unknown' ? conn.type : '') || conn.effectiveType || '').toUpperCase() : '';
-    $('dgInfo').innerHTML = '<div><span>Red de tu celular</span><b>' + (net || 'No disponible') + '</b></div><div><span>Nombre del Wi-Fi</span><b>No visible desde el navegador</b></div>';
-    /* 1 · internet del celular */
-    if (navigator.onLine === false) { dgSet('net', 'bad', 'Tu celular no tiene conexión a internet.', 'activa el Wi-Fi o los datos móviles.'); return skipRest('cloud'); }
-    dgSet('net', 'ok', 'Conectado' + (net ? ' por ' + net : '') + '.');
-    /* 2 · servidor (3 mediciones) */
-    var times = [], room = null, gotRoom = false;
-    (function ping(i) {
-      if (!alive()) return;
-      if (i >= 3) return afterCloud();
-      var t0 = Date.now();
-      store.getRoom(S.code, function (err, r) { if (!err) { times.push(Date.now() - t0); room = r; gotRoom = true; } ping(i + 1); });
-    })(0);
-    function afterCloud() {
-      if (!times.length) { dgSet('cloud', 'bad', 'No pudimos llegar al servidor.', 'revisa tu red; algunas redes de oficina lo bloquean. Prueba con datos móviles.'); return skipRest('room'); }
-      var avg = Math.round(times.reduce(function (a, b) { return a + b; }, 0) / times.length);
-      if (avg < 500) dgSet('cloud', 'ok', 'Responde en ' + avg + ' ms.');
-      else dgSet('cloud', 'warn', 'Responde lento: ' + avg + ' ms.', 'acércate al módem o cambia a una red más rápida.');
-      /* 3 · la sala de la TV existe */
-      if (!room) { dgSet('room', 'bad', 'La TV ya no tiene esta sala abierta.', 'vuelve a escanear el código QR que aparece en la TV.'); return skipRest('tv'); }
-      dgSet('room', 'ok', 'Encontramos a ' + (room.tvName || 'Sala') + '.');
-      /* 4 · la TV está viva */
-      var age = room.aliveAt ? Math.round((Date.now() - room.aliveAt) / 1000) : 999;
-      if (room.off) dgSet('tv', 'warn', 'La TV está en reposo.', 'enciéndela con el botón ⏻ de arriba.');
-      else if (age > 60) { dgSet('tv', 'bad', 'La TV no se reporta desde hace ' + (age > 900 ? 'más de 15 min' : age + ' s') + '.', 'revisa que el decodificador tenga internet y que Sala TV siga abierta en la pantalla.'); return skipRest('link'); }
-      else dgSet('tv', room.tvLat > 1200 ? 'warn' : 'ok', 'Se reportó hace ' + (age < 5 ? 'un momento' : age + ' s') + (room.tvLat ? ' · su conexión responde en ' + room.tvLat + ' ms' : '') + '.', room.tvLat > 1200 ? 'la red de la TV está lenta; revisa el cable o el Wi-Fi del decodificador.' : '');
-      /* 5 · este celular puede escribir comandos */
-      store.updatePlayer(S.code, S.pid, { seen: Date.now() }, function (err) {
-        if (!alive()) return;
-        if (err) { dgSet('link', 'bad', 'Tu celular no puede mandar comandos.', 'recarga esta página para volver a vincularte.'); return skipRest('e2e'); }
-        dgSet('link', 'ok', 'Vinculado como «' + S.name + '».');
-        /* 6 · prueba de punta a punta: la TV debe contestar */
-        var id = 'k' + Date.now().toString(36), t0 = Date.now();
-        send({ t: 'ping', id: id });
-        (function wait() {
-          if (!alive()) return;
-          store.getRoom(S.code, function (e2, r2) {
-            if (!alive()) return;
-            if (!e2 && r2 && r2.pong === id) { var ms = Date.now() - t0; dgSet('e2e', ms < 4000 ? 'ok' : 'warn', 'La TV respondió en ' + (ms / 1000).toFixed(1) + ' s.', ms < 4000 ? '' : 'los comandos tardan; revisa la red de la TV.'); return verdict(); }
-            if (Date.now() - t0 > 8000) { dgSet('e2e', 'bad', 'La TV no respondió a la prueba.', room.off ? 'enciéndela con ⏻ y vuelve a probar.' : 'recarga Sala TV en la TV o reinicia el decodificador.'); return verdict(); }
-            setTimeout(wait, 500);
-          });
-        })();
-      });
-    }
-    function skipRest(from) {
-      var order = ['net', 'cloud', 'room', 'tv', 'link', 'e2e'], go = false;
-      for (var i = 0; i < order.length; i++) { if (order[i] === from) go = true; if (go) dgSet(order[i], 'skip', 'No se pudo revisar por la falla anterior.'); }
-      verdict();
-    }
-    function verdict() {
-      if (!alive()) return;
-      var bad = null, warn = null;
-      for (var i = 0; i < DG.results.length; i++) { if (DG.results[i].st === 'bad' && !bad) bad = DG.results[i]; if (DG.results[i].st === 'warn' && !warn) warn = DG.results[i]; }
-      var html;
-      if (S.fake) html = '<div class="verdict" style="background:#FBF0DC;color:#7A5A1E">' + esc(S.fake.name) + ' es simulado: no hay una conexión real que revisar.</div>';
-      else if (bad) html = '<div class="verdict" style="background:#FBE3E7;color:#9A2236">✕ Falla: ' + esc(bad.label) + '<span>' + esc(bad.detail) + ' Qué hacer: ' + esc(bad.fix) + '</span></div>';
-      else if (warn) html = '<div class="verdict" style="background:#FBF0DC;color:#7A5A1E">! Funciona, con un detalle: ' + esc(warn.label) + '<span>' + esc(warn.detail) + ' Qué hacer: ' + esc(warn.fix) + '</span></div>';
-      else html = '<div class="verdict" style="background:#E3F4EA;color:#1F6B43">✓ Todo en orden<span>Tu celular y la TV están conectados y los comandos llegan.</span></div>';
-      $('dgV').innerHTML = html; $('dgSub').textContent = 'Resultado de la revisión';
-      if (!S.fake) send({ t: 'diag' });
-    }
-  }
-
   /* Modo noche: ¿en cuánto se apaga? Se puede elegir aquí o en la TV con el control (lo que pase primero). */
   function openSleepSheet() {
     var html = '<h2>🌙 Modo noche</h2><p class="sub">¿En cuánto se apaga la TV? También puedes elegirlo en la TV con el control.</p><div class="chips">';
@@ -934,7 +848,6 @@
     else if (act === 'newExp') openNewExp();
     else if (act === 'saveExp') saveExp();
     else if (act === 'find') openFind();
-    else if (act === 'diag') openDiag();
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
