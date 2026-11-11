@@ -99,13 +99,31 @@
     if (item.id === 'match') return 'background:url(' + C.PHOTOS.match + '640) center/cover no-repeat,repeating-linear-gradient(90deg,#2E7D49 0 12%,#2A7243 12% 24%)';
     if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w780') + ') center/cover no-repeat';
     if (item.id === 'series' || item.id === 'bunny') { if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat'; var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
-    if (item.id === 'swipe') return 'background:radial-gradient(45% 55% at 30% 40%,rgba(243,139,201,.75) 0%,rgba(243,139,201,0) 70%),radial-gradient(45% 55% at 75% 60%,rgba(84,112,214,.8) 0%,rgba(84,112,214,0) 70%),linear-gradient(150deg,#1B1E3A,#0B0C12)';
+    if (item.id === 'swipe') return 'background:radial-gradient(30% 55% at 50% 35%,rgba(243,139,201,.5) 0%,rgba(243,139,201,0) 100%),linear-gradient(135deg,#2A1450 0%,#5A2A78 55%,#1A2A6A 100%)';
     if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat';
-    if (item.id === 'ship') return 'background:radial-gradient(1.5px 1.5px at 25% 30%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(1.5px 1.5px at 70% 25%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(35% 35% at 70% 75%,rgba(127,214,255,.45) 0%,rgba(127,214,255,0) 70%),linear-gradient(180deg,#070512,#2A1E60)';
+    if (item.id === 'ship') return 'background:url(img/nave.jpg?v=7.8) center/cover no-repeat,radial-gradient(1.5px 1.5px at 25% 30%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(1.5px 1.5px at 70% 25%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(35% 35% at 70% 75%,rgba(127,214,255,.45) 0%,rgba(127,214,255,0) 70%),linear-gradient(180deg,#070512,#2A1E60)';
     if (item.id === 'recipe') return 'background:url(' + C.PHOTOS.recipe + '640) center/cover no-repeat,radial-gradient(40% 45% at 72% 40%,rgba(255,196,92,.55) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#3E7A3A 0%,#1E3A1C 100%)';
     if (item.id === 'tv') return 'background:linear-gradient(150deg,#3D7BE8,#2E7D49 55%,#3A2160)';
-    if (item.id === 'game') return 'background:radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
+    if (item.id === 'game') return 'background:url(img/atrapa.jpg?v=7.8) center/cover no-repeat,radial-gradient(40% 40% at 70% 30%,rgba(255,210,122,.6) 0%,rgba(255,210,122,0) 70%),linear-gradient(150deg,#3A2A6E,#120C22)';
     return item.art ? 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')' : '';
+  }
+  /* ¿Qué vemos?: tres pósters reales en abanico (TMDB) con ✕ / ♥ y MATCH, como el juego */
+  var SW = { films: [{ q: 'Pretty Woman', y: 1990 }, { q: 'La La Land', y: 2016 }, { q: 'An Affair to Remember', y: 1957 }], posters: [], loading: false };
+  function swipeArt() {
+    var h = '<span class="qv-art">';
+    for (var i = 0; i < 3; i++) h += '<span class="qv-p qv-p' + (i + 1) + '"' + (SW.posters[i] ? ' style="background-image:url(' + QV.catalog.img(SW.posters[i], 'w342') + ')"' : '') + '></span>';
+    return h + '<span class="qv-btn qv-x">✕</span><span class="qv-btn qv-h">♥</span><span class="qv-match">♥ MATCH</span></span>';
+  }
+  function artInner(item) { return item.id === 'swipe' ? swipeArt() : ''; }
+  function loadSwipe(cb) {
+    if (SW.loading || SW.posters.length) return; SW.loading = true;
+    for (var i = 0; i < SW.films.length; i++) (function (i) {
+      var f = SW.films[i];
+      QV.http.get('https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(f.q) + '&year=' + f.y, function (err, d) {
+        var m = !err && d && d.results && d.results[0];
+        if (m && m.poster_path) { SW.posters[i] = m.poster_path; if (cb) cb(); }
+      });
+    })(i);
   }
   function tileHtml(item, wide) {
     if (item.kind === 'app') {
@@ -126,7 +144,7 @@
     if (item.id === 'bunny' && S.vsaved > 1) extra = '<div class="t-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></div>';
     var sub = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     return '<button class="tile' + (wide ? ' wide' : '') + '" data-focusable data-action="open" data-id="' + item.id + '">' +
-      '<span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
+      '<span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
       (item.kind === 'live' ? '<span class="t-live"><span class="live">EN VIVO</span></span>' : '') +
       '<span class="t-body"><span class="t-tag">' + esc(item.id === 'series' ? 'Seguir viendo' : item.tag) + '</span>' +
       '<span class="t-title" style="display:block">' + esc(item.title) + '</span><span class="t-sub" style="display:block">' + esc(sub) + '</span>' + extra + '</span></button>';
@@ -150,7 +168,7 @@
       if (item.id === 'recipe' && S.rsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></span>';
     }
     return '<button class="card" data-focusable data-action="' + (item.n ? 'channel' : 'open') + '" data-id="' + id + '"' + (item.n ? ' data-n="' + item.n + '"' : '') + '>' +
-      '<span class="c-art" style="' + art + '"></span><span class="c-shade"></span>' + badge +
+      '<span class="c-art" style="' + art + '">' + (item.n ? '' : artInner(item)) + '</span><span class="c-shade"></span>' + badge +
       '<span class="c-title">' + esc(item.n ? item.show : item.title) + '</span>' + extra + '</button>';
   }
   function appTileHtml(item) {
@@ -184,6 +202,7 @@
       meta = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     }
     $('heroBg').setAttribute('style', heroBg(item));
+    $('heroArt').innerHTML = item.id === 'swipe' ? '<span class="qv-box">' + swipeArt() + '</span>' : '';
     $('heroInfo').innerHTML = '<p class="h-tag">' + tag + '</p><h2 class="h-title">' + esc(title) + '</h2><p class="h-meta">' + esc(meta) + '</p>';
   }
   /* Desliza la fila para que la tarjeta enfocada siempre se vea completa (sin scroll nativo: STB). */
@@ -215,7 +234,7 @@
     renderHero(heroId || 'series', true);
   }
   function gameTile(item) {
-    return '<button class="tile sm" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
+    return '<button class="tile sm" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
       '<span class="t-body"><span class="t-tag">Juego</span><span class="t-title" style="display:block">' + esc(item.title) + '</span></span></button>';
   }
   function renderPairing() {
@@ -516,6 +535,7 @@
   function loadCovers() {
     var redraw = function () { if (S.screen === 'home') renderHome(); };
     loadSinners(redraw);
+    loadSwipe(redraw);
     for (var i = 0; i < C.CHANNELS.length; i++) if (C.CHANNELS[i].tmdb) tmdbMovie(C.CHANNELS[i].tmdb, redraw);
   }
   function sendOffer() {
@@ -815,7 +835,7 @@
     }, 1400);
   }
   function gameCard(item, sub) {
-    return '<button class="x-game" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
+    return '<button class="x-game" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
       '<span class="xg-body"><span class="xg-t">' + esc(item.title) + '</span><span class="xg-s">' + esc(sub) + '</span></span></button>';
   }
   function openMovie(i) {

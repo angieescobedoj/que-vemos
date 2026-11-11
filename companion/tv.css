@@ -384,7 +384,7 @@ b{font-weight:700}
    Sin filter/backdrop-filter (R3): el fondo se oscurece con degradados encima. */
 .home{position:relative}
 .home > *{position:relative;z-index:1}
-.home > .hero-bg,.home > .hero-shade{position:fixed;left:0;top:0;right:0;bottom:0;z-index:0}
+.home > .hero-bg,.home > .hero-shade,.home > .hero-art{position:fixed;left:0;top:0;right:0;bottom:0;z-index:0}
 .hero-bg{background:#110D1A;transition:opacity .3s}
 .hero-shade{background:linear-gradient(90deg,rgba(10,7,16,.94) 0%,rgba(10,7,16,.7) 30%,rgba(10,7,16,.15) 62%,rgba(10,7,16,0) 80%),
   linear-gradient(0deg,rgba(10,7,16,.97) 0%,rgba(10,7,16,.82) 34%,rgba(10,7,16,0) 62%),
@@ -432,3 +432,19 @@ b{font-weight:700}
 .menu-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:.2rem;margin:.1rem -.2rem 0}
 .menu-list::-webkit-scrollbar{display:none}
 .m-item{padding:.45rem .8rem}
+
+/* v7.8 · portada de ¿Qué vemos?: pósters reales en abanico (se dibuja igual en tarjeta, mosaico y fondo grande) */
+.qv-art{position:absolute;left:0;top:0;right:0;bottom:0;font-size:.42rem}
+.qv-p{position:absolute;top:13%;width:19%;height:56%;border-radius:.5em;background:#3A2A5A center/cover no-repeat;box-shadow:0 .6em 1.2em rgba(0,0,0,.5)}
+.qv-p1{left:21.8%;-webkit-transform:rotate(-14deg);transform:rotate(-14deg)}
+.qv-p2{left:40.5%;top:9%;z-index:2}
+.qv-p3{left:59.2%;-webkit-transform:rotate(14deg);transform:rotate(14deg)}
+.qv-btn{position:absolute;top:36%;width:8.4%;height:15%;border-radius:50%;background:#fff;text-align:center;font-weight:700;font-size:1.9em;z-index:3;box-shadow:0 .2em .6em rgba(0,0,0,.4);
+  display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center}
+.qv-x{left:9%;color:#D9364F}.qv-h{right:9%;color:#E5488A}
+.qv-match{position:absolute;left:50%;top:3%;-webkit-transform:translateX(-50%) rotate(-6deg);transform:translateX(-50%) rotate(-6deg);background:#E5488A;color:#fff;border-radius:999px;padding:.25em 1em;font-weight:700;font-size:1.25em;z-index:4;white-space:nowrap}
+.tile.sm .qv-art{left:-30%;right:-30%}
+.x-game .qv-art{font-size:.81rem}
+.hero-art{pointer-events:none}
+.hero-art .qv-box{position:absolute;left:35vw;top:8.5vw;width:31vw;height:17.4vw}
+.hero-art .qv-art{font-size:1.14vw}
