@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portadas de juegos · propuesta</title>
+<style>
+@font-face{font-family:Montserrat;src:url(../../fonts/montserrat-latin-700-normal.woff2) format('woff2');font-weight:700}
+@font-face{font-family:Montserrat;src:url(../../fonts/montserrat-latin-600-normal.woff2) format('woff2');font-weight:600}
+body{margin:0;background:#0E0A16;color:#fff;font-family:Montserrat,Arial,sans-serif;padding:32px}
+h1{font-size:22px;margin:0 0 6px}p.s{color:#B9AFC8;margin:0 0 26px;font-size:14px}
+h2{font-size:15px;color:#B9AFC8;margin:30px 0 12px;font-weight:600}
+.row{display:flex;gap:18px;flex-wrap:wrap}
+.tile{position:relative;width:400px;height:225px;border-radius:14px;overflow:hidden;background:#1A1328}
+.tile.big{width:min(960px,92vw);height:calc(min(960px,92vw)*.5625)}
+.tile img.full{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .ttl{position:absolute;left:5.5%;bottom:8%;font-weight:700;font-size:calc(var(--w)*.065);text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.tile{--w:400px}.tile.big{--w:min(960px,92vw)}
+/* ¿Qué vemos? compuesta con pósters reales (TMDB) */
+.qv{position:absolute;inset:0;background:linear-gradient(135deg,#2A1450 0%,#5A2A78 55%,#1A2A6A 100%)}
+.qv:before{content:'';position:absolute;left:20%;top:-15%;width:60%;height:110%;background:radial-gradient(closest-side,rgba(243,139,201,.5),rgba(243,139,201,0))}
+.qv .p{position:absolute;top:13%;width:19%;height:56%;border-radius:calc(var(--w)*.018);background:#3A2A5A center/cover no-repeat;box-shadow:0 calc(var(--w)*.012) calc(var(--w)*.025) rgba(0,0,0,.5)}
+.qv .p1{left:21.8%;transform:rotate(-14deg)}
+.qv .p2{left:40.5%;top:9%;z-index:2}
+.qv .p3{left:59.2%;transform:rotate(14deg)}
+.qv .btn{position:absolute;top:36%;width:8.4%;height:15%;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:calc(var(--w)*.045);z-index:6;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.qv .bx{left:9%;color:#D9364F}.qv .bh{right:9%;color:#E5488A}
+.qv .match{position:absolute;left:50%;top:3%;transform:translateX(-50%) rotate(-6deg);background:#E5488A;border-radius:999px;padding:.6% 2.6%;font-weight:700;font-size:calc(var(--w)*.03);z-index:4;white-space:nowrap}
+.qv:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,18,0) 58%,rgba(10,7,18,.85) 100%);z-index:5}
+.tile .ttl{z-index:6}
+.note{color:#B9AFC8;font-size:13px;margin-top:22px;max-width:900px;line-height:1.5}
+</style></head><body>
+<h1>Portadas de juegos · propuesta</h1>
+<p class="s">Así se verían en la fila "Populares para ti". Todavía no están en el prototipo.</p>
+
+<h2>Tamaño de tarjeta</h2>
+<div class="row">
+  <div class="tile"><img class="full" src="atrapa.jpg" alt=""><div class="ttl">Atrapa estrellas</div></div>
+  <div class="tile"><img class="full" src="nave.jpg" alt=""><div class="ttl">Nave espacial</div></div>
+  <div class="tile" data-qv><div class="ttl">¿Qué vemos?</div></div>
+</div>
+
+<h2>¿Qué vemos? en grande</h2>
+<div class="tile big" data-qv><div class="ttl">¿Qué vemos?</div></div>
+
+<p class="note">Los pósters de ¿Qué vemos? son reales (Mujer bonita, La La Land y Algo para recordar) y se cargan del catálogo de TMDB, igual que las demás portadas del prototipo.</p>
+
+<script>
+(function () {
+  var KEY = 'a7795e812c110c40515e414ceb379fac';
+  var FILMS = [ { q: 'Pretty Woman', y: 1990 }, { q: 'La La Land', y: 2016 }, { q: 'An Affair to Remember', y: 1957 } ];
+  var tiles = document.querySelectorAll('[data-qv]');
+  for (var t = 0; t < tiles.length; t++) {
+    var qv = document.createElement('div'); qv.className = 'qv';
+    qv.innerHTML = '<div class="p p1"></div><div class="p p2"></div><div class="p p3"></div><div class="btn bx">✕</div><div class="btn bh">♥</div><div class="match">♥ MATCH</div>';
+    tiles[t].insertBefore(qv, tiles[t].firstChild);
+  }
+  FILMS.forEach(function (f, i) {
+    var x = new XMLHttpRequest();
+    x.open('GET', 'https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(f.q) + '&year=' + f.y);
+    x.onload = function () {
+      try {
+        var m = JSON.parse(x.responseText).results[0]; if (!m || !m.poster_path) return;
+        var els = document.querySelectorAll('.qv .p' + (i + 1));
+        for (var k = 0; k < els.length; k++) els[k].style.backgroundImage = 'url(https://image.tmdb.org/t/p/w342' + m.poster_path + ')';
+      } catch (e) {}
+    };
+    x.send();
+  });
+})();
+</script>
+</body></html>
