@@ -131,15 +131,88 @@
       '<span class="t-body"><span class="t-tag">' + esc(item.id === 'series' ? 'Seguir viendo' : item.tag) + '</span>' +
       '<span class="t-title" style="display:block">' + esc(item.title) + '</span><span class="t-sub" style="display:block">' + esc(sub) + '</span>' + extra + '</span></button>';
   }
+  /* Inicio (v7.5): como el launcher de la TV. Arriba, el fondo y los datos del contenido enfocado;
+     abajo, "Populares para ti" (se desliza de lado) y "Mis apps" (íconos completos). */
+  function homeItems() {
+    return [C.SERIES, C.BUNNY, C.RECIPE, C.MATCH].concat(C.CHANNELS).concat([C.GAME, C.SHIP, C.SWIPE]);
+  }
+  function cardHtml(item) {
+    var id = item.n ? 'ch' + item.n : item.id, art, extra = '', badge = '';
+    if (item.n) {
+      var cb = item.tmdb && TMDB[item.tmdb] && TMDB[item.tmdb].backdrop;
+      art = cb ? 'background:#000 url(' + QV.catalog.img(cb, 'w300') + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')';
+      badge = '<span class="c-num">' + item.n + '</span><span class="c-live">EN VIVO</span>';
+    } else {
+      art = artFor(item);
+      if (item.id === 'match') badge = '<span class="c-live">EN VIVO</span>';
+      if (item.id === 'series') extra = '<span class="c-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></span>';
+      if (item.id === 'bunny' && S.vsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></span>';
+      if (item.id === 'recipe' && S.rsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></span>';
+    }
+    return '<button class="card" data-focusable data-action="' + (item.n ? 'channel' : 'open') + '" data-id="' + id + '"' + (item.n ? ' data-n="' + item.n + '"' : '') + '>' +
+      '<span class="c-art" style="' + art + '"></span><span class="c-shade"></span>' + badge +
+      '<span class="c-title">' + esc(item.n ? item.show : item.title) + '</span>' + extra + '</button>';
+  }
+  function appTileHtml(item) {
+    if (item.kind === 'live') return '<button class="tile app sq live-app" data-focusable data-action="open" data-id="tv" aria-label="TV en vivo"><span class="t-name"><small>TV</small>en vivo</span></button>';
+    return tileHtml(item);
+  }
+  /* Datos grandes del contenido enfocado (fondo + etiqueta + título + detalle) */
+  var heroId = null;
+  function heroItem(id) {
+    if (!id) return null;
+    if (id.indexOf('ch') === 0) return C.channel(Number(id.substring(2)));
+    var it = C.byId(id); return it && it.kind !== 'app' && it.kind !== 'live' ? it : (id === 'match' ? C.MATCH : null);
+  }
+  function heroBg(item) {
+    if (item.n) {
+      var cb = item.tmdb && TMDB[item.tmdb] && TMDB[item.tmdb].backdrop;
+      return cb ? 'background:#000 url(' + QV.catalog.img(cb, 'w1280') + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')';
+    }
+    if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w1280') + ') center/cover no-repeat';
+    return artFor(item).replace(/640\)/g, '1600)');
+  }
+  function renderHero(id, force) {
+    var item = heroItem(id); if (!item) return;            /* en "Mis apps" se queda el último contenido */
+    if (id === heroId && !force) return;
+    heroId = id;
+    var tag, title, meta;
+    if (item.n) { tag = '<span class="h-live">● En vivo</span> Canal ' + item.n + ' · ' + esc(item.name.replace(/ \d+$/, '')); title = item.show; meta = 'A continuación: ' + item.next; }
+    else {
+      tag = item.id === 'match' ? '<span class="h-live">● En vivo</span> Deportes' : esc(item.id === 'series' ? 'Seguir viendo' : item.tag);
+      title = item.title;
+      meta = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
+    }
+    $('heroBg').setAttribute('style', heroBg(item));
+    $('heroInfo').innerHTML = '<p class="h-tag">' + tag + '</p><h2 class="h-title">' + esc(title) + '</h2><p class="h-meta">' + esc(meta) + '</p>';
+  }
+  /* Desliza la fila para que la tarjeta enfocada siempre se vea completa (sin scroll nativo: STB). */
+  function slideRow(el, instant) {
+    var track = el.parentNode; if (!track || !track.getAttribute || track.getAttribute('data-slide') === null) return;
+    var view = track.parentNode.clientWidth, x = Number(track.getAttribute('data-x') || 0), l = el.offsetLeft, w = el.offsetWidth, pad = 4,
+      padR = Math.round(window.innerWidth * 0.04) + 12;   /* a la derecha deja el margen de la pantalla libre */
+    if (l - x < pad) x = Math.max(0, l - pad);
+    else if (l + w - x > view - padR) x = l + w - view + padR;
+    x = Math.max(0, Math.min(x, track.scrollWidth - view));
+    track.setAttribute('data-x', x);
+    track.style.transition = instant ? 'none' : '';
+    track.style.transform = 'translateX(' + (-x) + 'px)';
+  }
+  TP.focus.onChange(function (el) {
+    if (S.screen !== 'home' || !el || !$('rows').contains(el)) return;
+    slideRow(el, homeRendering); renderHero(el.getAttribute('data-id'));
+  });
+  var homeRendering = false;
   function renderHome() {
-    var r1 = '<div><p class="row-h">Para ti</p><div class="row-tiles">' + tileHtml(C.SERIES, true) + tileHtml(C.BUNNY, true) + tileHtml(C.RECIPE, true) + tileHtml(C.MATCH, true) + '</div></div>';
-    var chs = ''; for (var i = 0; i < C.CHANNELS.length; i++) chs += tileHtml(C.CHANNELS[i]);
-    var r2 = '<div><p class="row-h">Canales en vivo</p><div class="row-tiles">' + chs + '</div></div>';
-    var apps = ''; for (var j = 0; j < C.APPS.length; j++) apps += tileHtml(C.APPS[j]);
-    var r3 = '<div><p class="row-h">Apps y juegos</p><div class="row-tiles">' + apps + gameTile(C.GAME) + gameTile(C.SHIP) + gameTile(C.SWIPE) + '</div></div>';
-    var keep = TP.focus.current(), keepId = keep ? keep.getAttribute('data-id') : null;
-    $('rows').innerHTML = r1 + r2 + r3;
+    var cards = '', items = homeItems(); for (var i = 0; i < items.length; i++) cards += cardHtml(items[i]);
+    var apps = appTileHtml(C.LIVE); for (var j = 0; j < C.APPS.length; j++) apps += appTileHtml(C.APPS[j]);
+    var keep = TP.focus.current(), keepId = keep && $('rows').contains(keep) ? keep.getAttribute('data-id') : null;
+    homeRendering = true;
+    $('rows').innerHTML = '<div class="row-view"><div class="row-tiles cards" data-slide>' + cards + '</div></div>' +
+      '<div><p class="row-h">Mis apps</p><div class="row-tiles">' + apps + '</div></div>';
     if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '[data-id="' + keepId + '"]' : '[data-id="series"]'); }
+    homeRendering = false;
+    renderHero(heroId || 'series', true);
   }
   function gameTile(item) {
     return '<button class="tile sm" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '"></span><span class="t-shade"></span>' +
@@ -1229,7 +1302,7 @@
   }
   function renderQR() {
     var url = phoneUrl(S.code);
-    $('qr').innerHTML = qrHtml(url, 10);
+    $('qr').innerHTML = qrHtml(url, 5.2);
     $('qr2').innerHTML = qrHtml(url, 7);
   }
   function newCode() {

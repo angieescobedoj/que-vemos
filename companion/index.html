@@ -71,19 +71,26 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .row2 button,.vol button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 6px;font-size:13px;font-weight:700}
 .row2 button:active,.vol button:active,.quick button:active,.apps button:active,.more button:active{transform:scale(.97)}
 .vol{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr;gap:10px;align-items:center;margin-bottom:6px}
-.vol button{font-size:20px;padding:10px 6px}
+.vol button{padding:11px 6px;color:#fff;display:flex;align-items:center;justify-content:center}
 .vol span{text-align:center;font-size:13px;font-weight:700;color:var(--ink-2)}
 .vol button.on{background:var(--red);border-color:var(--red);color:#fff}
-.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.apps button{background:#100C18;border:1px solid var(--line);border-radius:14px;padding:16px 4px 12px;font-size:12px;font-weight:700;position:relative;overflow:hidden}
-.apps button img{display:block;width:40px;height:40px;border-radius:10px;margin:0 auto 7px}
-.apps button:before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
+.keys3 svg,.vol svg{width:24px;height:24px;display:block;color:#fff}
+#playBtn .i-pause{display:none}
+#playBtn.playing .i-play{display:none}
+#playBtn.playing .i-pause{display:inline}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.apps button{aspect-ratio:1/1;border-radius:14px;position:relative;overflow:hidden;background:var(--c,#15111F);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;padding:4px;font-size:12px;font-weight:700;line-height:1.15;text-align:center}
+.apps button img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
+.apps button.has-logo{background:#000}
+.apps button.has-logo .nm{visibility:hidden}
+.apps .live-tile{background:linear-gradient(160deg,#2B57C9 0%,#13285E 100%)}
+.apps .live-tile small{display:block;font-size:10px;font-weight:600;opacity:.8}
+.apps .live-tile .nm{font-size:14px}
 .more{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .more button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px}
 .more i{font-style:normal;font-size:20px}
 .sec-c{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
 .keys3 button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px}
-.keys3 button i{font-style:normal;font-size:20px}
 .keys3 button:active{background:var(--card-2)}
 
 /* ahora */
@@ -164,6 +171,35 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .stepper button{width:48px;height:48px;border-radius:12px;background:#F1EDF6;color:#4A2E7A;font-size:22px;font-weight:700;flex:none}
 .stepper input{flex:1;min-width:0;text-align:center;font-size:22px;font-weight:700;border:1px solid #DDD3EA;border-radius:12px;padding:9px;color:#1E1A1A}
 .stepper span{font-weight:700;color:#555}
+/* control por voz: pantalla completa oscura con onda neón (imagen de referencia) */
+.sheet.voice{top:0;border-radius:0;max-height:none;height:100%;color:#fff;display:flex;flex-direction:column;align-items:stretch;padding:calc(12px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
+  background:radial-gradient(70% 38% at 50% 26%,rgba(150,60,230,.32) 0%,rgba(150,60,230,0) 70%),radial-gradient(90% 40% at 50% 100%,rgba(120,50,200,.28) 0%,rgba(120,50,200,0) 70%),linear-gradient(180deg,#140A24 0%,#0B0614 100%);box-shadow:none}
+.vhead{display:flex;align-items:center;justify-content:space-between;height:48px}
+.vhead h2{font-size:18px;margin:0}
+.vhead button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff}
+.vhead svg{width:24px;height:24px}
+.vwave{display:flex;align-items:center;justify-content:center;gap:7px;height:150px;margin:22px 0 8px}
+.vline{flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(190,110,255,0),#C07CFF);box-shadow:0 0 8px #A855F7}
+.vline:last-child{background:linear-gradient(270deg,rgba(190,110,255,0),#C07CFF)}
+.vbar{width:11px;border-radius:999px;border:2px solid #D7A8FF;box-shadow:0 0 10px #A855F7,0 0 22px rgba(168,85,247,.7),inset 0 0 6px rgba(168,85,247,.6);transform:scaleY(.8);animation:vbreath 2.4s ease-in-out infinite}
+.vbar:nth-child(5),.vbar:nth-child(6),.vbar:nth-child(7),.vbar:nth-child(8),.vbar:nth-child(9){background:linear-gradient(180deg,#E9CCFF,#B266FF);border-color:#F1DDFF}
+.vwave.on .vbar{animation:vtalk .9s ease-in-out infinite}
+@keyframes vbreath{0%,100%{transform:scaleY(.8)}50%{transform:scaleY(.92)}}
+@keyframes vtalk{0%,100%{transform:scaleY(.5)}30%{transform:scaleY(1.05)}60%{transform:scaleY(.75)}}
+.sheet.voice .vtext{font-size:26px;font-weight:700;margin:14px 0 4px;min-height:34px;text-align:center;overflow-wrap:anywhere}
+.sheet.voice .vreply{color:#CDB6EA;font-size:14px;min-height:20px;margin:0 0 18px}
+.vsugs{display:flex;flex-direction:column;gap:12px}
+.vsug{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 18px;font-size:16px;font-weight:600;color:#fff}
+.vsug svg{width:26px;height:26px;color:#C07CFF;flex:none}
+.vsug:active{background:rgba(168,85,247,.22)}
+.vfoot{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.vmic{width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+  background:radial-gradient(circle,#3A1660 0%,#200C38 70%);border:2px solid #B266FF;box-shadow:0 0 0 7px rgba(168,85,247,.16),0 0 26px rgba(168,85,247,.55)}
+.vmic svg{width:38px;height:38px}
+.vmic.on{animation:vglow 1.3s ease-in-out infinite}
+@keyframes vglow{50%{box-shadow:0 0 0 13px rgba(168,85,247,.22),0 0 40px rgba(168,85,247,.85)}}
+.sheet.voice .vform{width:100%}
+.vtype{color:#CDB6EA;font-size:13px;font-weight:600;text-decoration:underline}
 .scrim{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:35}
 
 /* gamepad */
@@ -297,22 +333,25 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
         <button data-key="BACK">↩  Regresar</button>
         <button data-cmd="home">⌂  Inicio</button>
       </div>
+      <!-- Iconos SVG en blanco (currentColor): se ven igual en iOS y Android, a diferencia de los emojis -->
       <div class="keys3">
-        <button data-key="REW" aria-label="Retroceder 30 segundos"><i>⏪</i></button>
-        <button data-key="PLAY" aria-label="Reproducir o pausar"><i>⏯</i></button>
-        <button data-key="FF" aria-label="Adelantar 30 segundos"><i>⏩</i></button>
+        <button data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
+        <button data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
+        <button data-key="FF" aria-label="Adelantar 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5v11l7.7-5.5zM12.5 6.5v11l7.7-5.5z" fill="currentColor"/></svg></button>
       </div>
       <div class="vol">
-        <button data-act="mute" id="muteBtn" aria-label="Silenciar">🔇</button>
-        <button data-vol="-5" aria-label="Bajar volumen">−</button>
+        <button data-act="mute" id="muteBtn" aria-label="Silenciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <span id="volLbl">Vol 30</span>
-        <button data-vol="5" aria-label="Subir volumen">＋</button>
+        <button data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
-      <p class="sec-c">Accesos directos</p>
+      <p class="sec-c">Mis apps</p>
+      <!-- Como en "Mis apps" de la TV: cada tarjeta es el logo de la app. Si el logo no carga, queda el nombre sobre el color de la marca. -->
       <div class="apps">
-        <button data-app="netflix" style="--c:#E50914">Netflix</button>
-        <button data-app="prime" style="--c:#1A98FF">Prime Video</button>
-        <button data-app="youtube" style="--c:#FF0033">YouTube</button>
+        <button data-open="tv" class="live-tile" aria-label="TV en vivo"><span class="nm"><small>TV</small>en vivo</span></button>
+        <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
+        <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
+        <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
       </div>
       <p class="sec-c">Más</p>
       <div class="more">
@@ -369,11 +408,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.4"></script>
-<script src="../src/services/firestore-rest.js?v=7.4"></script>
-<script src="content.js?v=7.4"></script>
-<script src="logos.js?v=7.4"></script>
-<script src="store.js?v=7.4"></script>
-<script src="phone.js?v=7.4"></script>
+<script src="../src/services/http.js?v=7.5"></script>
+<script src="../src/services/firestore-rest.js?v=7.5"></script>
+<script src="content.js?v=7.5"></script>
+<script src="logos.js?v=7.5"></script>
+<script src="store.js?v=7.5"></script>
+<script src="phone.js?v=7.5"></script>
 </body>
 </html>

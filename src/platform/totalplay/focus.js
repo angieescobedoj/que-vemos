@@ -7,7 +7,7 @@
 (function (TP) {
   'use strict';
   var FOCUS_CLASS = 'is-focused';
-  var current = null, scope = null, onActivate = null;
+  var current = null, scope = null, onActivate = null, onChange = null;
 
   function visible(el) {
     if (!el || el.getAttribute('aria-disabled') === 'true' || el.disabled) return false;
@@ -87,6 +87,8 @@
       reveal(current);
       try { current.focus({ preventScroll: true }); } catch (e) { try { current.focus(); } catch (e2) { /* ignore */ } }
       undoFocusScroll(current);
+      /* aviso para la pantalla (p. ej. deslizar una fila o cambiar el fondo del inicio) */
+      if (onChange) { try { onChange(current); } catch (e3) { /* ignore */ } }
     }
   }
   function move(dir) { var next = pick(dir); if (next) setFocus(next); return !!next; }
@@ -123,5 +125,5 @@
   }
 
   TP.focus = { setFocus: setFocus, move: move, activate: activate, ensure: ensure, setScope: setScope,
-    current: function () { return current; }, onActivate: function (fn) { onActivate = fn; }, enablePointer: enablePointer };
+    current: function () { return current; }, onActivate: function (fn) { onActivate = fn; }, onChange: function (fn) { onChange = fn; }, enablePointer: enablePointer };
 })(window.TP = window.TP || {});

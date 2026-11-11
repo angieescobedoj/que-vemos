@@ -142,6 +142,7 @@
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
     $('volLbl').textContent = muted ? 'Silencio' : 'Vol ' + vol;
     $('muteBtn').className = muted ? 'on' : '';
+    $('playBtn').className = !S.fake && S.room.playing ? 'playing' : '';
     $('fakeNote').hidden = !S.fake;
     if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Elige tu TV en el menú de arriba para volver.';
   }
@@ -572,7 +573,8 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
+    $('sheet').className = 'sheet' + (name === 'voice' ? ' voice' : '');
+    $('sheet').innerHTML = (name === 'voice' ? '' : '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>') + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
   function closeSheet() {
@@ -635,15 +637,39 @@
 
   /* ---------- control por voz (reconocimiento de voz del navegador) ---------- */
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, listening = false;
+  /* Onda: barras en forma de píldora que se mueven mientras escucha (CSS) y respiran en reposo. */
+  function voiceWave() {
+    var H = [14, 24, 40, 60, 84, 108, 84, 60, 40, 24, 14], html = '<div class="vwave" id="vWave" aria-hidden="true"><span class="vline"></span>';
+    for (var i = 0; i < H.length; i++) html += '<span class="vbar" style="height:' + H[i] + 'px;animation-delay:' + (Math.abs(i - 5) * 0.09).toFixed(2) + 's"></span>';
+    return html + '<span class="vline"></span></div>';
+  }
+  var V_ICONS = {
+    app: '<path d="M3.5 5.5h17v11h-17zM9 20h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.5 8.5v5l4-2.5z" fill="currentColor"/>',
+    vol: '<path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    tv: '<path d="M3 5.5h18v11.5H3zM8 20.5h8M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+  };
+  var V_SUGG = [['app', 'Abre Netflix'], ['vol', 'Sube el volumen'], ['tv', 'Cambia al canal 5'], ['search', 'Busca una película']];
+  var vAwait = null; /* 'search' = lo siguiente que digas es el título a buscar */
   function openVoice() {
-    openSheet('voice', '<h2>Control por voz</h2><p class="sub">Dilo y pasa en la TV.</p>' +
-      '<button class="mic" id="micBtn" data-act="listen" aria-label="Hablar">🎤</button>' +
-      '<p class="vtext" id="vText">' + (SR ? 'Toca el micrófono y habla' : 'Escribe lo que dirías') + '</p><p class="vreply" id="vReply"></p>' +
-      '<div class="chips"><button data-say="Abre Netflix">«Abre Netflix»</button><button data-say="Cambia al canal 5">«Cambia al canal 5»</button><button data-say="Sube el volumen">«Sube el volumen»</button>' +
-      '<button data-say="Busca Los Pecadores">«Busca Los Pecadores»</button><button data-say="Pausa">«Pausa»</button><button data-say="Modo noche">«Modo noche»</button><button data-say="Apaga la tele">«Apaga la tele»</button></div>' +
-      '<form class="vform" id="vForm"><input class="in-l" id="vIn" placeholder="o escríbelo aquí" autocomplete="off"><button>Enviar</button></form>');
+    var sg = '';
+    for (var i = 0; i < V_SUGG.length; i++) sg += '<button class="vsug" data-say="' + V_SUGG[i][1] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + V_ICONS[V_SUGG[i][0]] + '</svg><span>“' + V_SUGG[i][1] + '”</span></button>';
+    vAwait = null;
+    openSheet('voice', '<div class="vhead"><button data-act="closeSheet" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<h2>Control por voz</h2><button data-act="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>' +
+      voiceWave() +
+      '<p class="vtext" id="vText">' + (SR ? 'Te escucho…' : 'Escribe lo que dirías') + '</p><p class="vreply" id="vReply"></p>' +
+      '<div class="vsugs">' + sg + '</div>' +
+      '<div class="vfoot"><button class="vmic" id="micBtn" data-act="listen" aria-label="Hablar"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>' +
+      '<form class="vform" id="vForm"' + (SR ? ' hidden' : '') + '><input class="in-l" id="vIn" placeholder="Escríbelo aquí" autocomplete="off"><button>Enviar</button></form>' +
+      '<button class="vtype" data-act="vtype"' + (SR ? '' : ' hidden') + '>Escribir en lugar de hablar</button></div>');
     $('vForm').onsubmit = function (e) { e.preventDefault(); var v = $('vIn').value.trim(); if (v) { $('vIn').value = ''; runVoice(v); } };
-    if (SR) listen();
+    if (SR) listen(); else setListening(false);
+  }
+  /* Estado visual: la onda se mueve y el micrófono brilla solo mientras escucha. */
+  function setListening(on) {
+    if ($('micBtn')) $('micBtn').className = 'vmic' + (on ? ' on' : '');
+    if ($('vWave')) $('vWave').className = 'vwave' + (on ? ' on' : '');
   }
   function listen() {
     if (!SR) { $('vReply').textContent = 'Tu navegador no tiene dictado por voz: escríbelo abajo.'; return; }
@@ -660,11 +686,11 @@
         var m = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Permite el micrófono para usar la voz, o escríbelo abajo.' : e.error === 'no-speech' ? 'No te escuché. Toca el micrófono e intenta de nuevo.' : 'No se pudo usar el micrófono. Escríbelo abajo.';
         if ($('vReply')) $('vReply').textContent = m;
       };
-      rec.onend = function () { listening = false; if ($('micBtn')) $('micBtn').className = 'mic'; };
-      rec.start(); listening = true; $('micBtn').className = 'mic on'; $('vText').textContent = 'Te escucho…'; $('vReply').textContent = '';
+      rec.onend = function () { listening = false; setListening(false); if ($('vText') && $('vText').textContent === 'Te escucho…') $('vText').textContent = 'Toca para hablar'; };
+      rec.start(); listening = true; setListening(true); $('vText').textContent = 'Te escucho…'; $('vReply').textContent = '';
     } catch (e) { listening = false; $('vReply').textContent = 'No se pudo usar el micrófono. Escríbelo abajo.'; }
   }
-  function stopListening() { if (rec && listening) { try { rec.stop(); } catch (e) { /* ignore */ } } listening = false; }
+  function stopListening() { if (rec && listening) { try { rec.stop(); } catch (e) { /* ignore */ } } listening = false; setListening(false); }
 
   var NUM = { uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, veinte: 20, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80, noventa: 90, cien: 100 };
   function norm(t) { return t.toLowerCase().replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u').replace(/[¿?¡!.,]/g, ' ').replace(/\s+/g, ' ').replace(/^ | $/g, ''); }
@@ -699,6 +725,7 @@
     if (/netflix/.test(t)) return { cmds: [{ t: 'app', id: 'netflix' }], reply: 'Abriendo Netflix' };
     if (/(prime|amazon)/.test(t)) return { cmds: [{ t: 'app', id: 'prime' }], reply: 'Abriendo Prime Video' };
     if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
+    if (/^(busca|buscar|buscame|encuentra|quiero ver) (una |algo |alguna )?(pelicula|peli|serie|algo)( para ver)?$/.test(t)) return { cmds: [{ t: 'search', q: '' }], reply: 'Abrí la búsqueda en la TV. ¿Cuál quieres ver? Dime el título.', await: 'search' };
     if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
     if (/(pecadores|sinners|seguir viendo)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Los Pecadores' };
@@ -718,7 +745,10 @@
   }
   function runVoice(text) {
     stopListening();
+    /* Después de «Busca una película», lo que digas es el título (salvo que sea otro comando). */
     var r = parseVoice(text), reply;
+    if (vAwait === 'search' && (!r || (r.cmds && r.cmds[0].t === 'search' && !r.cmds[0].q))) r = { cmds: [{ t: 'search', q: text }], reply: 'Buscando «' + text + '» en la TV' };
+    vAwait = r && r.await ? r.await : null;
     if (r && r.exp) { var e = expById(r.exp); if (e) { applyExp(e, true); reply = r.exp === 'none' ? 'Experiencia quitada' : 'Activando ' + e.name; } }
     else if (r && r.cmds) { reply = r.reply; send({ t: 'say', text: text, reply: reply }); for (var i = 0; i < r.cmds.length; i++) send(r.cmds[i]); }
     else if (r) reply = r.reply;
@@ -729,6 +759,7 @@
     if ($('vReply')) $('vReply').textContent = reply;
     if (r && r.sheet === 'find') openFind(true);
     if (r && r.exp === 'night') setTimeout(openSleepSheet, 1200);
+    if (vAwait === 'search' && SR) setTimeout(function () { if (S.sheet === 'voice' && !listening) listen(); }, 1400);
   }
 
   /* ---------- experiencias: ajustes de la TV en un toque (volumen, brillo, pantalla) ---------- */
@@ -843,6 +874,7 @@
     else if (act === 'saveName') { var nm = ($('nameIn').value || '').trim().substring(0, 18); if (nm) { S.name = nm; ls.set('cp-name', nm); if (S.pid) store.updatePlayer(S.code, S.pid, { name: nm }, function () {}); toast('Listo: en la TV apareces como ' + nm); closeSheet(); } }
     else if (act === 'search') openSearch();
     else if (act === 'voice') openVoice();
+    else if (act === 'vtype') { $('vForm').hidden = false; el.hidden = true; stopListening(); setTimeout(function () { try { $('vIn').focus(); } catch (e2) { /* ignore */ } }, 50); }
     else if (act === 'listen') listen();
     else if (act === 'exps') openExps();
     else if (act === 'newExp') openNewExp();
@@ -914,7 +946,7 @@
   /* logos oficiales en los accesos directos (si no cargan, se queda el nombre) */
   function paintAppLogos() {
     var bs = document.querySelectorAll('.apps button[data-app]');
-    for (var i = 0; i < bs.length; i++) { var id = bs[i].getAttribute('data-app'), im = CP.logos.img(id, 'w92', 'logo'); if (im && !bs[i].querySelector('img')) bs[i].insertAdjacentHTML('afterbegin', im); }
+    for (var i = 0; i < bs.length; i++) { var id = bs[i].getAttribute('data-app'), im = CP.logos.img(id, 'w92', 'logo'); if (im && !bs[i].querySelector('img')) { bs[i].insertAdjacentHTML('afterbegin', im); bs[i].className += ' has-logo'; } }
   }
   CP.logos.ready(paintAppLogos);
 

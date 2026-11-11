@@ -36,7 +36,8 @@
   document.addEventListener('error', function (e) {
     var el = e.target; if (!el || el.tagName !== 'IMG' || !el.getAttribute('data-logo')) return;
     var h = Number(el.getAttribute('data-host') || 0) + 1;
-    if (h >= HOSTS.length) { el.parentNode && el.parentNode.removeChild(el); return; }
+    /* sin logo: se quita la imagen y su contenedor vuelve a mostrar el nombre */
+    if (h >= HOSTS.length) { var p = el.parentNode; if (p) { p.className = p.className.replace(/\s*\bhas-logo\b/, ''); p.removeChild(el); } return; }
     el.setAttribute('data-host', h); el.src = HOSTS[h] + el.getAttribute('data-logo');
   }, true);
 

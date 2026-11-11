@@ -8,7 +8,7 @@
 <link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="tv.css?v=7.4">
+<link rel="stylesheet" href="tv.css?v=7.5">
 </head>
 <body>
 <div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
@@ -16,28 +16,33 @@
 <main class="app" id="app">
 
   <!-- INICIO -->
+  <!-- v7.5 · inicio estilo launcher: fondo grande del contenido enfocado, fila "Populares para ti" y fila "Mis apps" -->
   <section class="screen home" data-screen="home">
+    <div class="hero-bg" id="heroBg"></div><div class="hero-shade"></div>
     <header class="topbar">
-      <div class="brand"><span class="brand-dot"></span><span id="tvName">Sala</span></div>
+      <h1 class="home-h">Populares para ti</h1>
       <div class="top-right">
         <span class="chip exp" id="expChip" hidden></span>
         <span class="chip" id="phonesChip">Sin celulares vinculados</span>
+        <span class="brand"><span class="brand-dot"></span><span id="tvName">Sala</span></span>
         <span class="clock" id="clock"></span>
       </div>
     </header>
 
     <div class="home-body">
+      <div class="hero-info" id="heroInfo"></div>
       <div class="rows" id="rows"></div>
-
-      <aside class="pair" id="pairPanel">
-        <p class="eyebrow">Tu celular es el control</p>
-        <h2 class="pair-title">Escanea y listo</h2>
-        <div class="qr-card"><div class="qr" id="qr"></div></div>
-        <p class="pair-sub">Se vincula solo, sin códigos.</p>
-        <ul class="pair-list" id="pairList"></ul>
-      </aside>
     </div>
-    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.4</p>
+
+    <aside class="pair" id="pairPanel">
+      <div class="qr-card"><div class="qr" id="qr"></div></div>
+      <div class="pair-txt">
+        <p class="pair-title">Usa tu celular como control</p>
+        <p class="pair-sub">Escanea el código. Se vincula solo.</p>
+        <ul class="pair-list" id="pairList"></ul>
+      </div>
+    </aside>
+    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.5</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -277,18 +282,18 @@
 <div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
-<script src="../src/platform/totalplay/device.js?v=7.4"></script>
-<script src="../src/platform/totalplay/debug.js?v=7.4"></script>
-<script src="../src/platform/totalplay/keys.js?v=7.4"></script>
-<script src="../src/platform/totalplay/lifecycle.js?v=7.4"></script>
-<script src="../src/platform/totalplay/focus.js?v=7.4"></script>
-<script src="../vendor/qrcode.js?v=7.4"></script>
-<script src="../src/services/http.js?v=7.4"></script>
-<script src="../src/services/firestore-rest.js?v=7.4"></script>
-<script src="../src/services/catalog.js?v=7.4"></script>
-<script src="content.js?v=7.4"></script>
-<script src="logos.js?v=7.4"></script>
-<script src="store.js?v=7.4"></script>
-<script src="tv.js?v=7.4"></script>
+<script src="../src/platform/totalplay/device.js?v=7.5"></script>
+<script src="../src/platform/totalplay/debug.js?v=7.5"></script>
+<script src="../src/platform/totalplay/keys.js?v=7.5"></script>
+<script src="../src/platform/totalplay/lifecycle.js?v=7.5"></script>
+<script src="../src/platform/totalplay/focus.js?v=7.5"></script>
+<script src="../vendor/qrcode.js?v=7.5"></script>
+<script src="../src/services/http.js?v=7.5"></script>
+<script src="../src/services/firestore-rest.js?v=7.5"></script>
+<script src="../src/services/catalog.js?v=7.5"></script>
+<script src="content.js?v=7.5"></script>
+<script src="logos.js?v=7.5"></script>
+<script src="store.js?v=7.5"></script>
+<script src="tv.js?v=7.5"></script>
 </body>
 </html>
