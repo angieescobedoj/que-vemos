@@ -86,8 +86,6 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .apps .live-tile{background:linear-gradient(160deg,#2B57C9 0%,#13285E 100%)}
 .apps .live-tile small{display:block;font-size:10px;font-weight:600;opacity:.8}
 .apps .live-tile .nm{font-size:14px}
-.dock .apps .live-tile .nm{font-size:11px}
-.dock .apps .live-tile small{font-size:8px}
 .more{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .more button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px}
 .more i{font-style:normal;font-size:20px}
@@ -337,10 +335,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .more button{flex-direction:row;justify-content:center;gap:7px;padding:13px 6px;font-size:12.5px;font-weight:700;border-radius:14px}
 .more button svg{width:20px;height:20px;color:#D8B4FE;flex:none}
 /* apps + voz: siempre abajo, sobre las pestañas */
-.dock{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:5;margin:0 -4px;padding-top:6px}
-.dock .apps{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px;margin:0 22px -12px;background:rgba(16,9,30,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;position:relative;z-index:1}
-.dock .apps::-webkit-scrollbar{display:none}
-.dock .apps button{flex:0 0 52px;width:52px;height:52px;aspect-ratio:auto;border-radius:10px;font-size:9.5px;padding:2px}
+.dock{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:5;margin:0 -4px;padding-top:4px}
 .vcta{width:100%;display:flex;align-items:center;gap:14px;padding:22px 20px 16px;border-radius:24px;font-size:16px;font-weight:700;color:#fff;
   background:linear-gradient(180deg,#2A1252,#1C0B38);border:1.5px solid #B266FF;box-shadow:0 0 18px rgba(168,85,247,.5)}
 .vcta span{flex:1;text-align:center}
@@ -350,6 +345,8 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 10px;font-size:11px;font-weight:600;color:var(--ink-3)}
 .tab svg{width:22px;height:22px}
 .tab.on{color:#D8B4FE}
+/* apps fijas */
+.apps{margin:2px 6px 14px;gap:12px}
 .gl.pressed,.corner.pressed,.vcta.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
 </style>
 </head>
@@ -404,24 +401,19 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <p class="vol-lbl" id="volLbl">Vol 30</p>
+      <!-- v7.7 · accesos directos fijos (no flotantes): solo 4 apps, como en la referencia -->
+      <div class="apps">
+        <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
+        <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
+        <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
+        <button data-app="ondemand" style="--c:#6B2BD9" aria-label="On Demand"><span class="nm">On Demand</span></button>
+      </div>
       <div class="more">
         <button class="gl" data-act="exps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" fill="currentColor"/></svg><span>Experiencias</span></button>
         <button class="gl" data-act="find"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Encontrar control</span></button>
       </div>
 
       <div class="dock">
-        <div class="apps">
-        <button data-open="tv" class="live-tile" aria-label="TV en vivo"><span class="nm"><small>TV</small>en vivo</span></button>
-        <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
-        <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
-        <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
-        <button data-app="ondemand" style="--c:#6B2BD9" aria-label="On Demand"><span class="nm">On Demand</span></button>
-        <button data-app="disney" style="--c:#113CCF" aria-label="Disney+"><span class="nm">Disney+</span></button>
-        <button data-app="max" style="--c:#002BE7" aria-label="Max"><span class="nm">Max</span></button>
-        <button data-app="appletv" style="--c:#1C1C1E" aria-label="Apple TV+"><span class="nm">Apple TV+</span></button>
-        <button data-app="paramount" style="--c:#0064FF" aria-label="Paramount+"><span class="nm">Paramount+</span></button>
-        <button data-app="universal" style="--c:#2A2A2A" aria-label="Universal+"><span class="nm">Universal+</span></button>
-        </div>
         <button class="vcta" data-act="voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Control por voz</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
@@ -474,11 +466,11 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.6"></script>
-<script src="../src/services/firestore-rest.js?v=7.6"></script>
-<script src="content.js?v=7.6"></script>
-<script src="logos.js?v=7.6"></script>
-<script src="store.js?v=7.6"></script>
-<script src="phone.js?v=7.6"></script>
+<script src="../src/services/http.js?v=7.7"></script>
+<script src="../src/services/firestore-rest.js?v=7.7"></script>
+<script src="content.js?v=7.7"></script>
+<script src="logos.js?v=7.7"></script>
+<script src="store.js?v=7.7"></script>
+<script src="phone.js?v=7.7"></script>
 </body>
 </html>
