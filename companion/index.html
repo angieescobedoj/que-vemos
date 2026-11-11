@@ -335,7 +335,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .more button{flex-direction:row;justify-content:center;gap:7px;padding:13px 6px;font-size:12.5px;font-weight:700;border-radius:14px}
 .more button svg{width:20px;height:20px;color:#D8B4FE;flex:none}
 /* apps + voz: siempre abajo, sobre las pestañas */
-.dock{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:5;margin:0 -4px;padding-top:4px}
+.dock{margin:0 2px;padding-top:2px}  /* estático: ya no flota, queda al final del control */
 .vcta{width:100%;display:flex;align-items:center;gap:14px;padding:22px 20px 16px;border-radius:24px;font-size:16px;font-weight:700;color:#fff;
   background:linear-gradient(180deg,#2A1252,#1C0B38);border:1.5px solid #B266FF;box-shadow:0 0 18px rgba(168,85,247,.5)}
 .vcta span{flex:1;text-align:center}
@@ -346,7 +346,9 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .tab svg{width:22px;height:22px}
 .tab.on{color:#D8B4FE}
 /* apps fijas */
-.apps{margin:2px 6px 14px;gap:12px}
+.apps{margin:2px 6px 14px;gap:10px}
+/* más bajitas pero llenando el ancho: el logo se recorta al centro */
+.apps button{aspect-ratio:auto;height:54px;border-radius:12px}
 .gl.pressed,.corner.pressed,.vcta.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
 </style>
 </head>
@@ -401,7 +403,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <p class="vol-lbl" id="volLbl">Vol 30</p>
-      <!-- v7.7 · accesos directos fijos (no flotantes): solo 4 apps, como en la referencia -->
+      <!-- accesos directos fijos (no flotantes): solo 4 apps, como en la referencia -->
       <div class="apps">
         <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
         <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
