@@ -9,8 +9,10 @@
   var MATCH = { netflix: { pid: 8, re: /^netflix$/i }, prime: { pid: 119, re: /^amazon prime video$/i }, youtube: { pid: 192, re: /^youtube$/i, alt: /youtube/i },
     disney: { pid: 337, re: /^disney plus$/i, alt: /disney/i }, max: { pid: 1899, re: /^max$/i, alt: /hbo max/i },
     appletv: { pid: 350, re: /^apple tv\+?$/i, alt: /apple tv plus|apple tv\+/i }, paramount: { pid: 531, re: /^paramount plus$/i, alt: /paramount\+|paramount plus/i },
-    universal: { re: /^universal\+$/i, alt: /universal\+|universal plus/i } };   /* On Demand es de Totalplay: sin logo en TMDB, se queda el nombre */
+    universal: { re: /^universal\+$/i, alt: /universal\+|universal plus/i } };   /* On Demand es de Totalplay: logo local (LOCAL) */
   var paths = {}, waiting = [];
+  /* Logos propios de Totalplay (no están en TMDB): se sirven desde el repo */
+  var LOCAL = { ondemand: 'img/ondemand.png?v=7.9' };
 
   function load() { try { var o = JSON.parse(localStorage.getItem(LS) || 'null'); if (o && new Date().getTime() - o.at < WEEK) return o.paths; } catch (e) { /* sin localStorage */ } return null; }
   function save(p) { try { localStorage.setItem(LS, JSON.stringify({ at: new Date().getTime(), paths: p })); } catch (e) { /* ignore */ } }
@@ -45,8 +47,9 @@
   }, true);
 
   CP.logos = {
-    /* <img> del logo o '' si aún no hay (o no existe, como On Demand) */
+    /* <img> del logo o '' si aún no hay */
     img: function (id, size, cls) {
+      if (LOCAL[id]) return '<img class="' + (cls || 'logo') + '" src="' + LOCAL[id] + '" alt="">';
       var p = paths[id]; if (!p) return '';
       return '<img class="' + (cls || 'logo') + '" data-logo="' + size + p + '" src="' + HOSTS[0] + size + p + '" alt="">';
     },
