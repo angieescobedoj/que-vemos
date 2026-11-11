@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Sala TV</title>
+<style>html,body{margin:0;background:#120E1C}</style>
+<script>
+/* Link temporal para pruebas con usuarios (focus groups). No es una copia: carga en vivo la página real de companion/
+   y le pone <base href="../companion/"> para que todos sus archivos salgan de ahí. Así lo que cambie en companion/ se ve
+   aquí también, y el link del STB no se toca. Para desactivar este link basta con borrar la carpeta prueba-7k2m/. */
+(function () {
+  var x = new XMLHttpRequest();
+  x.open('GET', '../companion/tv.html?t=' + new Date().getTime(), true);
+  x.onload = function () {
+    if (x.status !== 200) { document.body.innerHTML = '<p style="color:#fff;font:16px sans-serif;padding:24px">No se pudo cargar el prototipo. Recarga la página.</p>'; return; }
+    var html = x.responseText.replace(/<head([^>]*)>/i, '<head$1><base href="../companion/">');
+    document.open(); document.write(html); document.close();
+  };
+  x.onerror = function () { document.body.innerHTML = '<p style="color:#fff;font:16px sans-serif;padding:24px">Sin conexión. Recarga la página.</p>'; };
+  x.send();
+})();
+</script></head><body></body></html>
