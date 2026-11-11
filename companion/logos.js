@@ -3,10 +3,13 @@
    el juego ¿Qué vemos? para "Ver en Netflix"), se guardan 7 días en localStorage y, si no hay red, se queda el texto. */
 (function (CP, QV) {
   'use strict';
-  var KEY = 'a7795e812c110c40515e414ceb379fac', LS = 'cp-logos-v2', WEEK = 7 * 24 * 3600 * 1000;
+  var KEY = 'a7795e812c110c40515e414ceb379fac', LS = 'cp-logos-v3', WEEK = 7 * 24 * 3600 * 1000;
   var HOSTS = ['https://image.tmdb.org/t/p/', 'https://media.themoviedb.org/t/p/', 'https://wsrv.nl/?url=image.tmdb.org/t/p/'];
   /* id de la app → id de proveedor en TMDB y nombre de respaldo */
-  var MATCH = { netflix: { pid: 8, re: /^netflix$/i }, prime: { pid: 119, re: /^amazon prime video$/i }, youtube: { pid: 192, re: /^youtube$/i, alt: /youtube/i } };
+  var MATCH = { netflix: { pid: 8, re: /^netflix$/i }, prime: { pid: 119, re: /^amazon prime video$/i }, youtube: { pid: 192, re: /^youtube$/i, alt: /youtube/i },
+    disney: { pid: 337, re: /^disney plus$/i, alt: /disney/i }, max: { pid: 1899, re: /^max$/i, alt: /hbo max/i },
+    appletv: { pid: 350, re: /^apple tv\+?$/i, alt: /apple tv plus|apple tv\+/i }, paramount: { pid: 531, re: /^paramount plus$/i, alt: /paramount\+|paramount plus/i },
+    universal: { re: /^universal\+$/i, alt: /universal\+|universal plus/i } };   /* On Demand es de Totalplay: sin logo en TMDB, se queda el nombre */
   var paths = {}, waiting = [];
 
   function load() { try { var o = JSON.parse(localStorage.getItem(LS) || 'null'); if (o && new Date().getTime() - o.at < WEEK) return o.paths; } catch (e) { /* sin localStorage */ } return null; }
@@ -16,7 +19,7 @@
   function pick(list) {
     for (var id in MATCH) if (MATCH.hasOwnProperty(id) && !paths[id]) {
       var m = MATCH[id], hit = null, i;
-      for (i = 0; i < list.length && !hit; i++) if (list[i].provider_id === m.pid && list[i].logo_path) hit = list[i];
+      for (i = 0; i < list.length && !hit; i++) if (m.pid && list[i].provider_id === m.pid && list[i].logo_path) hit = list[i];
       for (i = 0; i < list.length && !hit; i++) if (m.re.test(list[i].provider_name || '') && list[i].logo_path) hit = list[i];
       for (i = 0; i < list.length && !hit && m.alt; i++) if (m.alt.test(list[i].provider_name || '') && list[i].logo_path) hit = list[i];
       if (hit) paths[id] = hit.logo_path;

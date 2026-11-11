@@ -135,7 +135,13 @@
   var APPS = [
     { id: 'netflix', kind: 'app', title: 'Netflix', sub: 'App', tag: 'App', color: '#E50914' },
     { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
-    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' }
+    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' },
+    { id: 'disney', kind: 'app', title: 'Disney+', sub: 'App', tag: 'App', color: '#113CCF' },
+    { id: 'max', kind: 'app', title: 'Max', sub: 'App', tag: 'App', color: '#002BE7' },
+    { id: 'appletv', kind: 'app', title: 'Apple TV+', sub: 'App', tag: 'App', color: '#1C1C1E' },
+    { id: 'paramount', kind: 'app', title: 'Paramount+', sub: 'App', tag: 'App', color: '#0064FF' },
+    { id: 'universal', kind: 'app', title: 'Universal+', sub: 'App', tag: 'App', color: '#2A2A2A' },
+    { id: 'ondemand', kind: 'app', title: 'On Demand', sub: 'App', tag: 'App', color: '#6B2BD9' }
   ];
   var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9', tag: 'Canales' };
 

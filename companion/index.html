@@ -86,6 +86,8 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .apps .live-tile{background:linear-gradient(160deg,#2B57C9 0%,#13285E 100%)}
 .apps .live-tile small{display:block;font-size:10px;font-weight:600;opacity:.8}
 .apps .live-tile .nm{font-size:14px}
+.dock .apps .live-tile .nm{font-size:11px}
+.dock .apps .live-tile small{font-size:8px}
 .more{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .more button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px}
 .more i{font-style:normal;font-size:20px}
@@ -294,6 +296,61 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .stores small{display:block;font-size:11px;color:#777;margin-top:2px}
 .stores button.on{border-color:var(--violet);background:#fff}
 .toast.err{background:var(--red);color:#fff}
+
+/* ---------- v7.6 · control con estilo neón (referencia) ---------- */
+body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(124,58,237,0) 70%),linear-gradient(180deg,#160C28 0%,#0D0718 100%) fixed}
+.wrap{padding-bottom:96px}
+.gl{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.26);border-radius:14px;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.gl:active{background:rgba(168,85,247,.24)}
+.gl svg{width:24px;height:24px;display:block}
+.top{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:8px;margin-bottom:10px}
+.dec{background:none;border:0;padding:4px 0;justify-content:center;text-align:center;flex-direction:column;gap:2px}
+.dec b{font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+.dec b i{font-size:12px;color:var(--ink-3);margin:0;font-style:normal}
+.dec small{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--ink-2);font-weight:600}
+.dec small.on{color:#4ADE80}
+.dot{width:8px;height:8px;box-shadow:0 0 6px currentColor}
+.pwr{width:46px;height:46px;justify-self:end;background:rgba(217,70,239,.14);border:1.5px solid #E879F9;color:#F5B5FF;box-shadow:0 0 14px rgba(232,121,249,.55)}
+.pwr.sleep{background:rgba(74,222,128,.12);border-color:#4ADE80;color:#86EFAC;box-shadow:0 0 14px rgba(74,222,128,.4)}
+.now{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:8px 10px;margin-bottom:12px}
+.now .thumb{width:40px;height:40px;border-radius:10px}
+.quick{display:flex;justify-content:center;gap:28px;margin:4px 0 10px}
+.quick button{width:82px;height:46px;display:flex;align-items:center;justify-content:center;padding:0}
+.padwrap{position:relative;width:300px;height:262px;margin:0 auto 14px}
+.pad{position:absolute;left:25px;top:0;width:250px;height:250px;margin:0;border-radius:50%;
+  background:radial-gradient(circle,#3B1D66 0%,#2A1450 55%,#1E0E3A 100%);border:2px solid rgba(192,132,252,.7);
+  box-shadow:0 0 24px rgba(168,85,247,.45),inset 0 0 28px rgba(168,85,247,.35)}
+.pad button{color:#fff}
+.pad button svg{width:28px;height:28px}
+.pad button:active{background:rgba(168,85,247,.25)}
+.pad .ok{background:radial-gradient(circle at 50% 35%,#B57BFF 0%,#8B3FF0 70%);box-shadow:0 0 18px rgba(168,85,247,.75),inset 0 1px 0 rgba(255,255,255,.3);font-size:22px}
+.corner{position:absolute;bottom:0;width:58px;height:58px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
+.corner svg{width:20px;height:20px}
+.corner span{font-size:8.5px;font-weight:700;color:var(--ink-2)}
+.corner.bl{left:-6px}.corner.br{right:-6px}
+.keys3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 6px 12px}
+.keys3 button{height:50px;padding:0;display:flex;align-items:center;justify-content:center}
+.keys3.vol{margin-bottom:4px}
+.vol button.on{background:rgba(217,54,79,.35);border-color:#F87171}
+.vol-lbl{text-align:center;font-size:12px;font-weight:600;color:var(--ink-3);margin-bottom:10px}
+.more{grid-template-columns:1fr 1fr;gap:12px;margin:0 6px 14px}
+.more button{flex-direction:row;justify-content:center;gap:7px;padding:13px 6px;font-size:12.5px;font-weight:700;border-radius:14px}
+.more button svg{width:20px;height:20px;color:#D8B4FE;flex:none}
+/* apps + voz: siempre abajo, sobre las pestañas */
+.dock{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:5;margin:0 -4px;padding-top:6px}
+.dock .apps{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px;margin:0 22px -12px;background:rgba(16,9,30,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;position:relative;z-index:1}
+.dock .apps::-webkit-scrollbar{display:none}
+.dock .apps button{flex:0 0 52px;width:52px;height:52px;aspect-ratio:auto;border-radius:10px;font-size:9.5px;padding:2px}
+.vcta{width:100%;display:flex;align-items:center;gap:14px;padding:22px 20px 16px;border-radius:24px;font-size:16px;font-weight:700;color:#fff;
+  background:linear-gradient(180deg,#2A1252,#1C0B38);border:1.5px solid #B266FF;box-shadow:0 0 18px rgba(168,85,247,.5)}
+.vcta span{flex:1;text-align:center}
+.vcta svg{width:24px;height:24px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(13,7,24,.96);border-top:1px solid rgba(255,255,255,.07);padding-bottom:env(safe-area-inset-bottom)}
+.tabs .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 10px;font-size:11px;font-weight:600;color:var(--ink-3)}
+.tab svg{width:22px;height:22px}
+.tab.on{color:#D8B4FE}
+.gl.pressed,.corner.pressed,.vcta.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
 </style>
 </head>
 <body>
@@ -309,54 +366,63 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   </section>
 
   <section id="main" hidden>
+    <!-- v7.6 · control con la distribución de la referencia: encabezado centrado, Buscar/Menú, D-pad grande,
+         reproducción y volumen, Experiencias/Encontrar control, y abajo las apps + "Control por voz" siempre a la mano -->
     <header class="top">
-      <button class="dec" data-act="decoders"><span class="dot" id="dot"></span><span style="min-width:0"><b id="decName">Sala</b><small id="decState">Conectado</small></span><i>▾</i></button>
-      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
+      <span class="top-sp"></span>
+      <button class="dec" data-act="decoders" aria-label="Elegir TV"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
+      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
     </header>
     <div class="fake-note" id="fakeNote" hidden></div>
     <div class="now" id="now"></div>
 
     <div data-tab="control">
       <div class="quick">
-        <button data-act="search"><i>🔍</i>Buscar</button>
-        <button class="voice" data-act="voice"><i>🎤</i>Control por voz</button>
-        <button data-cmd="menu"><i>☰</i>Menú</button>
+        <button class="gl" data-act="search" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.2 15.2l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="gl" data-cmd="menu" aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-      <div class="pad">
-        <button class="u" data-key="UP" aria-label="Arriba">▲</button>
-        <button class="l" data-key="LEFT" aria-label="Izquierda">◀</button>
-        <button class="ok" data-key="OK">OK</button>
-        <button class="r" data-key="RIGHT" aria-label="Derecha">▶</button>
-        <button class="d" data-key="DOWN" aria-label="Abajo">▼</button>
+      <div class="padwrap">
+        <div class="pad">
+          <button class="u" data-key="UP" aria-label="Arriba"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="l" data-key="LEFT" aria-label="Izquierda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5L9 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="ok" data-key="OK">OK</button>
+          <button class="r" data-key="RIGHT" aria-label="Derecha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5L15 12l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="d" data-key="DOWN" aria-label="Abajo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5L12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <!-- Regresar e Inicio en las esquinas de abajo del D-pad, donde los controles de TV suelen tenerlos -->
+        <button class="corner bl gl" data-key="BACK" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Regresar</span></button>
+        <button class="corner br gl" data-cmd="home" aria-label="Inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Inicio</span></button>
       </div>
-      <div class="row2">
-        <button data-key="BACK">↩  Regresar</button>
-        <button data-cmd="home">⌂  Inicio</button>
-      </div>
-      <!-- Iconos SVG en blanco (currentColor): se ven igual en iOS y Android, a diferencia de los emojis -->
       <div class="keys3">
-        <button data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
-        <button data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
-        <button data-key="FF" aria-label="Adelantar 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5v11l7.7-5.5zM12.5 6.5v11l7.7-5.5z" fill="currentColor"/></svg></button>
+        <button class="gl" data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
+        <button class="gl" data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
+        <button class="gl" data-key="FF" aria-label="Adelantar 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5v11l7.7-5.5zM12.5 6.5v11l7.7-5.5z" fill="currentColor"/></svg></button>
       </div>
-      <div class="vol">
-        <button data-act="mute" id="muteBtn" aria-label="Silenciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-        <button data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-        <span id="volLbl">Vol 30</span>
-        <button data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="keys3 vol">
+        <button class="gl" data-act="mute" id="muteBtn" aria-label="Silenciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="gl" data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-      <p class="sec-c">Mis apps</p>
-      <!-- Como en "Mis apps" de la TV: cada tarjeta es el logo de la app. Si el logo no carga, queda el nombre sobre el color de la marca. -->
-      <div class="apps">
+      <p class="vol-lbl" id="volLbl">Vol 30</p>
+      <div class="more">
+        <button class="gl" data-act="exps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" fill="currentColor"/></svg><span>Experiencias</span></button>
+        <button class="gl" data-act="find"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Encontrar control</span></button>
+      </div>
+
+      <div class="dock">
+        <div class="apps">
         <button data-open="tv" class="live-tile" aria-label="TV en vivo"><span class="nm"><small>TV</small>en vivo</span></button>
         <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
         <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
         <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
-      </div>
-      <p class="sec-c">Más</p>
-      <div class="more">
-        <button data-act="exps"><i>✨</i>Experiencias</button>
-        <button data-act="find"><i>📍</i>Encontrar control</button>
+        <button data-app="ondemand" style="--c:#6B2BD9" aria-label="On Demand"><span class="nm">On Demand</span></button>
+        <button data-app="disney" style="--c:#113CCF" aria-label="Disney+"><span class="nm">Disney+</span></button>
+        <button data-app="max" style="--c:#002BE7" aria-label="Max"><span class="nm">Max</span></button>
+        <button data-app="appletv" style="--c:#1C1C1E" aria-label="Apple TV+"><span class="nm">Apple TV+</span></button>
+        <button data-app="paramount" style="--c:#0064FF" aria-label="Paramount+"><span class="nm">Paramount+</span></button>
+        <button data-app="universal" style="--c:#2A2A2A" aria-label="Universal+"><span class="nm">Universal+</span></button>
+        </div>
+        <button class="vcta" data-act="voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Control por voz</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
 
@@ -366,9 +432,9 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 </div>
 
 <nav class="tabs" id="tabs" hidden><div class="in">
-  <button class="tab on" data-go="control"><i>🎮</i>Control</button>
-  <button class="tab" data-go="ahora"><i>✨</i>Ahora en la TV</button>
-  <button class="tab" data-go="seguir"><i>⏵</i>Seguir viendo</button>
+  <button class="tab on" data-go="control"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 15h4M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button>
+  <button class="tab" data-go="ahora"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5h18v11.5H3zM8 20.5h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ahora en la TV</button>
+  <button class="tab" data-go="seguir"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 8.6v6.8l5.2-3.4z" fill="currentColor"/></svg>Seguir viendo</button>
 </div></nav>
 
 <div class="banner" id="banner" hidden></div>
@@ -408,11 +474,11 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.5"></script>
-<script src="../src/services/firestore-rest.js?v=7.5"></script>
-<script src="content.js?v=7.5"></script>
-<script src="logos.js?v=7.5"></script>
-<script src="store.js?v=7.5"></script>
-<script src="phone.js?v=7.5"></script>
+<script src="../src/services/http.js?v=7.6"></script>
+<script src="../src/services/firestore-rest.js?v=7.6"></script>
+<script src="content.js?v=7.6"></script>
+<script src="logos.js?v=7.6"></script>
+<script src="store.js?v=7.6"></script>
+<script src="phone.js?v=7.6"></script>
 </body>
 </html>

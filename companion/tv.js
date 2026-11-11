@@ -208,8 +208,8 @@
     var apps = appTileHtml(C.LIVE); for (var j = 0; j < C.APPS.length; j++) apps += appTileHtml(C.APPS[j]);
     var keep = TP.focus.current(), keepId = keep && $('rows').contains(keep) ? keep.getAttribute('data-id') : null;
     homeRendering = true;
-    $('rows').innerHTML = '<div class="row-view"><div class="row-tiles cards" data-slide>' + cards + '</div></div>' +
-      '<div><p class="row-h">Mis apps</p><div class="row-tiles">' + apps + '</div></div>';
+    $('rows').innerHTML = '<div><p class="row-h">Populares para ti</p><div class="row-view"><div class="row-tiles cards" data-slide>' + cards + '</div></div></div>' +
+      '<div><p class="row-h">Mis apps</p><div class="row-view"><div class="row-tiles apps-row" data-slide>' + apps + '</div></div></div>';
     if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '[data-id="' + keepId + '"]' : '[data-id="series"]'); }
     homeRendering = false;
     renderHero(heroId || 'series', true);
@@ -1302,7 +1302,7 @@
   }
   function renderQR() {
     var url = phoneUrl(S.code);
-    $('qr').innerHTML = qrHtml(url, 5.2);
+    $('qr').innerHTML = qrHtml(url, 7);
     $('qr2').innerHTML = qrHtml(url, 7);
   }
   function newCode() {

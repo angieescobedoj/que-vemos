@@ -27,7 +27,7 @@
     { name: 'Terraza', state: 'off', vol: 30 }
   ];
   var STATE_TXT = { on: 'Conectado', sleep: 'En reposo', off: 'Desconectado' };
-  var APP_NAMES = { netflix: 'Netflix', prime: 'Prime Video', youtube: 'YouTube' };
+  var APP_NAMES = {}; for (var ai = 0; ai < C.APPS.length; ai++) APP_NAMES[C.APPS[ai].id] = C.APPS[ai].title;
 
   /* ---------- háptica: vibración en Android; en iPhone (iOS 18+) el truco del interruptor nativo ---------- */
   var hapLabel = null;
@@ -138,6 +138,7 @@
     $('decName').textContent = S.fake ? S.fake.name : (S.room.tvName || 'Sala');
     $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : '') + (!S.fake && S.room.sleepLeft && st === 'on' ? ' · 🌙 se apaga en ' + S.room.sleepLeft + ' min' : ''));
     $('dot').className = 'dot' + (st === 'off' ? ' off' : st === 'sleep' ? ' sleep' : '');
+    $('decState').parentNode.className = st === 'on' && !(S.offline && !S.fake) ? 'on' : '';
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
     $('volLbl').textContent = muted ? 'Silencio' : 'Vol ' + vol;
@@ -725,6 +726,12 @@
     if (/netflix/.test(t)) return { cmds: [{ t: 'app', id: 'netflix' }], reply: 'Abriendo Netflix' };
     if (/(prime|amazon)/.test(t)) return { cmds: [{ t: 'app', id: 'prime' }], reply: 'Abriendo Prime Video' };
     if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
+    if (/disney/.test(t)) return { cmds: [{ t: 'app', id: 'disney' }], reply: 'Abriendo Disney+' };
+    if (/(hbo|\bmax\b)/.test(t)) return { cmds: [{ t: 'app', id: 'max' }], reply: 'Abriendo Max' };
+    if (/apple/.test(t)) return { cmds: [{ t: 'app', id: 'appletv' }], reply: 'Abriendo Apple TV+' };
+    if (/paramount/.test(t)) return { cmds: [{ t: 'app', id: 'paramount' }], reply: 'Abriendo Paramount+' };
+    if (/universal/.test(t)) return { cmds: [{ t: 'app', id: 'universal' }], reply: 'Abriendo Universal+' };
+    if (/on demand/.test(t)) return { cmds: [{ t: 'app', id: 'ondemand' }], reply: 'Abriendo On Demand' };
     if (/^(busca|buscar|buscame|encuentra|quiero ver) (una |algo |alguna )?(pelicula|peli|serie|algo)( para ver)?$/.test(t)) return { cmds: [{ t: 'search', q: '' }], reply: 'Abrí la búsqueda en la TV. ¿Cuál quieres ver? Dime el título.', await: 'search' };
     if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
     if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
