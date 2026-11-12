@@ -142,8 +142,9 @@
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
     $('volLbl').textContent = muted ? 'Silencio' : 'Vol ' + vol;
-    $('muteBtn').className = muted ? 'on' : '';
-    $('playBtn').className = !S.fake && S.room.playing ? 'playing' : '';
+    $('muteBtn').classList.toggle('on', !!muted);
+    var playing = !S.fake && !!S.room.playing;
+    $('playBtn').classList.toggle('playing', playing); $('miniPlay').classList.toggle('playing', playing);
     $('fakeNote').hidden = !S.fake;
     if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Elige tu TV en el menú de arriba para volver.';
   }
@@ -948,6 +949,8 @@
     S.tab = t;
     var panes = document.querySelectorAll('[data-tab]'); for (var i = 0; i < panes.length; i++) panes[i].hidden = panes[i].getAttribute('data-tab') !== t;
     var tabs = document.querySelectorAll('.tab'); for (var j = 0; j < tabs.length; j++) tabs[j].classList.toggle('on', tabs[j].getAttribute('data-go') === t);
+    /* fuera del Control queda a la mano un mini control (Regresar, reproducir/pausar, Inicio) para no tener que volver de pestaña */
+    $('mini').hidden = t === 'control'; document.body.classList.toggle('has-mini', t !== 'control');
     render(); window.scrollTo(0, 0);
   }
 
