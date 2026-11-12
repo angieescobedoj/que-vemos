@@ -1029,12 +1029,38 @@
     if (S.screen !== 'player' || S.content !== 'series') return;
     var idx = C.sceneAt(curPos());
     if (idx !== S.sceneIdx) { S.sceneIdx = idx; S.songAt = now() + 5000; pushState(); }
-    if (S.songAt && S.playing && now() >= S.songAt) {
-      S.songAt = 0; S.songSeq++;
-      var sc = C.SERIES.scenes[idx];
-      toast('♪ Está sonando «' + sc.song.t + '» · ' + sc.song.a + ' — míralo en tu celular', 6000);
-      pushState();
-    }
+    if (S.songAt && S.playing && now() >= S.songAt) { S.songAt = 0; openSongCard(idx); }
+  }
+  /* La canción aparece a un costado de la TV sin interrumpir la película; con el control eliges
+     mandarla a los celulares (llega la notificación) o cerrarla. Se oculta sola a los 2 minutos. */
+  var SONG_MS = 120000;
+  function openSongCard(idx) {
+    var sc = C.SERIES.scenes[idx], sb = SIN.backdrops.length ? SIN.backdrops[idx % SIN.backdrops.length] : '';
+    S.songCard = { idx: idx, until: now() + SONG_MS };
+    $('scArt').style.background = sb ? '#000 url(' + QV.catalog.img(sb, 'w300') + ') center/cover no-repeat' : 'linear-gradient(150deg,' + sc.art[0] + ',' + sc.art[2] + ')';
+    $('scT').textContent = sc.song.t; $('scA').textContent = sc.song.a;
+    $('scBar').style.width = '100%';
+    $('songCard').hidden = false;
+    songFocus();
+  }
+  function songFocus() { TP.focus.setFocus(null); TP.focus.setScope($('songCard'), '[data-action="songSend"]'); }
+  function closeSongCard() {
+    if (!S.songCard) return;
+    S.songCard = null; $('songCard').hidden = true;
+    if (!S.menu && !S.guide && !S.dialog) TP.focus.setScope(null);
+  }
+  function songSend() {
+    if (!S.songCard) return;
+    closeSongCard(); S.songSeq++; pushState();
+    toast(connected().length ? '📱 Enviada a los celulares de la sala' : '📱 Enviada · conecta un celular para recibirla', 3500);
+  }
+  function tickSongCard() {
+    if (!S.songCard) return;
+    if (S.screen !== 'player' || S.content !== 'series') { closeSongCard(); return; }
+    var left = S.songCard.until - now();
+    if (left <= 0) { closeSongCard(); return; }
+    $('scBar').style.width = (left / SONG_MS * 100) + '%';
+    $('songCard').hidden = !S.playing;   /* en pausa se ve el panel de la escena */
   }
 
   /* --- ¿Qué vemos? (juego de match de películas, tv.html del mismo repo) ---
@@ -1136,6 +1162,13 @@
       if (k === 'OK') { TP.focus.activate(); return; }
       return;
     }
+    /* tarjeta de canción a un costado: ◀ ▶ eligen, OK activa; la película sigue */
+    if (S.songCard && S.screen === 'player' && S.content === 'series' && S.playing) {
+      if (k === 'LEFT' || k === 'RIGHT') { if (!TP.focus.current || !$('songCard').contains(TP.focus.current())) songFocus(); TP.focus.move(k.toLowerCase()); return; }
+      if (k === 'OK') { var f = TP.focus.current && TP.focus.current(); if (f && $('songCard').contains(f)) TP.focus.activate(); else songSend(); return; }
+      if (k === 'BACK') { closeSongCard(); return; }
+      if (k === 'UP' || k === 'DOWN') return;
+    }
     if (k === 'REW') { seek(-30); return; }
     if (k === 'FF') { seek(30); return; }
     if (S.screen === 'player' && S.content === 'video') {
@@ -1207,6 +1240,8 @@
     else if (a === 'gameAgain') startGame();
     else if (a === 'shipAgain') startShip();
     else if (a === 'rentGo') rentGo();
+    else if (a === 'songSend') songSend();
+    else if (a === 'songClose') closeSongCard();
     else if (a === 'rentBack') { if (R.ch) tune(R.ch.n); else goHome(); }
     else if (a === 'goHome') exitGame();
     else if (a === 'home') goHome();
@@ -1361,6 +1396,7 @@
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
     if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); }
+    tickSongCard();
     if (S.sleepAt) { if (now() >= S.sleepAt) { S.sleepAt = 0; S.exp = null; S.bright = 100; applyLook(); setOff(true); } else if (d.getSeconds() === 0) applyLook(); }
   }, 1000);
 

@@ -382,7 +382,7 @@
   }
   function showSongBanner(song) {
     var b = $('banner'); b.className = 'banner';
-    b.innerHTML = '<span class="ic">♪</span><div><div class="k">Está sonando en Los Pecadores</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><a class="lk" href="' + listenUrl(song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
+    b.innerHTML = '<span class="ic">♪</span><div><div class="k">Desde la TV · Los Pecadores</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><a class="lk" href="' + listenUrl(song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
     b.hidden = false; b._song = song; buzz();
     clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 9000);
   }

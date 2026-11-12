@@ -8,7 +8,7 @@
 <link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="tv.css?v=7.11">
+<link rel="stylesheet" href="tv.css?v=7.12">
 </head>
 <body>
 <div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
@@ -41,7 +41,7 @@
         <ul class="pair-list" id="pairList"></ul>
       </div>
     </aside>
-    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.11</p>
+    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.12</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -76,6 +76,14 @@
     <div class="live-strip" id="liveStrip" hidden><span class="live">EN VIVO</span><span id="liveMin"></span><span class="ch-keys">▲▼ cambiar canal · OK guía</span></div>
     <div class="ch-logo" id="chLogo" hidden></div>
     <div class="ch-banner" id="chBanner" hidden></div>
+
+    <!-- Los Pecadores: canción a un costado; con el control se manda a los celulares o se cierra -->
+    <div class="song-card" id="songCard" hidden>
+      <div class="sc-top"><div class="sc-art" id="scArt"><span>♪</span></div>
+        <div class="sc-txt"><p class="eyebrow">Está sonando</p><h3 id="scT"></h3><p id="scA"></p></div></div>
+      <div class="sc-btns"><button class="btn" data-focusable data-action="songSend">📱 Mandar a mi celular</button><button class="btn ghost" data-focusable data-action="songClose">Cerrar</button></div>
+      <div class="sc-bar"><i id="scBar"></i></div>
+    </div>
 
     <!-- Receta: paso actual -->
     <div class="recipe-card" id="recipeCard" hidden>
@@ -166,7 +174,7 @@
     <div class="rent-body">
       <div class="rent-poster" id="rentPoster"></div>
       <div class="rent-info">
-        <p class="eyebrow rent-brand"><img src="img/ondemand-wide.png?v=7.11" alt="On Demand"><span>Renta</span></p>
+        <p class="eyebrow rent-brand"><img src="img/ondemand-wide.png?v=7.12" alt="On Demand"><span>Renta</span></p>
         <h1 class="rent-title" id="rentTitle"></h1>
         <p class="rent-meta" id="rentMeta"></p>
         <p class="rent-ov" id="rentOv"></p>
@@ -281,18 +289,18 @@
 <div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
-<script src="../src/platform/totalplay/device.js?v=7.11"></script>
-<script src="../src/platform/totalplay/debug.js?v=7.11"></script>
-<script src="../src/platform/totalplay/keys.js?v=7.11"></script>
-<script src="../src/platform/totalplay/lifecycle.js?v=7.11"></script>
-<script src="../src/platform/totalplay/focus.js?v=7.11"></script>
-<script src="../vendor/qrcode.js?v=7.11"></script>
-<script src="../src/services/http.js?v=7.11"></script>
-<script src="../src/services/firestore-rest.js?v=7.11"></script>
-<script src="../src/services/catalog.js?v=7.11"></script>
-<script src="content.js?v=7.11"></script>
-<script src="logos.js?v=7.11"></script>
-<script src="store.js?v=7.11"></script>
-<script src="tv.js?v=7.11"></script>
+<script src="../src/platform/totalplay/device.js?v=7.12"></script>
+<script src="../src/platform/totalplay/debug.js?v=7.12"></script>
+<script src="../src/platform/totalplay/keys.js?v=7.12"></script>
+<script src="../src/platform/totalplay/lifecycle.js?v=7.12"></script>
+<script src="../src/platform/totalplay/focus.js?v=7.12"></script>
+<script src="../vendor/qrcode.js?v=7.12"></script>
+<script src="../src/services/http.js?v=7.12"></script>
+<script src="../src/services/firestore-rest.js?v=7.12"></script>
+<script src="../src/services/catalog.js?v=7.12"></script>
+<script src="content.js?v=7.12"></script>
+<script src="logos.js?v=7.12"></script>
+<script src="store.js?v=7.12"></script>
+<script src="tv.js?v=7.12"></script>
 </body>
 </html>
