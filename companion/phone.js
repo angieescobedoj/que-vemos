@@ -239,6 +239,7 @@
     if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
     if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
     if (!r.ad && S.sheet === 'facts' && !S.factsEnding) endFacts();
+    if (S.sheet === 'match' && (r.playing || r.screen !== 'player' || r.content !== 'match')) closeSheet();   /* se reanudó o cambió de canal */
     /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
     if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
     if (r.offer && r.offer.seq !== S.offerSeen) { S.offerSeen = r.offer.seq; showOffer(r.offer); }
@@ -247,19 +248,8 @@
     var r = S.room, el = $('ahora'), html = '';
     if (r.screen === 'player' && r.content === 'match') {
       var m = C.MATCH;
-      if (!S.peeked[S.seg]) { S.peeked[S.seg] = true; send({ t: 'peek', what: S.seg === 'lineup' ? 'la alineación' : S.seg === 'stats' ? 'las estadísticas' : 'datos del partido' }); }
       html += '<p class="eyebrow">Partido en vivo · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + m.home.name + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + m.away.name + '</h2>';
-      html += '<div class="seg"><button data-seg="lineup"' + (S.seg === 'lineup' ? ' class="on"' : '') + '>Alineación</button><button data-seg="stats"' + (S.seg === 'stats' ? ' class="on"' : '') + '>Estadísticas</button><button data-seg="facts"' + (S.seg === 'facts' ? ' class="on"' : '') + '>Datos</button></div>';
-      if (S.seg === 'lineup') {
-        html += '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>';
-      } else if (S.seg === 'stats') {
-        for (var i = 0; i < m.stats.length; i++) {
-          var s = m.stats[i], tot = s[1] + s[2];
-          html += '<div class="stat"><div class="row"><span>' + s[1] + s[3] + '</span><span class="muted">' + s[0] + '</span><span>' + s[2] + s[3] + '</span></div><div class="bars"><i style="flex:' + s[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + s[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
-        }
-      } else {
-        for (var f = 0; f < m.facts.length; f++) html += '<div class="fact">' + esc(m.facts[f]) + '</div>';
-      }
+      html += matchInfoHtml();
       el.innerHTML = html; return;
     }
     if (r.screen === 'player' && r.content === 'series') {
@@ -282,6 +272,31 @@
       '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
     html += soundtrackHtml();
     el.innerHTML = html;
+  }
+  /* Alineación / Estadísticas / Datos del partido: se usa en "Ahora en la TV" y en la hoja que sale al pausar */
+  function matchInfoHtml() {
+    var m = C.MATCH, html = '';
+    if (!S.peeked[S.seg]) { S.peeked[S.seg] = true; send({ t: 'peek', what: S.seg === 'lineup' ? 'la alineación' : S.seg === 'stats' ? 'las estadísticas' : 'datos del partido' }); }
+    html += '<div class="seg"><button data-seg="lineup"' + (S.seg === 'lineup' ? ' class="on"' : '') + '>Alineación</button><button data-seg="stats"' + (S.seg === 'stats' ? ' class="on"' : '') + '>Estadísticas</button><button data-seg="facts"' + (S.seg === 'facts' ? ' class="on"' : '') + '>Datos</button></div>';
+    if (S.seg === 'lineup') {
+      html += '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>';
+    } else if (S.seg === 'stats') {
+      for (var i = 0; i < m.stats.length; i++) {
+        var s = m.stats[i], tot = s[1] + s[2];
+        html += '<div class="stat"><div class="row"><span>' + s[1] + s[3] + '</span><span class="muted">' + s[0] + '</span><span>' + s[2] + s[3] + '</span></div><div class="bars"><i style="flex:' + s[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + s[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
+      }
+    } else {
+      for (var f = 0; f < m.facts.length; f++) html += '<div class="mfact">' + esc(m.facts[f]) + '</div>';
+    }
+    return html;
+  }
+  /* Al pausar el partido, el celular abre sus datos (alineación, estadísticas y datos) + la repetición en Anytime */
+  function openMatchSheet() {
+    var m = C.MATCH, of = C.offerSource('match').offer;
+    openSheet('match', '<p class="eyebrow">Pausaste el partido · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + esc(m.away.name) + '</h2>' +
+      matchInfoHtml() +
+      (of ? '<div class="mreplay"><div class="grow"><div class="t">' + esc(of.line) + '</div><div class="s">Disponible en Anytime · desde el inicio</div></div><button class="btn sm ghost" data-act="offerGo" data-ch="match">Ver en la TV</button></div>' : '') +
+      '<button class="btn" data-act="play" style="margin-top:14px">▶  Seguir viendo el partido</button>');
   }
   function team(t, list) {
     var h = '<div class="team"><div class="tn"><span class="sw" style="background:' + t.color + '"></span>' + esc(t.name) + '</div>';
@@ -408,6 +423,7 @@
   }
   /* Al pausar en la TV llega una sugerencia distinta según lo que se está viendo */
   function showOffer(o) {
+    if (o.ch === 'match') { openMatchSheet(); buzz(); setTimeout(buzz, 180); return; }
     var ch = C.offerSource(o.ch); if (!ch || !ch.offer) return;
     var of = ch.offer, b = $('banner'), k, t, s, btn;
     if (of.kind === 'rent') { k = 'Estabas viendo ' + ch.show; t = of.title + ' ya está en On Demand'; s = 'Renta por 48 horas · $' + of.price + ' MXN'; btn = 'Rentar y ver en la TV'; }
@@ -574,7 +590,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (name === 'voice' ? ' voice' : '');
+    $('sheet').className = 'sheet' + (name === 'voice' ? ' voice' : name === 'match' ? ' dark' : '');
     $('sheet').innerHTML = (name === 'voice' ? '' : '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>') + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -874,7 +890,7 @@
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
-    else if (seg) { S.seg = seg; renderAhora(); }
+    else if (seg) { S.seg = seg; if (S.sheet === 'match') openMatchSheet(); else renderAhora(); }
     else if (act === 'power') { send({ t: 'power' }); if (!S.fake) toast(S.room && S.room.off ? 'Encendiendo la TV' : 'Apagando la TV'); }
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();
