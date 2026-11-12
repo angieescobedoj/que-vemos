@@ -309,6 +309,7 @@
     $('pausePanel').hidden = true;
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer();
+    if (connected().length) setTimeout(function () { toast('📱 Alineación y estadísticas en tu celular', 3500); }, 700);
   }
   function stepChannel(d) {
     var list = C.CHANNELS, i = 0;

@@ -228,6 +228,11 @@
       if (r.dialog === 'sleep') S.sleepAsk.seen = true;
       else if (S.sleepAsk.seen) { S.sleepAsk = null; closeSheet(); toast(r.sleepLeft ? '🌙 Elegido en la TV: se apaga en ' + r.sleepLeft + ' min' : 'Elegido en la TV: sin apagado'); }
     }
+    /* al entrar al partido, el celular pasa solo a "Ahora en la TV" con alineación, estadísticas y datos */
+    var inMatch = r.screen === 'player' && r.content === 'match';
+    if (S.wasMatch === undefined) S.wasMatch = inMatch;
+    if (inMatch && !S.wasMatch) { S.wasMatch = true; if (S.tab !== 'ahora' && !S.sheet) { setTimeout(function () { setTab('ahora'); toast('📊 Alineación y estadísticas del partido'); }, 0); buzz(); } }
+    else if (!inMatch) S.wasMatch = false;
     if (S.tab === 'ahora') renderAhora();
     if (S.tab === 'seguir') renderSeguir();
     /* A4 · aviso de "Está sonando" */
