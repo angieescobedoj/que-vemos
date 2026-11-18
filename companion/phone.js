@@ -698,6 +698,7 @@
     var tabs = document.querySelectorAll('.tab'); for (var j = 0; j < tabs.length; j++) tabs[j].classList.toggle('on', tabs[j].getAttribute('data-go') === t);
     /* fuera del Control queda a la mano un mini control (Regresar, reproducir/pausar, Inicio) para no tener que volver de pestaña */
     $('mini').hidden = t === 'control'; document.body.classList.toggle('has-mini', t !== 'control');
+    $('tabs').classList.toggle('empty', t === 'control');   /* sin pestañas: la barra de abajo solo existe para el mini control */
     render(); window.scrollTo(0, 0);
   }
 
