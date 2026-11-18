@@ -307,6 +307,95 @@ body.has-mini .wrap{padding-bottom:96px}
 .set-row .t{display:block;font-weight:700}
 .set-row .s{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
 .set-row .go{color:var(--violet);font-weight:700;font-size:14px}
+
+/* ---------- v7.19 · encabezado, decodificadores y configuración ---------- */
+.top .cfg{justify-self:start}
+.top .pwr{justify-self:end}
+.apps{display:grid;justify-content:space-between;gap:8px}
+.apps button{width:100%;max-width:66px;height:auto;aspect-ratio:1/1}
+.dv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.dv-top .back-ctl{margin-bottom:0}
+.dv-add{display:inline-flex;align-items:center;gap:6px;background:var(--violet);color:#fff;font-size:13px;font-weight:700;border-radius:999px;padding:9px 14px}
+.dv-add svg{width:16px;height:16px}
+.dv-h{font-size:24px;margin:12px 0 2px}
+.dv-empty{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(217,54,79,.14);border:1px solid rgba(248,113,113,.4);font-size:13.5px}
+.dcard{margin-top:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.22);overflow:hidden}
+.dcard.cur{border-color:#B266FF;box-shadow:0 0 14px rgba(168,85,247,.35)}
+.dcard.unl .dpick{opacity:.6}
+.dpick{display:flex;align-items:center;gap:12px;width:100%;padding:14px;text-align:left}
+.dic{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(168,85,247,.2);color:#E9D5FF}
+.dic svg{width:24px;height:24px}
+.dpick .grow{flex:1;min-width:0}
+.dpick .t{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:16px;font-weight:700}
+.dpick .s{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.badge{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px}
+.badge.main{background:rgba(250,204,21,.16);color:#FACC15}
+.badge.cur{background:rgba(168,85,247,.25);color:#E9D5FF}
+.dacts{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px 70px}
+.dacts button{font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff}
+.dacts button.pri{background:var(--violet);border-color:var(--violet)}
+.dacts button.warn{color:#FCA5A5;border-color:rgba(248,113,113,.4)}
+.dacts button:disabled{opacity:.8}
+.dacts .spin,.btn .spin{display:inline-block;width:13px;height:13px;border-width:2px;vertical-align:-2px;margin-right:7px}
+.btn.warn{background:var(--red)}
+#decsView .lf{color:var(--ink-2)}
+.sh-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--violet);margin:-4px 0 10px}
+.sheet.dark .sh-back{color:#D8B4FE}
+.sh-back svg{width:18px;height:18px}
+.set-ic{width:40px;height:40px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(168,85,247,.2);color:#E9D5FF}
+.set-ic svg{width:22px;height:22px}
+.set-link{display:block;margin:16px auto 2px;font-size:13.5px;font-weight:700;color:#D8B4FE}
+.sw{width:46px;height:28px;flex:none;border-radius:999px;background:rgba(255,255,255,.2);position:relative;transition:background .2s}
+.sw i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw.on{background:#8B3FF0}.sw.on i{transform:translateX(18px)}
+.radio .rd{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
+.radio.on{border-color:#B266FF}
+.radio.on .rd{border-color:#B266FF;box-shadow:inset 0 0 0 5px #8B3FF0}
+.fav-list{display:flex;flex-direction:column;gap:8px}
+.fav-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(196,150,255,.18)}
+.fav-ic{width:38px;height:38px;flex:none;border-radius:10px;overflow:hidden;position:relative}
+.fav-ic img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain}
+.fav-row .grow{flex:1;min-width:0;font-weight:700;font-size:14px}
+.fav-row button{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);color:inherit;font-size:16px;font-weight:700}
+.fav-row button.del{color:#FCA5A5}
+.fav-row button.add{width:auto;padding:0 12px;font-size:12.5px;background:var(--violet);color:#fff}
+.fav-row button:disabled{opacity:.3}
+.sheet.dark .lf{color:var(--ink-2)}
+.sheet.dark .sub{color:var(--ink-2)}
+.sheet.dark .chips button{background:rgba(255,255,255,.08);color:#E9D5FF}
+
+/* ---------- v7.19 · tema claro (Configuración → Apariencia) ---------- */
+body.light{--bg:#F4F0FA;--card:#FFFFFF;--card-2:#EEE7F8;--ink:#1D1630;--ink-2:rgba(29,22,48,.66);--ink-3:rgba(29,22,48,.42);--line:rgba(29,22,48,.12);
+  background:radial-gradient(90% 45% at 50% 30%,rgba(168,85,247,.14) 0%,rgba(168,85,247,0) 70%),linear-gradient(180deg,#F7F3FC 0%,#EDE6F7 100%) fixed;color:var(--ink)}
+body.light .gl{background:#fff;border-color:rgba(122,76,196,.22);color:#2E1D52;box-shadow:0 1px 3px rgba(46,29,82,.08)}
+body.light .gl:active,body.light .gl.pressed{background:#EEE3FF}
+body.light .keys3 svg,body.light .vol svg{color:#2E1D52}
+body.light .navrow button span{color:#2E1D52}
+body.light .pad{background:radial-gradient(circle,#FFFFFF 0%,#F3EAFF 60%,#E7D8FF 100%);border-color:#B58AF0;box-shadow:0 0 18px rgba(168,85,247,.25),inset 0 0 20px rgba(168,85,247,.12)}
+body.light .pad button{color:#4B2C85}
+body.light .pad .ok{color:#fff}
+body.light .pwr{background:#FCE7FF;border-color:#D946EF;color:#A21CAF;box-shadow:0 0 10px rgba(217,70,239,.25)}
+body.light .pwr.sleep{background:#DCFCE7;border-color:#22C55E;color:#15803D}
+body.light .dec small.on{color:#15803D}
+body.light .vol button.on{background:#FEE2E2;border-color:#F87171}
+body.light .dcard,body.light .fav-row{background:#fff;border-color:rgba(122,76,196,.2)}
+body.light .dic,body.light .set-ic{background:#EFE5FF;color:#6B3FC0}
+body.light .dacts button{background:#F3EEFA;border-color:rgba(122,76,196,.18);color:#2E1D52}
+body.light .dacts button.pri{background:var(--violet);color:#fff}
+body.light .dacts button.warn{color:#B91C1C;border-color:rgba(220,38,38,.3)}
+body.light .badge.cur{background:#EFE5FF;color:#6B3FC0}
+body.light .badge.main{background:#FEF3C7;color:#A16207}
+body.light .back-ctl{color:#6B3FC0}
+body.light .sheet.dark{background:#fff;color:#1E1A1A;border-top:0}
+body.light .sheet.dark .x{background:#F1EDF6;color:#555}
+body.light .sheet.dark .sh-back,body.light .set-link{color:var(--violet)}
+body.light .sheet.dark .chips button{background:#F1EDF6;color:#4A2E7A}
+body.light .set-row{background:#F7F3FC;border-color:rgba(122,76,196,.18);color:#1E1A1A}
+body.light .sw{background:#D9D0E6}
+body.light .radio .rd{border-color:#C9BDD9}
+body.light .fav-row button{background:#F3EEFA}
+body.light .tabs{background:rgba(255,255,255,.96);border-top-color:rgba(29,22,48,.08)}
+body.light .fake-note{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -322,11 +411,11 @@ body.has-mini .wrap{padding-bottom:96px}
   </section>
 
   <section id="main" hidden>
-    <!-- v7.18 · encendido | TV | configuración; D-pad, Regresar/Inicio, reproducción, volumen y apps repartidos en toda la pantalla -->
+    <!-- v7.19 · configuración | decodificador (abre la lista) | encendido; D-pad, Regresar/Inicio, reproducción, volumen y apps repartidos en toda la pantalla -->
     <header class="top">
-      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
-      <button class="dec" data-act="decoders" aria-label="Elegir TV"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
       <button class="cfg gl" data-act="settings" aria-label="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      <button class="dec" data-act="decoders" aria-label="Decodificadores"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
+      <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
     </header>
     <div class="fake-note" id="fakeNote" hidden></div>
 
@@ -356,15 +445,10 @@ body.has-mini .wrap{padding-bottom:96px}
         <button class="gl" data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-      <!-- accesos directos fijos (no flotantes): solo 4 apps, como en la referencia -->
-      <div class="apps">
-        <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
-        <button data-app="prime" style="--c:#1A98FF" aria-label="Prime Video"><span class="nm">Prime Video</span></button>
-        <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
-        <button data-app="ondemand" style="--c:#6B2BD9" aria-label="On Demand"><span class="nm">On Demand</span></button>
-      </div>
+            <div class="apps" id="appsRow"></div>   <!-- favoritas: se arman desde Configuración → Aplicaciones favoritas -->
     </div>
 
+    <div data-tab="decs" hidden><div id="decsView"></div></div>
     <div data-tab="ahora" hidden><button class="back-ctl" data-go="control"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button><div id="ahora"></div></div>
   </section>
 </div>
@@ -415,11 +499,11 @@ body.has-mini .wrap{padding-bottom:96px}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.18"></script>
-<script src="../src/services/firestore-rest.js?v=7.18"></script>
-<script src="content.js?v=7.18"></script>
-<script src="logos.js?v=7.18"></script>
-<script src="store.js?v=7.18"></script>
-<script src="phone.js?v=7.18"></script>
+<script src="../src/services/http.js?v=7.19"></script>
+<script src="../src/services/firestore-rest.js?v=7.19"></script>
+<script src="content.js?v=7.19"></script>
+<script src="logos.js?v=7.19"></script>
+<script src="store.js?v=7.19"></script>
+<script src="phone.js?v=7.19"></script>
 </body>
 </html>

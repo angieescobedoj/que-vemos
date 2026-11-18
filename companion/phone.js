@@ -32,6 +32,7 @@
   /* ---------- háptica: vibración en Android; en iPhone (iOS 18+) el truco del interruptor nativo ---------- */
   var hapLabel = null;
   function buzz() {
+    if (typeof PREF !== 'undefined' && !PREF.vib) return;
     try {
       if (navigator.vibrate) { navigator.vibrate(14); return; }
       if (!hapLabel) {
@@ -98,6 +99,7 @@
         S.code = code; S.pid = pid; S.cmds = []; S.room = room; S.fake = null; S.songSeen = room.songSeq || 0;
         ls.set('cp-last-sala' + (CP.DEMO ? '-demo' : ''), code);
         rememberRoom(code, room.tvName || 'Sala');
+        decUpdate('r' + code, function (x) { x.linked = true; }); S.fakeId = null; S.noDec = false;
         $('gate').hidden = true; $('main').hidden = false; $('tabs').hidden = false;
         render(); startPolling();
         if (!S.hb) S.hb = setInterval(function () { if (S.pid && !S.fake) store.updatePlayer(S.code, S.pid, { seen: Date.now() }, function (e) { setOffline(!!e); }); }, HEARTBEAT_MS);
@@ -135,7 +137,7 @@
   function renderHeader() {
     if (!S.room && !S.fake) return;
     var st = tvState();
-    $('decName').textContent = S.fake ? S.fake.name : (S.room.tvName || 'Sala');
+    $('decName').textContent = S.fake ? S.fake.name : (realAlias(S.code) || S.room.tvName || 'Sala');
     $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : ''));
     $('dot').className = 'dot' + (st === 'off' ? ' off' : st === 'sleep' ? ' sleep' : '');
     $('decState').parentNode.className = st === 'on' && !(S.offline && !S.fake) ? 'on' : '';
@@ -145,7 +147,7 @@
     var playing = !S.fake && !!S.room.playing;
     $('playBtn').classList.toggle('playing', playing); $('miniPlay').classList.toggle('playing', playing);
     $('fakeNote').hidden = !S.fake;
-    if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Elige tu TV en el menú de arriba para volver.';
+    if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Toca su nombre arriba para elegir otro.';
   }
   function appColor(id) { for (var i = 0; i < C.APPS.length; i++) if (C.APPS[i].id === id) return C.APPS[i].color; return '#7A4CC4'; }
 
@@ -528,7 +530,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (name === 'match' || name === 'settings' ? ' dark' : '');
+    $('sheet').className = 'sheet' + (/^(match|settings|favs|prefs|look|rename|unlink|add)$/.test(name) ? ' dark' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -536,50 +538,196 @@
     S.sheet = null; $('sheet').hidden = true; $('scrim').hidden = true;
   }
 
-  /* Decodificadores: las TVs reales que este celular ya escaneó + los simulados del hogar */
-  /* Configuración (arriba a la derecha): TV que controlas y "Ahora en la TV" */
-  function openSettings() {
-    var n = S.fake ? S.fake.name : (S.room && S.room.tvName) || 'Sala';
-    openSheet('settings', '<h2>Configuración</h2>' +
-      '<button class="set-row" data-act="decoders"><span class="grow"><span class="t">TV que controlas</span><span class="s">' + esc(n) + '</span></span><span class="go">Cambiar ›</span></button>' +
-      (S.fake ? '' : '<button class="set-row" data-act="ahoraGo"><span class="grow"><span class="t">Ahora en la TV</span><span class="s">Datos de lo que estás viendo</span></span><span class="go">›</span></button>') +
-      '<p class="sub" style="margin-top:14px;text-align:center">Sala TV · prototipo</p>');
+  /* ---------- v7.19 · Decodificadores: lista con controlar, vincular, renombrar, desvincular, principal y agregar ----------
+     Las TVs reales son las que este celular escaneó (QR); Recámara/Estudio/Terraza y las que agregues son simuladas. */
+  var DKEY = 'cp-decs' + (CP.DEMO ? '-demo' : ''), RKEY = 'cp-rooms' + (CP.DEMO ? '-demo' : '');
+  var FAKE_BY = {}, DEC_ST = {};
+  var TV_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5h18v11.5H3zM8 20.5h8M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function decs() {
+    var list = lsJSON(DKEY, null), rooms = lsJSON(RKEY, []), have = {}, i;
+    if (!list) { list = []; for (i = 0; i < FAKES.length; i++) list.push({ id: 'f' + i, kind: 'fake', fi: i, name: FAKES[i].name, linked: true }); }
+    for (i = 0; i < list.length; i++) have[list[i].id] = true;
+    for (i = rooms.length - 1; i >= 0; i--) if (!have['r' + rooms[i].code]) list.unshift({ id: 'r' + rooms[i].code, kind: 'real', code: rooms[i].code, name: rooms[i].name, linked: true });
+    var main = null; for (i = 0; i < list.length; i++) if (list[i].main) { if (main || !list[i].linked) list[i].main = false; else main = list[i]; }
+    if (!main) for (i = 0; i < list.length; i++) if (list[i].linked) { list[i].main = true; break; }
+    return list;
   }
-  function openDecoders() {
-    var rooms = lsJSON('cp-rooms' + (CP.DEMO ? '-demo' : ''), []), html = '<h2>Tus decodificadores</h2><p class="sub">Elige qué TV quieres controlar.</p><div id="decList">';
-    var names = {};
-    for (var i = 0; i < rooms.length; i++) {
-      names[rooms[i].name] = true;
-      var cur = !S.fake && rooms[i].code === S.code;
-      html += '<button class="opt' + (cur ? ' on' : '') + '" data-room="' + esc(rooms[i].code) + '"><span class="sdot" id="st-' + esc(rooms[i].code) + '"></span><span class="grow"><span class="t">' + esc(rooms[i].name) + '</span><span class="s" id="sx-' + esc(rooms[i].code) + '" style="display:block">Revisando…</span></span>' + (cur ? '<b style="color:#7A4CC4">✓</b>' : '') + '</button>';
+  function saveDecs(list) { ls.set(DKEY, JSON.stringify(list)); }
+  function decById(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+  function decUpdate(id, fn) { var l = decs(), d = decById(l, id); if (d) { fn(d, l); saveDecs(l); } return d; }
+  function curDecId() { return S.fake ? S.fakeId : 'r' + S.code; }
+  function realAlias(code) { var d = decById(decs(), 'r' + code); return d ? d.name : null; }
+  function fakeFor(d) {
+    var f = d.kind === 'fake' ? FAKES[d.fi] : (FAKE_BY[d.id] || (FAKE_BY[d.id] = { name: d.name, state: 'on', vol: 30 }));
+    f.name = d.name; return f;
+  }
+  function decState(d) {
+    if (!d.linked) return 'unlinked';
+    if (d.kind === 'real') return DEC_ST[d.code] || (!S.fake && d.code === S.code ? tvState() : 'on');
+    return fakeFor(d).state;
+  }
+  var DEC_TXT = { on: 'Conectado', sleep: 'En reposo', off: 'Desconectado', unlinked: 'No vinculado' };
+  function renderDecs() {
+    var list = decs(), cur = curDecId(), anyLinked = false, html = '', i;
+    list.sort(function (a, b) { return (b.main ? 1 : 0) - (a.main ? 1 : 0); });
+    for (i = 0; i < list.length; i++) if (list[i].linked) anyLinked = true;
+    html += '<div class="dv-top"><button class="back-ctl" data-act="decsBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button>' +
+      '<button class="dv-add" data-act="decAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Agregar decodificador</button></div>' +
+      '<h1 class="dv-h">Decodificadores</h1><p class="sub">Toca uno para controlarlo.</p>';
+    if (!anyLinked) html += '<div class="dv-empty">No tienes decodificadores vinculados. Vincula uno o agrega uno nuevo para usar el control.</div>';
+    for (i = 0; i < list.length; i++) {
+      var d = list[i], st = decState(d), isCur = d.linked && d.id === cur && !S.noDec;
+      html += '<div class="dcard' + (isCur ? ' cur' : '') + (d.linked ? '' : ' unl') + '">' +
+        '<button class="dpick" data-dpick="' + d.id + '"><span class="dic">' + TV_IC + '</span><span class="grow"><span class="t">' + esc(d.name) +
+        (d.main ? '<span class="badge main">★ Principal</span>' : '') + (isCur ? '<span class="badge cur">Controlando</span>' : '') + '</span>' +
+        '<span class="s"><span class="sdot ' + (st === 'on' ? '' : st === 'unlinked' ? 'off' : st) + '" id="dst-' + d.id + '"></span><span id="dsx-' + d.id + '">' + DEC_TXT[st] + '</span>' + (d.kind === 'real' ? '' : ' · Simulado') + '</span></span></button>' +
+        '<div class="dacts">' + (d.linked
+          ? (d.main ? '' : '<button data-dmain="' + d.id + '">Hacer principal</button>') + '<button data-dren="' + d.id + '">Renombrar</button><button class="warn" data-dunl="' + d.id + '">Desvincular</button>'
+          : '<button class="pri" data-dlink="' + d.id + '">Vincular</button><button data-dren="' + d.id + '">Renombrar</button>') +
+        '</div></div>';
     }
-    for (var j = 0; j < FAKES.length; j++) {
-      var f = FAKES[j]; if (names[f.name]) continue;
-      var on = S.fake === f;
-      html += '<button class="opt' + (on ? ' on' : '') + '" data-fake="' + j + '"><span class="sdot ' + (f.state === 'on' ? '' : f.state) + '"></span><span class="grow"><span class="t">' + esc(f.name) + '<span class="tag">Simulado</span></span><span class="s" style="display:block">' + STATE_TXT[f.state] + '</span></span>' + (on ? '<b style="color:#7A4CC4">✓</b>' : '') + '</button>';
-    }
-    html += '</div><p class="sub" style="margin-top:10px">¿Otra TV de la casa? Escanea el QR que aparece en su pantalla y se agrega aquí sola.</p>' +
-      '<label class="lf">Apareces en la TV como</label><div class="vform"><input class="in-l" id="nameIn" maxlength="18" value="' + esc(S.name) + '"><button data-act="saveName">Guardar</button></div>';
-    openSheet('decoders', html);
-    for (var k = 0; k < rooms.length; k++) (function (rm) {
-      store.getRoom(rm.code, function (err, room) {
-        var sx = $('sx-' + rm.code), sd = $('st-' + rm.code); if (!sx) return;
+    html += '<label class="lf" style="margin-top:22px">Apareces en la TV como</label><div class="vform"><input class="in-l" id="nameIn" maxlength="18" value="' + esc(S.name) + '"><button data-act="saveName">Guardar</button></div>';
+    $('decsView').innerHTML = html;
+    for (i = 0; i < list.length; i++) if (list[i].kind === 'real' && list[i].linked) (function (d) {
+      store.getRoom(d.code, function (err, room) {
         var st = 'off';
         if (!err && room) st = (room.aliveAt && Date.now() - room.aliveAt > ALIVE_MS) ? 'off' : (room.off ? 'sleep' : 'on');
-        if (!err && !room) { sx.textContent = 'Ya no está disponible'; sd.className = 'sdot off'; return; }
-        sx.textContent = err ? 'Sin conexión' : STATE_TXT[st]; sd.className = 'sdot ' + (st === 'on' ? '' : st);
+        DEC_ST[d.code] = st;
+        var sx = $('dsx-' + d.id), sd = $('dst-' + d.id); if (!sx) return;
+        sx.textContent = err ? 'Sin conexión' : (!room ? 'Ya no está disponible' : DEC_TXT[st]); sd.className = 'sdot ' + (st === 'on' ? '' : st);
       });
-    })(rooms[k]);
+    })(list[i]);
   }
-  function pickRoom(code) {
+  function openDecoders() { closeSheet(); setTab('decs'); }
+  function pickDec(id, silent) {
+    var d = decById(decs(), id); if (!d) return;
+    if (!d.linked) { toast('Primero vincula ' + d.name, true); return; }
+    if (decState(d) === 'off') { toast(d.name + ' está desconectado', true); return; }
+    S.noDec = false;
+    if (d.kind === 'real') {
+      if (!S.fake && d.code === S.code) { setTab('control'); return; }
+      S.fake = null; S.fakeId = null; connect(d.code, true); setTab('control'); return;
+    }
+    S.fake = fakeFor(d); S.fakeId = d.id; setTab('control');
+    if (!silent) toast('Controlando ' + d.name + ' (simulado)');
+  }
+  function setMain(id) {
+    var d = decUpdate(id, function (x, l) { for (var i = 0; i < l.length; i++) l[i].main = false; x.main = true; });
+    renderDecs(); if (d) toast('★ ' + d.name + ' ahora es tu principal');
+  }
+  function openRename(id) {
+    var d = decById(decs(), id); if (!d) return;
+    openSheet('rename', '<h2>Renombrar decodificador</h2><p class="sub">Así lo verás en el control y en la lista.</p>' +
+      '<input class="in-l" id="renIn" maxlength="20" value="' + esc(d.name) + '" autocomplete="off">' +
+      '<div class="chips"><button data-renq="Sala">Sala</button><button data-renq="Recámara">Recámara</button><button data-renq="Cocina">Cocina</button><button data-renq="Estudio">Estudio</button><button data-renq="Cuarto de niños">Cuarto de niños</button></div>' +
+      '<button class="btn" data-act="renSave" data-id="' + id + '">Guardar</button>');
+    setTimeout(function () { try { $('renIn').focus(); $('renIn').select(); } catch (e) { /* ignore */ } }, 60);
+  }
+  function saveRename(id) {
+    var nm = ($('renIn').value || '').trim().substring(0, 20); if (!nm) { toast('Escribe un nombre', true); return; }
+    var d = decUpdate(id, function (x) { x.name = nm; });
+    if (d && d.kind !== 'real') fakeFor(d);
+    closeSheet(); renderDecs(); renderHeader(); toast('Listo: ahora se llama ' + nm);
+  }
+  function askUnlink(id) {
+    var d = decById(decs(), id); if (!d) return;
+    openSheet('unlink', '<h2>¿Desvincular ' + esc(d.name) + '?</h2><p class="sub">Ya no podrás controlarlo desde este celular hasta que lo vuelvas a vincular.</p>' +
+      '<button class="btn warn" data-act="unlinkOk" data-id="' + id + '">Desvincular</button><button class="btn ghost" data-act="closeSheet" style="margin-top:8px">Cancelar</button>');
+  }
+  function doUnlink(id) {
+    var wasCur = id === curDecId() && !S.noDec;
+    var d = decUpdate(id, function (x) { x.linked = false; x.main = false; });
+    var list = decs(); saveDecs(list);   /* reasigna la principal */
     closeSheet();
-    if (!S.fake && code === S.code) return;
-    S.fake = null; connect(code, true);
+    if (wasCur) {
+      var next = null; for (var i = 0; i < list.length; i++) if (list[i].linked && list[i].main) next = list[i];
+      if (!next) for (var j = 0; j < list.length; j++) if (list[j].linked && decState(list[j]) !== 'off') { next = list[j]; break; }
+      if (next) { pickDec(next.id, true); setTab('decs'); toast((d ? d.name : '') + ' desvinculado · ahora controlas ' + next.name); return; }
+      S.noDec = true;
+    }
+    renderDecs(); toast((d ? d.name : 'Decodificador') + ' desvinculado');
   }
-  function pickFake(i) {
-    var f = FAKES[i];
-    if (f.state === 'off') { toast(f.name + ' está desconectado', true); return; }
-    closeSheet(); S.fake = f; render(); toast('Controlando ' + f.name + ' (simulado)');
+  function doLink(id, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Vinculando…'; }
+    setTimeout(function () {
+      var d = decUpdate(id, function (x) { x.linked = true; });
+      saveDecs(decs());
+      if (S.noDec && d) { pickDec(d.id, true); setTab('decs'); }
+      renderDecs(); if (d) { buzz(); toast('✓ Vinculado con ' + d.name); }
+    }, 1200);
+  }
+  function openAdd() {
+    openSheet('add', '<h2>Agregar decodificador</h2><p class="sub">Enciende el decodificador y conéctalo a la misma red Wi‑Fi que tu celular.</p>' +
+      '<label class="lf">Nombre</label><input class="in-l" id="addName" maxlength="20" value="Cocina" autocomplete="off">' +
+      '<div class="chips"><button data-addq="Cocina">Cocina</button><button data-addq="Comedor">Comedor</button><button data-addq="Cuarto de visitas">Cuarto de visitas</button><button data-addq="Cuarto de niños">Cuarto de niños</button></div>' +
+      '<button class="btn" id="addGo" data-act="addGo">Buscar y vincular</button><p class="sub" style="margin-top:12px;text-align:center">También puedes escanear el código QR que aparece en la TV.</p>');
+  }
+  function doAdd() {
+    var nm = ($('addName').value || '').trim().substring(0, 20); if (!nm) { toast('Escribe un nombre', true); return; }
+    var b = $('addGo'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Buscando en tu red…';
+    setTimeout(function () { if ($('addGo')) $('addGo').innerHTML = '<span class="spin"></span>Vinculando con ' + esc(nm) + '…'; }, 1300);
+    setTimeout(function () {
+      var l = decs(); l.push({ id: 'n' + Date.now(), kind: 'new', name: nm, linked: true }); saveDecs(l); saveDecs(decs());
+      closeSheet(); buzz(); renderDecs(); toast('✓ ' + nm + ' agregado y vinculado');
+      if (S.noDec) pickDec(l[l.length - 1].id, true), setTab('decs');
+    }, 2300);
+  }
+
+  /* ---------- v7.19 · Configuración (engrane del encabezado): apps favoritas, preferencias del control y apariencia ---------- */
+  var FKEY = 'cp-favs', FAV_DEF = ['netflix', 'prime', 'youtube', 'ondemand'], FAV_MAX = 6;
+  var PREF = lsJSON('cp-prefs', { vib: true, touch: true });
+  function favs() { var f = lsJSON(FKEY, null); if (!f || !f.length) f = FAV_DEF.slice(); return f.filter(function (id) { return !!APP_NAMES[id]; }); }
+  function appTile(id) { return '<button data-app="' + id + '" style="--c:' + appColor(id) + '" aria-label="' + esc(APP_NAMES[id]) + '"><span class="nm">' + esc(APP_NAMES[id]) + '</span></button>'; }
+  function renderApps() {
+    var f = favs(), html = ''; for (var i = 0; i < f.length; i++) html += appTile(f[i]);
+    var row = $('appsRow'); row.innerHTML = html; row.style.gridTemplateColumns = 'repeat(' + f.length + ',minmax(0,66px))';
+    paintAppLogos();
+  }
+  var BACK_SET = '<button class="sh-back" data-act="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Configuración</button>';
+  function setRow(act, ic, t, sub) {
+    return '<button class="set-row" data-act="' + act + '"><span class="set-ic">' + ic + '</span><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="go">›</span></button>';
+  }
+  function openSettings() {
+    var th = { dark: 'Oscuro', light: 'Claro', auto: 'Automático' }[themeMode()];
+    openSheet('settings', '<h2>Configuración</h2>' +
+      setRow('setApps', '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16.75 13.8v6M13.75 16.8h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        'Aplicaciones favoritas', 'Agregar, eliminar y ordenar · ' + favs().length + ' en el control') +
+      setRow('setPrefs', '<svg viewBox="0 0 24 24"><rect x="7.5" y="3" width="9" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 9v6M20 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        'Preferencias del control', 'Vibración ' + (PREF.vib ? 'activada' : 'desactivada') + ' · respuesta táctil ' + (PREF.touch ? 'activada' : 'desactivada')) +
+      setRow('setLook', '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
+        'Apariencia', 'Tema ' + th.toLowerCase()) +
+      (S.fake ? '' : '<button class="set-link" data-act="ahoraGo">Ver lo que está en la TV ›</button>'));
+  }
+  function openFavs() {
+    var f = favs(), html = BACK_SET + '<h2>Aplicaciones favoritas</h2><p class="sub">Aparecen en el control en este orden (máximo ' + FAV_MAX + ').</p><div class="fav-list">';
+    for (var i = 0; i < f.length; i++) html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(f[i]) + '">' + (CP.logos.img(f[i], 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[f[i]]) + '</span>' +
+      '<button data-fup="' + i + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-fdn="' + i + '" aria-label="Bajar"' + (i === f.length - 1 ? ' disabled' : '') + '>↓</button><button class="del" data-fdel="' + i + '" aria-label="Eliminar"' + (f.length < 2 ? ' disabled' : '') + '>✕</button></div>';
+    html += '</div><p class="lf" style="margin-top:18px">Agregar al control</p><div class="fav-list">';
+    var more = 0;
+    for (var j = 0; j < C.APPS.length; j++) { var id = C.APPS[j].id; if (f.indexOf(id) >= 0) continue; more++;
+      html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(id) + '">' + (CP.logos.img(id, 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[id]) + '</span><button class="add" data-fadd="' + id + '"' + (f.length >= FAV_MAX ? ' disabled' : '') + '>＋ Agregar</button></div>'; }
+    if (!more) html += '<p class="sub">Ya tienes todas las apps en el control.</p>';
+    var keep = $('sheet').scrollTop;
+    openSheet('favs', html + '</div>'); if (S.sheet === 'favs') $('sheet').scrollTop = keep;
+  }
+  function favEdit(fn) { var f = favs(); fn(f); ls.set(FKEY, JSON.stringify(f)); renderApps(); openFavs(); }
+  function sw(key, t, sub) { return '<button class="set-row sw-row" data-pref="' + key + '"><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="sw' + (PREF[key] ? ' on' : '') + '"><i></i></span></button>'; }
+  function openPrefs() {
+    openSheet('prefs', BACK_SET + '<h2>Preferencias del control</h2>' +
+      sw('vib', 'Vibración', 'El celular vibra al tocar un botón y con los avisos') +
+      sw('touch', 'Respuesta táctil', 'Los botones se iluminan al presionarlos'));
+  }
+  function themeMode() { var m = ls.get('cp-theme'); return m === 'light' || m === 'auto' ? m : 'dark'; }
+  var mqLight = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  function applyTheme() {
+    var m = themeMode(), light = m === 'light' || (m === 'auto' && mqLight && mqLight.matches);
+    document.body.classList.toggle('light', !!light);
+    var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', light ? '#F4F0FA' : '#140F20');
+  }
+  if (mqLight) { var onMq = function () { if (themeMode() === 'auto') applyTheme(); }; if (mqLight.addEventListener) mqLight.addEventListener('change', onMq); else if (mqLight.addListener) mqLight.addListener(onMq); }
+  function openLook() {
+    var m = themeMode(), opt = function (v, t, sub) { return '<button class="set-row radio' + (m === v ? ' on' : '') + '" data-theme="' + v + '"><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="rd"></span></button>'; };
+    openSheet('look', BACK_SET + '<h2>Apariencia</h2>' + opt('dark', 'Oscuro', 'Fondo morado oscuro') + opt('light', 'Claro', 'Fondo claro') + opt('auto', 'Automático', 'Sigue el tema de tu celular'));
   }
 
   /* ---------- eventos (delegación) ---------- */
@@ -591,8 +739,19 @@
     if (k) send({ t: 'key', k: k });
     else if (g('data-vol')) { var d = Number(g('data-vol')); send({ t: 'vol', d: d }); if (!S.fake) { var nv = Math.max(0, Math.min(100, (S.room.vol == null ? 30 : S.room.vol) + d)); S.room.vol = nv; S.room.muted = false; renderHeader(); toast('Volumen ' + nv); } }
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
-    else if (g('data-room')) pickRoom(g('data-room'));
-    else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
+    else if (g('data-dpick')) pickDec(g('data-dpick'));
+    else if (g('data-dmain')) setMain(g('data-dmain'));
+    else if (g('data-dren')) openRename(g('data-dren'));
+    else if (g('data-dunl')) askUnlink(g('data-dunl'));
+    else if (g('data-dlink')) doLink(g('data-dlink'), el);
+    else if (g('data-renq')) { $('renIn').value = g('data-renq'); }
+    else if (g('data-addq')) { $('addName').value = g('data-addq'); }
+    else if (g('data-fup') !== null && el.hasAttribute('data-fup')) favEdit(function (f) { var i = Number(g('data-fup')); f.splice(i - 1, 0, f.splice(i, 1)[0]); });
+    else if (g('data-fdn') !== null && el.hasAttribute('data-fdn')) favEdit(function (f) { var i = Number(g('data-fdn')); f.splice(i + 1, 0, f.splice(i, 1)[0]); });
+    else if (g('data-fdel') !== null && el.hasAttribute('data-fdel')) favEdit(function (f) { f.splice(Number(g('data-fdel')), 1); });
+    else if (g('data-fadd')) favEdit(function (f) { if (f.length < FAV_MAX) f.push(g('data-fadd')); });
+    else if (g('data-pref')) { var pk = g('data-pref'); PREF[pk] = !PREF[pk]; ls.set('cp-prefs', JSON.stringify(PREF)); if (pk === 'vib' && PREF.vib) buzz(); openPrefs(); }
+    else if (g('data-theme')) { ls.set('cp-theme', g('data-theme')); applyTheme(); openLook(); }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
@@ -600,6 +759,14 @@
     else if (act === 'power') { send({ t: 'power' }); if (!S.fake) toast(S.room && S.room.off ? 'Encendiendo la TV' : 'Apagando la TV'); }
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();
+    else if (act === 'decsBack') { if (S.noDec) toast('Vincula un decodificador para usar el control', true); else setTab('control'); }
+    else if (act === 'decAdd') openAdd();
+    else if (act === 'addGo') doAdd();
+    else if (act === 'renSave') saveRename(g('data-id'));
+    else if (act === 'unlinkOk') doUnlink(g('data-id'));
+    else if (act === 'setApps') openFavs();
+    else if (act === 'setPrefs') openPrefs();
+    else if (act === 'setLook') openLook();
     else if (act === 'settings') openSettings();
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
     else if (act === 'saveName') { var nm = ($('nameIn').value || '').trim().substring(0, 18); if (nm) { S.name = nm; ls.set('cp-name', nm); if (S.pid) store.updatePlayer(S.code, S.pid, { name: nm }, function () {}); toast('Listo: en la TV apareces como ' + nm); closeSheet(); } }
@@ -649,8 +816,10 @@
     var panes = document.querySelectorAll('[data-tab]'); for (var i = 0; i < panes.length; i++) panes[i].hidden = panes[i].getAttribute('data-tab') !== t;
     var tabs = document.querySelectorAll('.tab'); for (var j = 0; j < tabs.length; j++) tabs[j].classList.toggle('on', tabs[j].getAttribute('data-go') === t);
     /* fuera del Control queda a la mano un mini control (Regresar, reproducir/pausar, Inicio) para no tener que volver de pestaña */
-    $('mini').hidden = t === 'control'; document.body.classList.toggle('has-mini', t !== 'control');
-    $('tabs').classList.toggle('empty', t === 'control');   /* sin pestañas: la barra de abajo solo existe para el mini control */
+    var mini = t === 'ahora';
+    $('mini').hidden = !mini; document.body.classList.toggle('has-mini', mini);
+    $('tabs').classList.toggle('empty', !mini);
+    if (t === 'decs') renderDecs();   /* sin pestañas: la barra de abajo solo existe para el mini control */
     render(); window.scrollTo(0, 0);
   }
 
@@ -658,7 +827,7 @@
   document.addEventListener('touchstart', function () {}, { passive: true });
   var pressedAt = 0;
   document.addEventListener('pointerdown', function (e) {
-    var b = e.target.closest && e.target.closest('button'); if (!b) return;
+    var b = e.target.closest && e.target.closest('button'); if (!b || !PREF.touch) return;
     b.classList.add('pressed'); pressedAt = Date.now();
   }, { passive: true });
   function release() {
@@ -675,6 +844,7 @@
     for (var i = 0; i < bs.length; i++) { var id = bs[i].getAttribute('data-app'), im = CP.logos.img(id, 'w92', 'logo'); if (im && !bs[i].querySelector('img')) { bs[i].insertAdjacentHTML('afterbegin', im); bs[i].className += ' has-logo'; } }
   }
   CP.logos.ready(paintAppLogos);
+  applyTheme(); renderApps();
 
   connect(S.code);
 })(window.CP);
