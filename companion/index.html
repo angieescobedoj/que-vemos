@@ -47,11 +47,6 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .dot.sleep{background:#E0A93A;box-shadow:0 0 0 4px rgba(224,169,58,.25)}
 .pwr{width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:22px;font-weight:700;flex:none;display:flex;align-items:center;justify-content:center}
 .pwr.sleep{background:var(--card-2);color:var(--green);border:1px solid var(--line)}
-.now{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.now .thumb{width:50px;height:50px;border-radius:14px;flex:none}
-.now .k{font-size:11px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.1em}
-.now .t{font-weight:700}
-.now .s{font-size:12px;color:var(--ink-2)}
 .fake-note{background:rgba(224,169,58,.14);border:1px solid rgba(224,169,58,.4);color:#F3D59A;border-radius:14px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
 
 /* control */
@@ -62,13 +57,10 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .pad .u{left:85px;top:0}.pad .d{left:85px;bottom:0}.pad .l{left:0;top:85px}.pad .r{right:0;top:85px}
 .pad .ok{left:75px;top:75px;width:100px;height:100px;background:var(--violet);color:#fff;font-size:16px;font-weight:700}
 .pad .ok:active{background:#8E5FD8}
-.quick{display:grid;grid-template-columns:1fr 1.45fr 1fr;gap:8px;margin-bottom:6px}
-.quick button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 4px;font-size:12.5px;white-space:nowrap;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
-.quick i{font-style:normal;font-size:17px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .keys3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
 .row2 button,.vol button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 6px;font-size:13px;font-weight:700}
-.row2 button:active,.vol button:active,.quick button:active,.apps button:active{transform:scale(.97)}
+.row2 button:active,.vol button:active,.apps button:active{transform:scale(.97)}
 .vol{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr;gap:10px;align-items:center;margin-bottom:6px}
 .vol button{padding:11px 6px;color:#fff;display:flex;align-items:center;justify-content:center}
 .vol span{text-align:center;font-size:13px;font-weight:700;color:var(--ink-2)}
@@ -176,7 +168,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
    en cuanto el dedo toca el botón y lo deja al menos 140 ms para que se alcance a ver aunque el toque sea rapidísimo. */
 button{transition:background-color .08s,transform .08s,filter .08s}
 button.pressed{transform:scale(.95);filter:brightness(1.4)}
-.quick button.pressed,.row2 button.pressed,.keys3 button.pressed,.vol button.pressed,.apps button.pressed,.dec.pressed,.tab.pressed{background:#3D3060;border-color:rgba(185,160,214,.7);filter:none}
+.row2 button.pressed,.keys3 button.pressed,.vol button.pressed,.apps button.pressed,.dec.pressed,.tab.pressed{background:#3D3060;border-color:rgba(185,160,214,.7);filter:none}
 .pad button.pressed{background:var(--card-2);color:#fff;filter:none;transform:none}
 .pad .ok.pressed{background:#9D6FE6;transform:scale(.96)}
 .sheet button.pressed,.banner button.pressed{filter:brightness(.88)}
@@ -234,8 +226,6 @@ button.pressed{transform:scale(.95);filter:brightness(1.4)}
 .songbtns{display:flex;gap:8px;padding:0 0 12px}
 .songbtns .btn{flex:1;text-align:center}
 .nowtv{display:block;font-size:11px;font-weight:700;color:#1F6B43;margin-bottom:2px}
-.nowbtn{flex:none;margin-left:auto;background:var(--violet);color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:9px 12px}
-.now .grow{flex:1;min-width:0}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#F1EDF6;border-radius:12px;padding:4px;margin-bottom:12px}
 .seg2 button{border-radius:9px;padding:9px;font-size:13.5px;font-weight:700;color:#6A5A80}
 .seg2 button.on{background:#fff;color:#4A2E7A;box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -257,7 +247,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .gl{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.26);border-radius:14px;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .gl:active{background:rgba(168,85,247,.24)}
 .gl svg{width:24px;height:24px;display:block}
-.top{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:8px;margin-bottom:10px}
+.top{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:8px;margin-bottom:10px}
 .dec{background:none;border:0;padding:4px 0;justify-content:center;text-align:center;flex-direction:column;gap:2px}
 .dec b{font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
 .dec b i{font-size:12px;color:var(--ink-3);margin:0;font-style:normal}
@@ -266,10 +256,6 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .dot{width:8px;height:8px;box-shadow:0 0 6px currentColor}
 .pwr{width:46px;height:46px;justify-self:end;background:rgba(217,70,239,.14);border:1.5px solid #E879F9;color:#F5B5FF;box-shadow:0 0 14px rgba(232,121,249,.55)}
 .pwr.sleep{background:rgba(74,222,128,.12);border-color:#4ADE80;color:#86EFAC;box-shadow:0 0 14px rgba(74,222,128,.4)}
-.now{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:8px 10px;margin-bottom:12px}
-.now .thumb{width:40px;height:40px;border-radius:10px}
-.quick{display:flex;justify-content:center;gap:28px;margin:4px 0 10px}
-.quick button{width:82px;height:46px;display:flex;align-items:center;justify-content:center;padding:0}
 .padwrap{position:relative;width:300px;height:262px;margin:0 auto 14px}
 .pad{position:absolute;left:25px;top:0;width:250px;height:250px;margin:0;border-radius:50%;
   background:radial-gradient(circle,#3B1D66 0%,#2A1450 55%,#1E0E3A 100%);border:2px solid rgba(192,132,252,.7);
@@ -278,15 +264,10 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .pad button svg{width:28px;height:28px}
 .pad button:active{background:rgba(168,85,247,.25)}
 .pad .ok{background:radial-gradient(circle at 50% 35%,#B57BFF 0%,#8B3FF0 70%);box-shadow:0 0 18px rgba(168,85,247,.75),inset 0 1px 0 rgba(255,255,255,.3);font-size:22px}
-.corner{position:absolute;bottom:0;width:58px;height:58px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
-.corner svg{width:20px;height:20px}
-.corner span{font-size:8.5px;font-weight:700;color:var(--ink-2)}
-.corner.bl{left:-6px}.corner.br{right:-6px}
 .keys3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 6px 12px}
 .keys3 button{height:50px;padding:0;display:flex;align-items:center;justify-content:center}
 .keys3.vol{margin-bottom:4px}
 .vol button.on{background:rgba(217,54,79,.35);border-color:#F87171}
-.vol-lbl{text-align:center;font-size:12px;font-weight:600;color:var(--ink-3);margin-bottom:10px}
 /* apps + voz: siempre abajo, sobre las pestañas */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(13,7,24,.96);border-top:1px solid rgba(255,255,255,.07);padding-bottom:env(safe-area-inset-bottom)}
 /* apps fijas */
@@ -294,7 +275,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .apps{display:flex;justify-content:space-between;margin:2px 6px 14px;gap:0}
 .apps button{flex:none;width:66px;height:66px;aspect-ratio:1/1;border-radius:14px}
 .apps button img{object-fit:contain}
-.gl.pressed,.corner.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
+.gl.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
 
 /* v7.10 · mini control fuera de la pestaña Control */
 .mini{max-width:460px;margin:0 auto;display:grid;grid-template-columns:1fr 64px 1fr;gap:10px;padding:10px 16px 2px}
@@ -305,12 +286,27 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .mini button.pressed{background:rgba(168,85,247,.3);border-color:#C084FC}
 body.has-mini .wrap{padding-bottom:96px}
 .tabs.empty{display:none}
-.now{cursor:pointer;position:relative;padding-right:30px}
-.now:after{content:'›';position:absolute;right:12px;top:50%;transform:translateY(-52%);font-size:24px;color:var(--ink-3)}
-.now:active{background:rgba(168,85,247,.18)}
-body.has-mini .now:after{display:none}
 .back-ctl{display:inline-flex;align-items:center;gap:4px;color:#D8B4FE;font-size:15px;font-weight:700;padding:4px 6px 4px 0;margin-bottom:10px}
 .back-ctl svg{width:20px;height:20px}
+
+/* ---------- v7.18 · control repartido en toda la pantalla ---------- */
+.wrap{min-height:100vh;min-height:100dvh}
+#main:not([hidden]){flex:1;display:flex;flex-direction:column}
+#main > [data-tab="control"]:not([hidden]){flex:1;display:flex;flex-direction:column;justify-content:space-evenly;gap:14px;padding-top:6px}
+#main > [data-tab="control"] > *{margin-top:0;margin-bottom:0}
+.top{grid-template-columns:46px 1fr 46px}
+.top .pwr{justify-self:start}
+.cfg{width:46px;height:46px;border-radius:50%;justify-self:end;display:flex;align-items:center;justify-content:center;padding:0}
+.cfg svg{width:24px;height:24px}
+.padwrap{height:250px}
+.navrow button{flex-direction:row;gap:7px;padding:0 6px;font-size:13.5px;font-weight:700}
+.navrow button span{display:inline;font-size:13.5px;color:#fff}
+.navrow button svg{width:22px;height:22px}
+.set-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(196,150,255,.22);margin-top:10px;color:#fff}
+.set-row .grow{flex:1;min-width:0}
+.set-row .t{display:block;font-weight:700}
+.set-row .s{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
+.set-row .go{color:var(--violet);font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
@@ -326,21 +322,15 @@ body.has-mini .now:after{display:none}
   </section>
 
   <section id="main" hidden>
-    <!-- v7.6 · control con la distribución de la referencia: encabezado centrado, Buscar/Menú, D-pad grande,
-         reproducción y volumen, Experiencias/Encontrar control, y abajo las apps + "Control por voz" siempre a la mano -->
+    <!-- v7.18 · encendido | TV | configuración; D-pad, Regresar/Inicio, reproducción, volumen y apps repartidos en toda la pantalla -->
     <header class="top">
-      <span class="top-sp"></span>
-      <button class="dec" data-act="decoders" aria-label="Elegir TV"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
       <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
+      <button class="dec" data-act="decoders" aria-label="Elegir TV"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
+      <button class="cfg gl" data-act="settings" aria-label="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
     </header>
     <div class="fake-note" id="fakeNote" hidden></div>
-    <div class="now" id="now" data-go="ahora" role="button" aria-label="Ver lo que está en la TV"></div>
 
     <div data-tab="control">
-      <div class="quick">
-        <button class="gl" data-act="search" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.2 15.2l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button class="gl" data-cmd="menu" aria-label="Menú"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
       <div class="padwrap">
         <div class="pad">
           <button class="u" data-key="UP" aria-label="Arriba"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -349,9 +339,12 @@ body.has-mini .now:after{display:none}
           <button class="r" data-key="RIGHT" aria-label="Derecha"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5L15 12l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button class="d" data-key="DOWN" aria-label="Abajo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5L12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
-        <!-- Regresar e Inicio en las esquinas de abajo del D-pad, donde los controles de TV suelen tenerlos -->
-        <button class="corner bl gl" data-key="BACK" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Regresar</span></button>
-        <button class="corner br gl" data-cmd="home" aria-label="Inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Inicio</span></button>
+      </div>
+      <!-- Regresar e Inicio: abajo del D-pad, del mismo tamaño que los demás botones -->
+      <div class="keys3 navrow">
+        <button class="gl nav-b" data-key="BACK" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Regresar</span></button>
+        <span></span>
+        <button class="gl nav-b" data-cmd="home" aria-label="Inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Inicio</span></button>
       </div>
       <div class="keys3">
         <button class="gl" data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
@@ -363,7 +356,6 @@ body.has-mini .now:after{display:none}
         <button class="gl" data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-      <p class="vol-lbl" id="volLbl">Vol 30</p>
       <!-- accesos directos fijos (no flotantes): solo 4 apps, como en la referencia -->
       <div class="apps">
         <button data-app="netflix" style="--c:#E50914" aria-label="Netflix"><span class="nm">Netflix</span></button>
@@ -423,11 +415,11 @@ body.has-mini .now:after{display:none}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.17"></script>
-<script src="../src/services/firestore-rest.js?v=7.17"></script>
-<script src="content.js?v=7.17"></script>
-<script src="logos.js?v=7.17"></script>
-<script src="store.js?v=7.17"></script>
-<script src="phone.js?v=7.17"></script>
+<script src="../src/services/http.js?v=7.18"></script>
+<script src="../src/services/firestore-rest.js?v=7.18"></script>
+<script src="content.js?v=7.18"></script>
+<script src="logos.js?v=7.18"></script>
+<script src="store.js?v=7.18"></script>
+<script src="phone.js?v=7.18"></script>
 </body>
 </html>

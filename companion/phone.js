@@ -141,53 +141,11 @@
     $('decState').parentNode.className = st === 'on' && !(S.offline && !S.fake) ? 'on' : '';
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
-    $('volLbl').textContent = muted ? 'Silencio' : 'Vol ' + vol;
     $('muteBtn').classList.toggle('on', !!muted);
     var playing = !S.fake && !!S.room.playing;
     $('playBtn').classList.toggle('playing', playing); $('miniPlay').classList.toggle('playing', playing);
     $('fakeNote').hidden = !S.fake;
     if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Elige tu TV en el menú de arriba para volver.';
-  }
-  function renderNow() {
-    var r = S.room, el = $('now'), html = '', st = tvState();
-    if (S.fake) {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">' + esc(S.fake.name) + '</div><div class="t">' + (st === 'sleep' ? 'TV en reposo' : 'Inicio') + '</div><div class="s">Decodificador simulado</div></div>';
-    } else if (r.off) {
-      html = '<span class="thumb" style="background:#000;border:1px solid var(--line)"></span><div><div class="k">En la TV</div><div class="t">TV en reposo</div><div class="s">Toca ⏻ para encenderla</div></div>';
-    } else if (r.app) {
-      html = '<span class="thumb" style="background:#0B0910;border-top:5px solid ' + appColor(r.app) + '"></span><div><div class="k">En la TV</div><div class="t">' + esc(APP_NAMES[r.app] || 'App') + '</div><div class="s">App abierta · Regresar vuelve al inicio</div></div>';
-    } else if (r.screen === 'player' && r.content === 'series') {
-      var sc = sceneNow(); loadSin();
-      html = '<span class="thumb" style="' + sinArt(sc.art) + '"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(sc.place) + '</div><div class="t">Los Pecadores</div><div class="s">' + C.fmt(pos()) + ' / ' + C.fmt(C.SERIES.duration) + '</div></div>';
-    } else if (r.screen === 'player' && r.content === 'recipe') {
-      var RC = C.RECIPE, si = r.recipeStep || 0;
-      html = '<span class="thumb" style="background:#3E7A3A url(' + C.PHOTOS.recipe + '200) center/cover"></span><div class="grow"><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · paso ' + (si + 1) + ' de ' + RC.steps.length + '</div><div class="t">' + esc(RC.dish) + '</div><div class="s">' + esc(RC.steps[si].t) + '</div></div>' +
-        (r.recipeSeq ? '<button class="nowbtn" data-act="recipe">🛒 Receta</button>' : '');
-    } else if (r.screen === 'player' && r.content === 'video') {
-      var vp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
-      html = '<span class="thumb" style="background:#000 url(' + C.BUNNY.poster + ') center/cover"></span><div><div class="k">' + (r.ad ? 'Comercial · vuelve en ' + Math.max(0, Math.ceil((r.ad.endsAt - Date.now()) / 1000)) + ' s' : (r.playing ? 'Reproduciendo' : 'En pausa')) + '</div><div class="t">Big Buck Bunny</div><div class="s">' + C.fmt(Math.min(vp, C.BUNNY.dur)) + ' / ' + C.fmt(C.BUNNY.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
-    } else if (r.screen === 'rent') {
-      html = '<span class="thumb" style="background:linear-gradient(150deg,#7A4CC4,#2A1E60)"></span><div><div class="k">En la TV · On Demand</div><div class="t">Confirma la renta</div><div class="s">Pulsa OK para rentar y ver</div></div>';
-    } else if (r.screen === 'ship') {
-      html = '<span class="thumb" style="background:linear-gradient(180deg,#070512,#2A1E60)"></span><div><div class="k">En la TV</div><div class="t">Nave espacial</div><div class="s">Tu celular es el control</div></div>';
-    } else if (r.screen === 'player' && r.content === 'movie' && r.movie) {
-      var mv = r.movie, mp = r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos;
-      html = '<span class="thumb" style="background:linear-gradient(170deg,' + mv.art[0] + ',' + mv.art[1] + ')"></span><div><div class="k">' + (r.playing ? 'Reproduciendo' : 'En pausa') + ' · ' + esc(mv.label || APP_NAMES[mv.app] || '') + '</div><div class="t">' + esc(mv.t) + '</div><div class="s">' + C.fmt(mp) + ' / ' + C.fmt(mv.dur) + ' · ⏪ ⏯ ⏩ para controlar</div></div>';
-    } else if (r.screen === 'player' && r.content === 'match') {
-      html = '<span class="thumb" style="background:#2E7D49 url(' + C.PHOTOS.match + '200) center/cover"></span><div><div class="k">En vivo · min ' + matchMinute() + '</div><div class="t">' + C.MATCH.home.name + ' ' + C.MATCH.score[0] + ' – ' + C.MATCH.score[1] + ' ' + C.MATCH.away.name + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
-    } else if (r.screen === 'player' && r.content === 'live') {
-      var ch = C.channel(r.channel) || C.CHANNELS[0];
-      html = '<span class="thumb" style="background:linear-gradient(150deg,' + ch.art[0] + ',' + ch.art[1] + ')"></span><div><div class="k">Canal ' + ch.n + ' · en vivo</div><div class="t">' + esc(ch.show) + '</div><div class="s">▲▼ cambian de canal · OK abre la guía</div></div>';
-    } else if (r.screen === 'search') {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">Buscando “' + esc(r.query) + '”</div><div class="s">Usa las flechas y OK para elegir</div></div>';
-    } else if (r.screen === 'swipe') {
-      html = '<span class="thumb" style="background:linear-gradient(150deg,#F38BC9,#5470D6)"></span><div><div class="k">En la TV</div><div class="t">¿Qué vemos? · match de películas</div><div class="s">Muévete con el control · Regresar vuelve a Sala TV</div></div>';
-    } else if (r.screen === 'game') {
-      html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
-    } else {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">' + (r.menu ? 'Menú abierto' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
-    }
-    el.innerHTML = html;
   }
   function appColor(id) { for (var i = 0; i < C.APPS.length; i++) if (C.APPS[i].id === id) return C.APPS[i].color; return '#7A4CC4'; }
 
@@ -195,7 +153,7 @@
   function fakeCommand(cmd) {
     var f = S.fake, n = f.name;
     if (cmd.t === 'peek') return;
-    if (cmd.t === 'power') { f.state = f.state === 'sleep' ? 'on' : 'sleep'; toast(n + (f.state === 'sleep' ? ' en reposo' : ' encendida') + ' (simulado)'); renderHeader(); renderNow(); return; }
+    if (cmd.t === 'power') { f.state = f.state === 'sleep' ? 'on' : 'sleep'; toast(n + (f.state === 'sleep' ? ' en reposo' : ' encendida') + ' (simulado)'); renderHeader(); return; }
     if (f.state === 'sleep') { toast(n + ' está en reposo · toca ⏻'); return; }
     if (cmd.t === 'vol') { f.vol = Math.max(0, Math.min(100, typeof cmd.v === 'number' ? cmd.v : f.vol + cmd.d)); f.muted = false; toast(n + ' · volumen ' + f.vol + ' (simulado)'); renderHeader(); return; }
     if (cmd.t === 'mute') { f.muted = !f.muted; toast(n + (f.muted ? ' en silencio' : ' con sonido') + ' (simulado)'); renderHeader(); return; }
@@ -219,8 +177,8 @@
   /* ---------- render ---------- */
   function render() {
     var r = S.room; if (!r) return;
-    if (S.fake) { renderHeader(); renderNow(); return; }
-    renderHeader(); renderNow(); renderGame(); renderPad2();
+    if (S.fake) { renderHeader(); return; }
+    renderHeader(); renderGame(); renderPad2();
     /* al entrar al partido, el celular pasa solo a "Ahora en la TV" con alineación, estadísticas y datos */
     var inMatch = r.screen === 'player' && r.content === 'match';
     if (S.wasMatch === undefined) S.wasMatch = inMatch;
@@ -570,7 +528,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (name === 'match' ? ' dark' : '');
+    $('sheet').className = 'sheet' + (name === 'match' || name === 'settings' ? ' dark' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -579,6 +537,14 @@
   }
 
   /* Decodificadores: las TVs reales que este celular ya escaneó + los simulados del hogar */
+  /* Configuración (arriba a la derecha): TV que controlas y "Ahora en la TV" */
+  function openSettings() {
+    var n = S.fake ? S.fake.name : (S.room && S.room.tvName) || 'Sala';
+    openSheet('settings', '<h2>Configuración</h2>' +
+      '<button class="set-row" data-act="decoders"><span class="grow"><span class="t">TV que controlas</span><span class="s">' + esc(n) + '</span></span><span class="go">Cambiar ›</span></button>' +
+      (S.fake ? '' : '<button class="set-row" data-act="ahoraGo"><span class="grow"><span class="t">Ahora en la TV</span><span class="s">Datos de lo que estás viendo</span></span><span class="go">›</span></button>') +
+      '<p class="sub" style="margin-top:14px;text-align:center">Sala TV · prototipo</p>');
+  }
   function openDecoders() {
     var rooms = lsJSON('cp-rooms' + (CP.DEMO ? '-demo' : ''), []), html = '<h2>Tus decodificadores</h2><p class="sub">Elige qué TV quieres controlar.</p><div id="decList">';
     var names = {};
@@ -616,20 +582,6 @@
     closeSheet(); S.fake = f; render(); toast('Controlando ' + f.name + ' (simulado)');
   }
 
-  /* Búsqueda: se escribe en el celular, los resultados salen en la TV */
-  var qTimer = null;
-  function openSearch() {
-    openSheet('search', '<h2>Buscar en la TV</h2><p class="sub">Escribe aquí; los resultados aparecen en la pantalla.</p>' +
-      '<input class="in-l" id="sq" type="search" placeholder="Película, serie, app o canal" enterkeyhint="search" autocomplete="off">' +
-      '<div class="chips"><button data-q="Pecadores">Pecadores</button><button data-q="Netflix">Netflix</button><button data-q="Partido">Partido</button><button data-q="Canal">Canales</button><button data-q="Estrellas">Estrellas</button></div>' +
-      '<button class="btn" data-act="closeSheet">Listo, elegir con el control</button>');
-    var q = $('sq'); q.value = S.room && S.room.screen === 'search' ? (S.room.query || '') : '';
-    setTimeout(function () { try { q.focus(); } catch (e) { /* ignore */ } }, 60);
-    q.addEventListener('input', function () { var v = q.value; clearTimeout(qTimer); qTimer = setTimeout(function () { send({ t: 'search', q: v }); }, 300); });
-    q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { q.blur(); closeSheet(); send({ t: 'key', k: 'DOWN' }); } });
-    send({ t: 'search', q: q.value });
-  }
-
   /* ---------- eventos (delegación) ---------- */
   document.addEventListener('click', function (e) {
     var el = e.target.closest('button,[data-go]'); if (!el) return;
@@ -641,7 +593,6 @@
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
     else if (g('data-room')) pickRoom(g('data-room'));
     else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
-    else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
@@ -649,8 +600,9 @@
     else if (act === 'power') { send({ t: 'power' }); if (!S.fake) toast(S.room && S.room.off ? 'Encendiendo la TV' : 'Apagando la TV'); }
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();
+    else if (act === 'settings') openSettings();
+    else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
     else if (act === 'saveName') { var nm = ($('nameIn').value || '').trim().substring(0, 18); if (nm) { S.name = nm; ls.set('cp-name', nm); if (S.pid) store.updatePlayer(S.code, S.pid, { name: nm }, function () {}); toast('Listo: en la TV apareces como ' + nm); closeSheet(); } }
-    else if (act === 'search') openSearch();
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
