@@ -542,7 +542,8 @@
      Las TVs reales son las que este celular escaneó (QR); Recámara/Estudio/Terraza y las que agregues son simuladas. */
   var DKEY = 'cp-decs' + (CP.DEMO ? '-demo' : ''), RKEY = 'cp-rooms' + (CP.DEMO ? '-demo' : '');
   var FAKE_BY = {}, DEC_ST = {};
-  var TV_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5h18v11.5H3zM8 20.5h8M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var PEN_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.7 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.8 7l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var STAR_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9.9 5.6L12 16.6l-5 2.6.9-5.6-4-3.9 5.6-.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
   function decs() {
     var list = lsJSON(DKEY, null), rooms = lsJSON(RKEY, []), have = {}, i;
     if (!list) { list = []; for (i = 0; i < FAKES.length; i++) list.push({ id: 'f' + i, kind: 'fake', fi: i, name: FAKES[i].name, linked: true }); }
@@ -577,14 +578,17 @@
     if (!anyLinked) html += '<div class="dv-empty">No tienes decodificadores vinculados. Vincula uno o agrega uno nuevo para usar el control.</div>';
     for (i = 0; i < list.length; i++) {
       var d = list[i], st = decState(d), isCur = d.linked && d.id === cur && !S.noDec;
+      /* v7.20 · nombre + lápiz (renombrar) + estrella (principal); estado abajo; Desvincular/Vincular a la derecha */
       html += '<div class="dcard' + (isCur ? ' cur' : '') + (d.linked ? '' : ' unl') + '">' +
-        '<button class="dpick" data-dpick="' + d.id + '"><span class="dic">' + TV_IC + '</span><span class="grow"><span class="t">' + esc(d.name) +
-        (d.main ? '<span class="badge main">★ Principal</span>' : '') + (isCur ? '<span class="badge cur">Controlando</span>' : '') + '</span>' +
-        '<span class="s"><span class="sdot ' + (st === 'on' ? '' : st === 'unlinked' ? 'off' : st) + '" id="dst-' + d.id + '"></span><span id="dsx-' + d.id + '">' + DEC_TXT[st] + '</span>' + (d.kind === 'real' ? '' : ' · Simulado') + '</span></span></button>' +
-        '<div class="dacts">' + (d.linked
-          ? (d.main ? '' : '<button data-dmain="' + d.id + '">Hacer principal</button>') + '<button data-dren="' + d.id + '">Renombrar</button><button class="warn" data-dunl="' + d.id + '">Desvincular</button>'
-          : '<button class="pri" data-dlink="' + d.id + '">Vincular</button><button data-dren="' + d.id + '">Renombrar</button>') +
-        '</div></div>';
+        '<div class="dinfo" data-dpick="' + d.id + '" role="button" aria-label="Controlar ' + esc(d.name) + '">' +
+          '<div class="dline"><span class="dname">' + esc(d.name) + '</span>' +
+          '<button class="dic-b" data-dren="' + d.id + '" aria-label="Editar nombre">' + PEN_IC + '</button>' +
+          '<button class="dic-b star' + (d.main ? ' on' : '') + '" data-dmain="' + d.id + '" aria-label="' + (d.main ? 'Es tu principal' : 'Hacer principal') + '"' + (d.linked ? '' : ' disabled') + '>' + STAR_IC + '</button></div>' +
+          '<span class="s"><span class="sdot ' + (st === 'on' ? '' : st === 'unlinked' ? 'off' : st) + '" id="dst-' + d.id + '"></span><span id="dsx-' + d.id + '">' + DEC_TXT[st] + '</span>' +
+          (isCur ? ' · Controlando' : '') + (d.kind === 'real' ? '' : ' · Simulado') + '</span>' +
+        '</div>' +
+        (d.linked ? '<button class="dcta warn" data-dunl="' + d.id + '">Desvincular</button>' : '<button class="dcta pri" data-dlink="' + d.id + '">Vincular</button>') +
+        '</div>';
     }
     html += '<label class="lf" style="margin-top:22px">Apareces en la TV como</label><div class="vform"><input class="in-l" id="nameIn" maxlength="18" value="' + esc(S.name) + '"><button data-act="saveName">Guardar</button></div>';
     $('decsView').innerHTML = html;
@@ -612,6 +616,7 @@
     if (!silent) toast('Controlando ' + d.name + ' (simulado)');
   }
   function setMain(id) {
+    var cur = decById(decs(), id); if (cur && cur.main) { toast(cur.name + ' ya es tu principal'); return; }
     var d = decUpdate(id, function (x, l) { for (var i = 0; i < l.length; i++) l[i].main = false; x.main = true; });
     renderDecs(); if (d) toast('★ ' + d.name + ' ahora es tu principal');
   }
@@ -732,7 +737,7 @@
 
   /* ---------- eventos (delegación) ---------- */
   document.addEventListener('click', function (e) {
-    var el = e.target.closest('button,[data-go]'); if (!el) return;
+    var el = e.target.closest('button,[data-go],[data-dpick]'); if (!el) return;
     if (el.tagName === 'BUTTON') buzz();
     var g = function (a) { return el.getAttribute(a); };
     var k = g('data-key'), cmd = g('data-cmd'), go = g('data-go'), open = g('data-open'), act = g('data-act'), seg = g('data-seg');

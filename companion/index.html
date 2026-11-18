@@ -321,22 +321,6 @@ body.has-mini .wrap{padding-bottom:96px}
 .dv-empty{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(217,54,79,.14);border:1px solid rgba(248,113,113,.4);font-size:13.5px}
 .dcard{margin-top:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.22);overflow:hidden}
 .dcard.cur{border-color:#B266FF;box-shadow:0 0 14px rgba(168,85,247,.35)}
-.dcard.unl .dpick{opacity:.6}
-.dpick{display:flex;align-items:center;gap:12px;width:100%;padding:14px;text-align:left}
-.dic{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(168,85,247,.2);color:#E9D5FF}
-.dic svg{width:24px;height:24px}
-.dpick .grow{flex:1;min-width:0}
-.dpick .t{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:16px;font-weight:700}
-.dpick .s{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
-.badge{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px}
-.badge.main{background:rgba(250,204,21,.16);color:#FACC15}
-.badge.cur{background:rgba(168,85,247,.25);color:#E9D5FF}
-.dacts{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px 70px}
-.dacts button{font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff}
-.dacts button.pri{background:var(--violet);border-color:var(--violet)}
-.dacts button.warn{color:#FCA5A5;border-color:rgba(248,113,113,.4)}
-.dacts button:disabled{opacity:.8}
-.dacts .spin,.btn .spin{display:inline-block;width:13px;height:13px;border-width:2px;vertical-align:-2px;margin-right:7px}
 .btn.warn{background:var(--red)}
 #decsView .lf{color:var(--ink-2)}
 .sh-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--violet);margin:-4px 0 10px}
@@ -379,12 +363,7 @@ body.light .pwr.sleep{background:#DCFCE7;border-color:#22C55E;color:#15803D}
 body.light .dec small.on{color:#15803D}
 body.light .vol button.on{background:#FEE2E2;border-color:#F87171}
 body.light .dcard,body.light .fav-row{background:#fff;border-color:rgba(122,76,196,.2)}
-body.light .dic,body.light .set-ic{background:#EFE5FF;color:#6B3FC0}
-body.light .dacts button{background:#F3EEFA;border-color:rgba(122,76,196,.18);color:#2E1D52}
-body.light .dacts button.pri{background:var(--violet);color:#fff}
-body.light .dacts button.warn{color:#B91C1C;border-color:rgba(220,38,38,.3)}
-body.light .badge.cur{background:#EFE5FF;color:#6B3FC0}
-body.light .badge.main{background:#FEF3C7;color:#A16207}
+body.light .set-ic{background:#EFE5FF;color:#6B3FC0}
 body.light .back-ctl{color:#6B3FC0}
 body.light .sheet.dark{background:#fff;color:#1E1A1A;border-top:0}
 body.light .sheet.dark .x{background:#F1EDF6;color:#555}
@@ -396,6 +375,31 @@ body.light .radio .rd{border-color:#C9BDD9}
 body.light .fav-row button{background:#F3EEFA}
 body.light .tabs{background:rgba(255,255,255,.96);border-top-color:rgba(29,22,48,.08)}
 body.light .fake-note{color:var(--ink)}
+
+/* v7.20 · fila de decodificador: nombre + lápiz + estrella, estado abajo, CTA a la derecha */
+.dcard{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px}
+.dinfo{flex:1;min-width:0;cursor:pointer}
+.dline{display:flex;align-items:center;gap:2px}
+.dname{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:4px}
+.dic-b{width:34px;height:34px;flex:none;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.dic-b svg{width:19px;height:19px}
+.dic-b:active{background:rgba(168,85,247,.2)}
+.dic-b.star.on{color:#FACC15}
+.dic-b.star.on svg path{fill:currentColor}
+.dic-b:disabled{opacity:.35}
+.dinfo .s{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.dcard.unl .dname{opacity:.6}
+.dcta{flex:none;font-size:13px;font-weight:700;border-radius:999px;padding:9px 14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff}
+.dcta.warn{color:#FCA5A5;border-color:rgba(248,113,113,.45)}
+.dcta.pri{background:var(--violet);border-color:var(--violet)}
+.dcta:disabled{opacity:.85}
+.dcta .spin{display:inline-block;width:13px;height:13px;border-width:2px;vertical-align:-2px;margin-right:7px}
+body.light .dic-b{color:#6B5C86}
+body.light .dic-b.star.on{color:#D99A00}
+body.light .dcta{background:#F3EEFA;border-color:rgba(122,76,196,.18);color:#2E1D52}
+body.light .dcta.warn{color:#B91C1C;border-color:rgba(220,38,38,.3);background:#FFF5F5}
+body.light .dcta.pri{background:var(--violet);color:#fff}
+.btn .spin{display:inline-block;width:13px;height:13px;border-width:2px;vertical-align:-2px;margin-right:7px}
 </style>
 </head>
 <body>
@@ -499,11 +503,11 @@ body.light .fake-note{color:var(--ink)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.19"></script>
-<script src="../src/services/firestore-rest.js?v=7.19"></script>
-<script src="content.js?v=7.19"></script>
-<script src="logos.js?v=7.19"></script>
-<script src="store.js?v=7.19"></script>
-<script src="phone.js?v=7.19"></script>
+<script src="../src/services/http.js?v=7.20"></script>
+<script src="../src/services/firestore-rest.js?v=7.20"></script>
+<script src="content.js?v=7.20"></script>
+<script src="logos.js?v=7.20"></script>
+<script src="store.js?v=7.20"></script>
+<script src="phone.js?v=7.20"></script>
 </body>
 </html>
