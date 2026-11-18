@@ -308,62 +308,6 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 #miniPlay .i-pause{display:none}#miniPlay.playing .i-play{display:none}#miniPlay.playing .i-pause{display:inline}
 .mini button.pressed{background:rgba(168,85,247,.3);border-color:#C084FC}
 body.has-mini .wrap{padding-bottom:160px}
-/* ---------- flujo de vinculación ---------- */
-.pairflow{position:relative;flex:1;display:flex;flex-direction:column;min-height:calc(100vh - 40px);min-height:calc(100dvh - 40px)}
-.pf-x{position:absolute;right:0;top:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;z-index:2}
-.pf-x svg{width:24px;height:24px}
-.pf-body{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:36px 4px 10px}
-.pf-step{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#C4A5F5;margin-top:6px}
-.pf-h{font-size:24px;line-height:1.2;margin:8px 0 6px}
-.pf-sub{color:var(--ink-2);font-size:14.5px;line-height:1.45;max-width:320px}
-.pf-sub b{color:#fff}
-.pf-found{margin-top:18px;font-size:14px;font-weight:700;color:#D8B4FE}
-.pf-radar{position:relative;width:210px;height:210px;margin:18px 0 22px;display:flex;align-items:center;justify-content:center}
-.pf-radar i{position:absolute;left:50%;top:50%;width:210px;height:210px;margin:-105px 0 0 -105px;border-radius:50%;border:2px solid rgba(192,132,252,.7);opacity:0;animation:pfring 2.4s ease-out infinite}
-.pf-radar i:nth-child(2){animation-delay:.8s}.pf-radar i:nth-child(3){animation-delay:1.6s}
-@keyframes pfring{0%{transform:scale(.3);opacity:.9}100%{transform:scale(1);opacity:0}}
-.pf-ph{position:relative;width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
-  background:radial-gradient(circle at 50% 35%,#B57BFF 0%,#8B3FF0 70%);box-shadow:0 0 26px rgba(168,85,247,.7)}
-.pf-ph svg{width:34px;height:34px}
-.pf-list{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:20px;text-align:left}
-.pf-dev{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:16px;color:#fff;text-align:left;
-  background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.26);animation:pfin .35s ease-out both}
-.pf-dev:nth-child(2){animation-delay:.08s}.pf-dev:nth-child(3){animation-delay:.16s}.pf-dev:nth-child(4){animation-delay:.24s}
-@keyframes pfin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.pf-dev:active{background:rgba(168,85,247,.24)}
-.pf-dev.dis{opacity:.5}
-.pf-ic{width:46px;height:46px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(168,85,247,.2);color:#E9D5FF}
-.pf-ic svg{width:26px;height:26px}
-.pf-dev .t,.pf-card .t{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700}
-.pf-dev .s,.pf-card .s{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px}
-.pf-dev .s2{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);margin-top:4px}
-.pf-tag{font-size:10px;font-weight:700;background:#7A4CC4;color:#fff;border-radius:6px;padding:2px 6px}
-.pf-dev .grow,.pf-card .grow{flex:1;min-width:0}
-.pf-go{font-size:26px;color:var(--ink-3);line-height:1}
-.pf-again{margin-top:16px;color:#D8B4FE;font-weight:700;font-size:14px;text-decoration:underline}
-.pf-link{display:flex;align-items:center;gap:12px;margin:34px 0 26px}
-.pf-node{width:74px;height:74px;border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(168,85,247,.2);border:1.5px solid rgba(192,132,252,.7);box-shadow:0 0 18px rgba(168,85,247,.4)}
-.pf-node svg{width:36px;height:36px}
-.pf-dots{display:flex;gap:7px}
-.pf-dots i{width:8px;height:8px;border-radius:50%;background:#C084FC;opacity:.25;animation:pfdot 1.2s ease-in-out infinite}
-.pf-dots i:nth-child(2){animation-delay:.15s}.pf-dots i:nth-child(3){animation-delay:.3s}.pf-dots i:nth-child(4){animation-delay:.45s}.pf-dots i:nth-child(5){animation-delay:.6s}
-@keyframes pfdot{50%{opacity:1;transform:scale(1.3)}}
-.pf-checks{list-style:none;margin:22px 0 0;padding:0;width:100%;max-width:320px;text-align:left;display:flex;flex-direction:column;gap:14px}
-.pf-checks li{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--ink-3);transition:color .2s}
-.pf-checks .ck{width:24px;height:24px;border-radius:50%;flex:none;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
-.pf-checks li.on{color:#fff}
-.pf-checks li.on .ck{border-color:#C084FC;border-top-color:transparent;animation:sp .8s linear infinite}
-.pf-checks li.ok{color:#fff}
-.pf-checks li.ok .ck{border-color:#4ADE80;background:#4ADE80}
-.pf-checks li.ok .ck:after{content:'';width:6px;height:11px;border:solid #0D0718;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
-.pf-done{width:112px;height:112px;border-radius:50%;margin:34px 0 22px;display:flex;align-items:center;justify-content:center;color:#0D0718;
-  background:radial-gradient(circle at 50% 35%,#86EFAC 0%,#22C55E 75%);box-shadow:0 0 0 10px rgba(74,222,128,.14),0 0 34px rgba(74,222,128,.55);animation:pfpop .5s cubic-bezier(.2,1.4,.4,1) both}
-.pf-done svg{width:58px;height:58px}
-@keyframes pfpop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
-.pf-card{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:16px;margin:22px 0 18px;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(74,222,128,.35)}
-.pf-badge{font-size:11px;font-weight:700;color:#4ADE80;background:rgba(74,222,128,.14);border-radius:8px;padding:4px 8px}
-.pf-body .btn{margin-top:auto;width:100%}
-.pf-card + .btn{margin-top:0}
 </style>
 </head>
 <body>
@@ -376,12 +320,6 @@ body.has-mini .wrap{padding-bottom:160px}
     <p class="muted" id="gSub"></p>
     <div class="spin" id="gSpin"></div>
     <button class="btn" id="gRetry" hidden style="max-width:280px">Reintentar</button>
-  </section>
-
-  <!-- Flujo de vinculación (simulado): buscar → equipos disponibles → vincular → listo -->
-  <section class="pairflow" id="pairFlow" hidden>
-    <button class="pf-x" id="pfClose" data-act="pfClose" aria-label="Cerrar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-    <div class="pf-body" id="pfBody"></div>
   </section>
 
   <section id="main" hidden>
@@ -485,11 +423,11 @@ body.has-mini .wrap{padding-bottom:160px}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.15"></script>
-<script src="../src/services/firestore-rest.js?v=7.15"></script>
-<script src="content.js?v=7.15"></script>
-<script src="logos.js?v=7.15"></script>
-<script src="store.js?v=7.15"></script>
-<script src="phone.js?v=7.15"></script>
+<script src="../src/services/http.js?v=7.16"></script>
+<script src="../src/services/firestore-rest.js?v=7.16"></script>
+<script src="content.js?v=7.16"></script>
+<script src="logos.js?v=7.16"></script>
+<script src="store.js?v=7.16"></script>
+<script src="phone.js?v=7.16"></script>
 </body>
 </html>
