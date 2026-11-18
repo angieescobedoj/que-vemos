@@ -90,21 +90,113 @@
     store.getRoom(code, function (err, room) {
       if (err) { if (quiet) { toast('No pudimos conectar con esa TV', true); return; } gate('Sin conexión', 'Revisa el internet de tu celular e intenta de nuevo.', false, true); return; }
       if (!room || room.kind !== 'companion') { if (quiet) { toast('Esa TV ya no está disponible', true); return; } gate('No encontramos esta TV', 'Vuelve a escanear el código QR que aparece en la pantalla.', false, true); return; }
+      /* la primera vez en esta sesión se muestra el flujo de vinculación (buscar → elegir → vincular → listo) */
+      if (!quiet && !pairedThisSession(code)) { startPairFlow(code, room, false); return; }
+      joinRoom(code, room, quiet, true);
+    });
+  }
+  function joinRoom(code, room, quiet, reveal, done) {
       S.name = ls.get('cp-name') || deviceName();
       var pid = idStore.get('cp-pid-' + code) || ('p' + Math.random().toString(36).slice(2, 10));
       idStore.set('cp-pid-' + code, pid);
       store.updatePlayer(code, pid, { name: S.name, joinedAt: Date.now(), seen: Date.now(), kind: 'companion', cmds: [] }, function (err2) {
-        if (err2) { if (quiet) { toast('No pudimos conectar con esa TV', true); return; } gate('No pudimos conectarte', 'Intenta de nuevo en un momento.', false, true); return; }
+        if (err2) { if (done) { done(err2); return; } if (quiet) { toast('No pudimos conectar con esa TV', true); return; } gate('No pudimos conectarte', 'Intenta de nuevo en un momento.', false, true); return; }
         S.code = code; S.pid = pid; S.cmds = []; S.room = room; S.fake = null; S.songSeen = room.songSeq || 0;
         ls.set('cp-last-sala' + (CP.DEMO ? '-demo' : ''), code);
         rememberRoom(code, room.tvName || 'Sala');
-        $('gate').hidden = true; $('main').hidden = false; $('tabs').hidden = false;
-        render(); startPolling();
+        if (reveal) { $('gate').hidden = true; $('main').hidden = false; $('tabs').hidden = false; render(); }
+        startPolling();
         if (!S.hb) S.hb = setInterval(function () { if (S.pid && !S.fake) store.updatePlayer(S.code, S.pid, { seen: Date.now() }, function (e) { setOffline(!!e); }); }, HEARTBEAT_MS);
-        if (quiet) toast('Controlando ' + (room.tvName || 'Sala'));
+        if (quiet && !done) toast('Controlando ' + (room.tvName || 'Sala'));
+        if (done) done(null);
       });
+  }
+
+  /* ---------- flujo de vinculación (simulado): buscar decodificadores → equipos disponibles → elegir → vincular → listo ----------
+     El equipo real es la TV del QR; los demás son los decodificadores simulados de la casa. */
+  var PF = { code: null, room: null, devs: [], timers: [], fromSheet: false, busy: false };
+  var PF_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5h18v11.5H3zM8 20.5h8M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var PF_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function pairedThisSession(code) { try { return sessionStorage.getItem('cp-paired-' + code) === '1'; } catch (e) { return false; } }
+  function markPaired(code) { try { sessionStorage.setItem('cp-paired-' + code, '1'); } catch (e) { /* ignore */ } }
+  function pfLater(fn, ms) { PF.timers.push(setTimeout(fn, ms)); }
+  function pfStop() { for (var i = 0; i < PF.timers.length; i++) clearTimeout(PF.timers[i]); PF.timers = []; }
+  function pfShow(html) {
+    $('pfBody').innerHTML = html;
+    $('pfClose').hidden = !PF.fromSheet || PF.busy;
+  }
+  function startPairFlow(code, room, fromSheet) {
+    pfStop(); closeSheet();
+    PF.code = code; PF.room = room; PF.fromSheet = !!fromSheet; PF.busy = false;
+    PF.devs = [{ real: true, name: room.tvName || 'Sala', model: 'Decodificador Totalplay 4K', state: room.off ? 'sleep' : 'on' }];
+    for (var i = 0; i < FAKES.length; i++) PF.devs.push({ fake: i, name: FAKES[i].name, model: i === 1 ? 'Decodificador Totalplay HD' : 'Decodificador Totalplay 4K', state: FAKES[i].state });
+    $('gate').hidden = true; $('main').hidden = true; $('tabs').hidden = true; $('pairFlow').hidden = false;
+    pfSearch();
+  }
+  function pfSearch() {
+    pfStop();
+    pfShow('<div class="pf-radar" aria-hidden="true"><i></i><i></i><i></i><span class="pf-ph"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.5 18.5h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>' +
+      '<p class="pf-step">Paso 1 de 3</p><h1 class="pf-h">Buscando decodificadores…</h1>' +
+      '<p class="pf-sub">Mantén tu celular cerca de la TV y conectado a la misma red Wi‑Fi.</p>' +
+      '<p class="pf-found" id="pfFound">Buscando en tu red…</p>');
+    var n = 0;
+    for (var i = 0; i < PF.devs.length; i++) pfLater(function () { n++; var f = $('pfFound'); if (f) f.textContent = n === 1 ? '1 equipo encontrado' : n + ' equipos encontrados'; }, 900 + i * 550);
+    pfLater(pfList, 900 + PF.devs.length * 550 + 500);
+  }
+  var PF_STATE = { on: ['Disponible', ''], sleep: ['En reposo · se enciende al vincular', 'sleep'], off: ['Desconectado', 'off'] };
+  function pfList() {
+    pfStop();
+    var html = '<p class="pf-step">Paso 2 de 3</p><h1 class="pf-h">Equipos disponibles</h1><p class="pf-sub">Elige el decodificador que quieres controlar con este celular.</p><div class="pf-list">';
+    for (var i = 0; i < PF.devs.length; i++) {
+      var d = PF.devs[i], st = PF_STATE[d.state] || PF_STATE.on;
+      html += '<button class="pf-dev' + (d.state === 'off' ? ' dis' : '') + '" data-pfdev="' + i + '"><span class="pf-ic">' + PF_ICON + '</span><span class="grow"><span class="t">' + esc(d.name) +
+        (d.real ? '<span class="pf-tag">Esta TV</span>' : '') + '</span><span class="s">' + esc(d.model) + '</span><span class="s2"><span class="sdot ' + st[1] + '"></span>' + st[0] + '</span></span>' +
+        '<span class="pf-go">›</span></button>';
+    }
+    pfShow(html + '</div><button class="pf-again" data-act="pfAgain">Buscar de nuevo</button>');
+  }
+  function pfSelect(i) {
+    var d = PF.devs[i]; if (!d || PF.busy) return;
+    if (d.state === 'off') { toast(d.name + ' está desconectado. Enciéndelo e intenta de nuevo.', true); return; }
+    PF.busy = true; pfStop();
+    var steps = ['Conectando con el decodificador', 'Verificando el equipo', 'Sincronizando el control'];
+    var html = '<div class="pf-link" aria-hidden="true"><span class="pf-node"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>' +
+      '<span class="pf-dots"><i></i><i></i><i></i><i></i><i></i></span><span class="pf-node">' + PF_ICON + '</span></div>' +
+      '<p class="pf-step">Paso 3 de 3</p><h1 class="pf-h">Vinculando con ' + esc(d.name) + '…</h1><p class="pf-sub">No cierres esta pantalla. Tarda solo unos segundos.</p><ul class="pf-checks">';
+    for (var s = 0; s < steps.length; s++) html += '<li id="pfc' + s + '"><span class="ck"></span>' + steps[s] + '</li>';
+    pfShow(html + '</ul>');
+    var joined = !d.real, timeUp = false, failed = false;
+    function finish() { if (joined && timeUp && !failed) pfDone(d); }
+    for (var k = 0; k < steps.length; k++) (function (k) {
+      pfLater(function () { var li = $('pfc' + k); if (li) li.className = 'on'; }, 250 + k * 800);
+      pfLater(function () { var li = $('pfc' + k); if (li) li.className = 'ok'; }, 250 + k * 800 + 700);
+    })(k);
+    pfLater(function () { timeUp = true; finish(); }, 250 + steps.length * 800 + 200);
+    if (d.real) joinRoom(PF.code, PF.room, true, false, function (err) {
+      if (err) { failed = true; PF.busy = false; pfStop(); pfShow('<h1 class="pf-h">No pudimos vincular</h1><p class="pf-sub">Revisa el internet de tu celular e intenta de nuevo.</p><button class="btn" data-act="pfAgain">Intentar de nuevo</button>'); return; }
+      joined = true; finish();
     });
   }
+  function pfDone(d) {
+    PF.busy = false; markPaired(PF.code); buzz(); setTimeout(buzz, 160);
+    PF.sel = d;
+    pfShow('<div class="pf-done" aria-hidden="true">' + PF_OK + '</div><h1 class="pf-h">¡Vinculación exitosa!</h1>' +
+      '<p class="pf-sub">Tu celular ya controla <b>' + esc(d.name) + '</b>.' + (d.fake !== undefined ? ' (Equipo simulado: los botones no llegan a ninguna TV.)' : '') + '</p>' +
+      '<div class="pf-card"><span class="pf-ic">' + PF_ICON + '</span><span class="grow"><span class="t">' + esc(d.name) + '</span><span class="s">' + esc(d.model) + '</span></span><span class="pf-badge">Vinculado</span></div>' +
+      '<button class="btn" data-act="pfStart">Empezar a usar el control</button>');
+  }
+  function pfStart() {
+    var d = PF.sel; pfStop();
+    $('pairFlow').hidden = true; $('main').hidden = false; $('tabs').hidden = false;
+    if (d && d.fake !== undefined) {
+      var f = FAKES[d.fake]; if (f.state === 'sleep') f.state = 'on';
+      var use = function () { S.fake = f; render(); toast('Controlando ' + f.name + ' (simulado)'); };
+      if (!S.pid) joinRoom(PF.code, PF.room, true, false, use); else use();   /* la TV real queda conectada por detrás */
+      render(); return;
+    }
+    S.fake = null; render();
+  }
+  function pfClose() { if (PF.busy) return; pfStop(); $('pairFlow').hidden = true; $('main').hidden = false; $('tabs').hidden = false; render(); }
   function rememberRoom(code, name) {
     var list = lsJSON('cp-rooms' + (CP.DEMO ? '-demo' : ''), []), out = [{ code: code, name: name }];
     for (var i = 0; i < list.length; i++) if (list[i].code !== code && list[i].name !== name) out.push(list[i]);
@@ -592,7 +684,7 @@
       var on = S.fake === f;
       html += '<button class="opt' + (on ? ' on' : '') + '" data-fake="' + j + '"><span class="sdot ' + (f.state === 'on' ? '' : f.state) + '"></span><span class="grow"><span class="t">' + esc(f.name) + '<span class="tag">Simulado</span></span><span class="s" style="display:block">' + STATE_TXT[f.state] + '</span></span>' + (on ? '<b style="color:#7A4CC4">✓</b>' : '') + '</button>';
     }
-    html += '</div><p class="sub" style="margin-top:10px">¿Otra TV de la casa? Escanea el QR que aparece en su pantalla y se agrega aquí sola.</p>' +
+    html += '</div><button class="btn ghost" data-act="pfScan" style="margin-top:12px">Buscar decodificadores</button><p class="sub" style="margin-top:10px">¿Otra TV de la casa? Escanea el QR que aparece en su pantalla y se agrega aquí sola.</p>' +
       '<label class="lf">Apareces en la TV como</label><div class="vform"><input class="in-l" id="nameIn" maxlength="18" value="' + esc(S.name) + '"><button data-act="saveName">Guardar</button></div>';
     openSheet('decoders', html);
     for (var k = 0; k < rooms.length; k++) (function (rm) {
@@ -640,6 +732,11 @@
     else if (g('data-vol')) { var d = Number(g('data-vol')); send({ t: 'vol', d: d }); if (!S.fake) { var nv = Math.max(0, Math.min(100, (S.room.vol == null ? 30 : S.room.vol) + d)); S.room.vol = nv; S.room.muted = false; renderHeader(); toast('Volumen ' + nv); } }
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
     else if (g('data-room')) pickRoom(g('data-room'));
+    else if (g('data-pfdev') !== null && el.hasAttribute('data-pfdev')) pfSelect(Number(g('data-pfdev')));
+    else if (act === 'pfAgain') { PF.busy = false; pfSearch(); }
+    else if (act === 'pfStart') pfStart();
+    else if (act === 'pfClose') pfClose();
+    else if (act === 'pfScan') { if (S.room && S.code) startPairFlow(S.code, S.room, true); }
     else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
     else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
