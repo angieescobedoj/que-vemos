@@ -15,7 +15,7 @@
   /* ---------------- estado ---------------- */
   var S = {
     code: null, players: [], lastSeq: {}, known: {}, offline: false,
-    screen: 'boot', content: null, playing: false, pos: 0, posAt: 0, saved: C.SERIES.saved,
+    screen: 'boot', content: null, playing: false, pos: 0, posAt: 0, saved: 0,
     sceneIdx: -1, songSeq: 0, songAt: 0, query: '', dialog: null, matchStart: 0,
     game: { state: 'idle', endsAt: 0, scores: {}, baskets: {}, stars: [], timer: null, lastSpawn: 0 },
     timer: null, standby: false, lastCmdAt: 0,
@@ -139,14 +139,13 @@
         '<span class="t-body"><span class="t-tag t-red">● En vivo</span><span class="t-title" style="display:block">' + esc(item.name.replace(/ \d+$/, '')) + '</span></span></button>';
     }
     var extra = '';
-    if (item.id === 'series') extra = '<div class="t-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></div>';
     if (item.id === 'recipe') extra = '' + (S.rsaved > 1 ? '<div class="t-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></div>' : '');
     if (item.id === 'bunny' && S.vsaved > 1) extra = '<div class="t-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></div>';
-    var sub = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
+    var sub = item.id === 'bunny' && S.vsaved > 1 ? 'Corto · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     return '<button class="tile' + (wide ? ' wide' : '') + '" data-focusable data-action="open" data-id="' + item.id + '">' +
       '<span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
       (item.kind === 'live' ? '<span class="t-live"><span class="live">EN VIVO</span></span>' : '') +
-      '<span class="t-body"><span class="t-tag">' + esc(item.id === 'series' ? 'Seguir viendo' : item.tag) + '</span>' +
+      '<span class="t-body"><span class="t-tag">' + esc(item.tag) + '</span>' +
       '<span class="t-title" style="display:block">' + esc(item.title) + '</span><span class="t-sub" style="display:block">' + esc(sub) + '</span>' + extra + '</span></button>';
   }
   /* Inicio (v7.5): como el launcher de la TV. Arriba, el fondo y los datos del contenido enfocado;
@@ -163,7 +162,6 @@
     } else {
       art = artFor(item);
       if (item.id === 'match') badge = '<span class="c-live">EN VIVO</span>';
-      if (item.id === 'series') extra = '<span class="c-prog"><i style="width:' + Math.round(S.saved / C.SERIES.duration * 100) + '%"></i></span>';
       if (item.id === 'bunny' && S.vsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></span>';
       if (item.id === 'recipe' && S.rsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></span>';
     }
@@ -197,9 +195,9 @@
     var tag, title, meta;
     if (item.n) { tag = '<span class="h-live">● En vivo</span> Canal ' + item.n + ' · ' + esc(item.name.replace(/ \d+$/, '')); title = item.show; meta = 'A continuación: ' + item.next; }
     else {
-      tag = item.id === 'match' ? '<span class="h-live">● En vivo</span> Deportes' : esc(item.id === 'series' ? 'Seguir viendo' : item.tag);
+      tag = item.id === 'match' ? '<span class="h-live">● En vivo</span> Deportes' : esc(item.tag);
       title = item.title;
-      meta = item.id === 'series' ? 'Película · quedan ' + C.fmt(C.SERIES.duration - S.saved) : item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
+      meta = item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
     }
     $('heroBg').setAttribute('style', heroBg(item));
     $('heroArt').innerHTML = item.id === 'swipe' ? '<span class="qv-box">' + swipeArt() + '</span>' : '';
@@ -277,15 +275,13 @@
     if (id === 'match') { openMatch(); return; }
     closeOverlays();
     if (id === 'series') {
-      if (!from && S.saved > 60) { openResume(); return; }
-      setPos(from === 'start' ? 0 : (from === 'resume' ? S.saved : 0), true);
+      setPos(0, true);   /* Los Pecadores siempre empieza desde el inicio (sin "continuar donde lo dejaste") */
       S.sceneIdx = -1;
     }
     S.content = id;
     $('pausePanel').hidden = true;
     show('player');
     paintPlayer();
-    if (from === 'resume') toast('Continuando donde lo dejaste · ' + C.fmt(S.saved));
   }
   /* --- TV en vivo: los canales se recorren con ▲▼ del control (o del celular) y OK abre la guía --- */
   var chTimer = null;
@@ -362,7 +358,7 @@
   }
   function openMenu() {
     closeGuide(); closeDialog();
-    var html = menuItem('home', 'Inicio') + menuItem('search', 'Buscar') + menuItem('tv', 'TV en vivo') + menuItem('series', 'Seguir viendo') + '<p class="m-h">Apps</p>';
+    var html = menuItem('home', 'Inicio') + menuItem('search', 'Buscar') + menuItem('tv', 'TV en vivo') + menuItem('series', 'Los Pecadores') + '<p class="m-h">Apps</p>';
     for (var i = 0; i < C.APPS.length; i++) html += menuItem(C.APPS[i].id, C.APPS[i].title, C.APPS[i].color);
     html += '<p class="m-h">Juegos</p>' + menuItem('game', 'Atrapa estrellas') + menuItem('swipe', '¿Qué vemos?');
     $('menuList').innerHTML = html; $('menu').hidden = false; S.menu = true;
@@ -858,18 +854,9 @@
     setTimeout(function () { location.href = '../tv.html?back=companion&cp=' + S.code + (CP.DEMO ? '&demo=1' : '') + TP.lifecycle.returnQuery(); }, 900);
   }
 
-  /* --- B3 · continuar donde lo dejaste --- */
-  function openResume() {
-    S.dialog = 'resume';
-    $('resumeSub').textContent = 'Te quedaste en ' + C.fmt(S.saved) + ' · quedan ' + C.fmt(C.SERIES.duration - S.saved);
-    $('resumeBar').style.width = (S.saved / C.SERIES.duration * 100) + '%';
-    $('resumeDlg').hidden = false;
-    TP.focus.setScope($('resumeDlg'), '[data-action="resume"]');
-    pushState();
-  }
   function closeDialog() {
     if (!S.dialog) return;
-    S.dialog = null; $('resumeDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
+    S.dialog = null; TP.focus.setScope(null); TP.focus.ensure(); pushState();
   }
 
   /* --- C2 · juego: atrapa estrellas --- */
@@ -1018,8 +1005,6 @@
   TP.focus.onActivate(function (el) {
     var a = el.getAttribute('data-action');
     if (a === 'open') openContent(el.getAttribute('data-id'));
-    else if (a === 'resume') { closeDialog(); openContent('series', 'resume'); }
-    else if (a === 'restart') { closeDialog(); openContent('series', 'start'); }
     else if (a === 'gameAgain') startGame();
     else if (a === 'shipAgain') startShip();
     else if (a === 'rentGo') rentGo();

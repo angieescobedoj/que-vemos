@@ -18,12 +18,12 @@
     facts: ['Halcones no pierde en casa desde hace 8 partidos.', 'E. Salcedo lleva 6 goles en la temporada.', 'Es el clásico número 41 entre ambos equipos.']
   };
 
-  /* Película real para "Seguir viendo": Los Pecadores (Sinners, 2025). Las imágenes salen del catálogo de TMDB en tiempo real.
+  /* Película real: Los Pecadores (Sinners, 2025). Las imágenes salen del catálogo de TMDB en tiempo real.
      Elenco, lugares y canciones son los de la película; los productos son genéricos (sin marcas). */
   var SERIES = {
     id: 'series', kind: 'vod', title: 'Los Pecadores', sub: 'Película · 2025 · Ryan Coogler', tag: 'Película',
     tmdbQuery: 'Sinners', tmdbYear: 2025,
-    duration: 8220, saved: 3900,
+    duration: 8220,
     scenes: [
       { from: 0, to: 2740, place: 'Clarksdale, Mississippi · 1932',
         cast: [['Smoke y Stack', 'Michael B. Jordan'], ['Pearline', 'Jayme Lawson']],

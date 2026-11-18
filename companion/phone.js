@@ -185,7 +185,7 @@
     } else if (r.screen === 'game') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
     } else {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">' + (r.menu ? 'Menú abierto' : r.dialog === 'resume' ? '¿Continuar Los Pecadores?' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
+      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">' + (r.menu ? 'Menú abierto' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
     }
     el.innerHTML = html;
   }
