@@ -679,13 +679,13 @@
   }
 
   /* ---------- v7.19 · Configuración (engrane del encabezado): apps favoritas, preferencias del control y apariencia ---------- */
-  var FKEY = 'cp-favs', FAV_DEF = ['netflix', 'prime', 'youtube', 'ondemand'], FAV_MAX = 6;
+  var FKEY = 'cp-favs', FAV_DEF = ['netflix', 'prime', 'youtube', 'ondemand'], FAV_MAX = 4;   /* el control muestra 4 */
   var PREF = lsJSON('cp-prefs', { vib: true, touch: true });
-  function favs() { var f = lsJSON(FKEY, null); if (!f || !f.length) f = FAV_DEF.slice(); return f.filter(function (id) { return !!APP_NAMES[id]; }); }
+  function favs() { var f = lsJSON(FKEY, null); if (!f || !f.length) f = FAV_DEF.slice(); return f.filter(function (id) { return !!APP_NAMES[id]; }).slice(0, FAV_MAX); }
   function appTile(id) { return '<button data-app="' + id + '" style="--c:' + appColor(id) + '" aria-label="' + esc(APP_NAMES[id]) + '"><span class="nm">' + esc(APP_NAMES[id]) + '</span></button>'; }
   function renderApps() {
     var f = favs(), html = ''; for (var i = 0; i < f.length; i++) html += appTile(f[i]);
-    var row = $('appsRow'); row.innerHTML = html; row.style.gridTemplateColumns = 'repeat(' + f.length + ',minmax(0,66px))';
+    var row = $('appsRow'); row.innerHTML = html;
     paintAppLogos();
   }
   var BACK_SET = '<button class="sh-back" data-act="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Configuración</button>';
@@ -704,7 +704,7 @@
       (S.fake ? '' : '<button class="set-link" data-act="ahoraGo">Ver lo que está en la TV ›</button>'));
   }
   function openFavs() {
-    var f = favs(), html = BACK_SET + '<h2>Aplicaciones favoritas</h2><p class="sub">Aparecen en el control en este orden (máximo ' + FAV_MAX + ').</p><div class="fav-list">';
+    var f = favs(), html = BACK_SET + '<h2>Aplicaciones favoritas</h2><p class="sub">Aparecen en el control en este orden. Caben ' + FAV_MAX + ': para agregar otra, quita una primero.</p><div class="fav-list">';
     for (var i = 0; i < f.length; i++) html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(f[i]) + '">' + (CP.logos.img(f[i], 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[f[i]]) + '</span>' +
       '<button data-fup="' + i + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-fdn="' + i + '" aria-label="Bajar"' + (i === f.length - 1 ? ' disabled' : '') + '>↓</button><button class="del" data-fdel="' + i + '" aria-label="Eliminar"' + (f.length < 2 ? ' disabled' : '') + '>✕</button></div>';
     html += '</div><p class="lf" style="margin-top:18px">Agregar al control</p><div class="fav-list">';

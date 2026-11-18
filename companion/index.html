@@ -400,6 +400,29 @@ body.light .dcta{background:#F3EEFA;border-color:rgba(122,76,196,.18);color:#2E1
 body.light .dcta.warn{color:#B91C1C;border-color:rgba(220,38,38,.3);background:#FFF5F5}
 body.light .dcta.pri{background:var(--violet);color:#fff}
 .btn .spin{display:inline-block;width:13px;height:13px;border-width:2px;vertical-align:-2px;margin-right:7px}
+
+/* ---------- v7.21 · retícula de 8 px: botones en múltiplos de 8, 4 px entre filas de botones ---------- */
+.top{grid-template-columns:48px 1fr 48px;height:56px;margin-bottom:8px}
+.top .pwr{width:48px;height:48px;justify-self:end}
+#main > [data-tab="control"]:not([hidden]){gap:16px;padding-top:8px;justify-content:space-between}  /* la fila circular queda pegada al encabezado; el resto se reparte hasta abajo */
+.navrow3,.keypad,#appsRow{width:328px;max-width:100%;margin-left:auto;margin-right:auto}
+.navrow3{display:grid;grid-template-columns:repeat(3,104px);column-gap:8px;justify-content:center}
+.navc{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0}
+.navc .circ{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.navc .circ svg{width:24px;height:24px}
+.navc .lbl{font-size:12px;font-weight:700;line-height:16px;color:var(--ink-2)}
+.navc.pressed .circ{background:rgba(168,85,247,.3);border-color:#C084FC}
+.padwrap{width:248px;height:248px;margin:0 auto}
+.pad{left:0;width:248px;height:248px}
+.pad button{width:80px;height:80px}
+.pad .u{left:84px;top:0}.pad .d{left:84px;bottom:0}.pad .l{left:0;top:84px}.pad .r{right:0;top:84px}
+.pad .ok{left:76px;top:76px;width:96px;height:96px}
+.keypad{display:flex;flex-direction:column;gap:4px}
+.keypad .keys3{display:grid;grid-template-columns:repeat(3,104px);gap:8px;margin:0;justify-content:center}
+.keypad .keys3 button{height:56px;border-radius:16px}
+#appsRow{display:grid;grid-template-columns:repeat(4,64px)!important;justify-content:space-between;gap:0}
+#appsRow button{width:64px;height:64px;max-width:none;border-radius:16px;padding:0}
+body.light .navc.pressed .circ{background:#EEE3FF}
 </style>
 </head>
 <body>
@@ -417,13 +440,19 @@ body.light .dcta.pri{background:var(--violet);color:#fff}
   <section id="main" hidden>
     <!-- v7.19 · configuración | decodificador (abre la lista) | encendido; D-pad, Regresar/Inicio, reproducción, volumen y apps repartidos en toda la pantalla -->
     <header class="top">
-      <button class="cfg gl" data-act="settings" aria-label="Configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      <span class="top-sp"></span>
       <button class="dec" data-act="decoders" aria-label="Decodificadores"><b><span id="decName">Sala</span> <i>▾</i></b><small><span class="dot" id="dot"></span><span id="decState">Conectado</span></small></button>
       <button class="pwr" id="pwr" data-act="power" aria-label="Encender o apagar la TV"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
     </header>
     <div class="fake-note" id="fakeNote" hidden></div>
 
     <div data-tab="control">
+      <!-- v7.21 · Regresar, Inicio y Configuración: botones circulares de 56 px justo bajo el encabezado -->
+      <div class="navrow3">
+        <button class="navc" data-key="BACK" aria-label="Regresar"><span class="circ gl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Regresar</span></button>
+        <button class="navc" data-cmd="home" aria-label="Inicio"><span class="circ gl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Inicio</span></button>
+        <button class="navc" data-act="settings" aria-label="Configuración"><span class="circ gl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><span class="lbl">Configuración</span></button>
+      </div>
       <div class="padwrap">
         <div class="pad">
           <button class="u" data-key="UP" aria-label="Arriba"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -433,12 +462,7 @@ body.light .dcta.pri{background:var(--violet);color:#fff}
           <button class="d" data-key="DOWN" aria-label="Abajo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5L12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>
-      <!-- Regresar e Inicio: abajo del D-pad, del mismo tamaño que los demás botones -->
-      <div class="keys3 navrow">
-        <button class="gl nav-b" data-key="BACK" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Regresar</span></button>
-        <span></span>
-        <button class="gl nav-b" data-cmd="home" aria-label="Inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Inicio</span></button>
-      </div>
+      <div class="keypad">
       <div class="keys3">
         <button class="gl" data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
         <button class="gl" data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
@@ -449,7 +473,8 @@ body.light .dcta.pri{background:var(--violet);color:#fff}
         <button class="gl" data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-            <div class="apps" id="appsRow"></div>   <!-- favoritas: se arman desde Configuración → Aplicaciones favoritas -->
+      </div>
+      <div class="apps" id="appsRow"></div>   <!-- favoritas: se arman desde Configuración → Aplicaciones favoritas -->
     </div>
 
     <div data-tab="decs" hidden><div id="decsView"></div></div>
@@ -503,11 +528,11 @@ body.light .dcta.pri{background:var(--violet);color:#fff}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.20"></script>
-<script src="../src/services/firestore-rest.js?v=7.20"></script>
-<script src="content.js?v=7.20"></script>
-<script src="logos.js?v=7.20"></script>
-<script src="store.js?v=7.20"></script>
-<script src="phone.js?v=7.20"></script>
+<script src="../src/services/http.js?v=7.21"></script>
+<script src="../src/services/firestore-rest.js?v=7.21"></script>
+<script src="content.js?v=7.21"></script>
+<script src="logos.js?v=7.21"></script>
+<script src="store.js?v=7.21"></script>
+<script src="phone.js?v=7.21"></script>
 </body>
 </html>
