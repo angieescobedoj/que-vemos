@@ -136,7 +136,7 @@
     if (!S.room && !S.fake) return;
     var st = tvState();
     $('decName').textContent = S.fake ? S.fake.name : (S.room.tvName || 'Sala');
-    $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : '') + (!S.fake && S.room.sleepLeft && st === 'on' ? ' · 🌙 se apaga en ' + S.room.sleepLeft + ' min' : ''));
+    $('decState').textContent = S.offline && !S.fake ? 'Sin conexión' : (STATE_TXT[st] + (S.fake ? ' · simulado' : ''));
     $('dot').className = 'dot' + (st === 'off' ? ' off' : st === 'sleep' ? ' sleep' : '');
     $('decState').parentNode.className = st === 'on' && !(S.offline && !S.fake) ? 'on' : '';
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
@@ -182,12 +182,10 @@
       html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">Buscando “' + esc(r.query) + '”</div><div class="s">Usa las flechas y OK para elegir</div></div>';
     } else if (r.screen === 'swipe') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#F38BC9,#5470D6)"></span><div><div class="k">En la TV</div><div class="t">¿Qué vemos? · match de películas</div><div class="s">Muévete con el control · Regresar vuelve a Sala TV</div></div>';
-    } else if (r.screen === 'exp') {
-      html = '<span class="thumb" style="background:linear-gradient(150deg,#E58AC3,#7A4CC4)"></span><div><div class="k">En la TV · experiencia</div><div class="t">' + esc(r.exp || 'Experiencia') + '</div><div class="s">' + (r.dialog === 'movie' ? 'Elige dónde verla con OK' : 'Elige con las flechas y OK') + '</div></div>';
     } else if (r.screen === 'game') {
       html = '<span class="thumb" style="background:linear-gradient(150deg,#3A2A6E,#120C22)"></span><div><div class="k">En la TV</div><div class="t">Atrapa estrellas</div></div>';
     } else {
-      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV' + (r.exp ? ' · ✨ ' + esc(r.exp) : '') + '</div><div class="t">' + (r.menu ? 'Menú abierto' : r.dialog === 'resume' ? '¿Continuar Los Pecadores?' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
+      html = '<span class="thumb" style="background:var(--card-2)"></span><div><div class="k">En la TV</div><div class="t">' + (r.menu ? 'Menú abierto' : r.dialog === 'resume' ? '¿Continuar Los Pecadores?' : 'Inicio') + '</div><div class="s">Navega con las flechas y OK</div></div>';
     }
     el.innerHTML = html;
   }
@@ -196,7 +194,7 @@
   /* ---------- decodificador simulado: responde con feedback, sin TV detrás ---------- */
   function fakeCommand(cmd) {
     var f = S.fake, n = f.name;
-    if (cmd.t === 'say' || cmd.t === 'peek') return;
+    if (cmd.t === 'peek') return;
     if (cmd.t === 'power') { f.state = f.state === 'sleep' ? 'on' : 'sleep'; toast(n + (f.state === 'sleep' ? ' en reposo' : ' encendida') + ' (simulado)'); renderHeader(); renderNow(); return; }
     if (f.state === 'sleep') { toast(n + ' está en reposo · toca ⏻'); return; }
     if (cmd.t === 'vol') { f.vol = Math.max(0, Math.min(100, typeof cmd.v === 'number' ? cmd.v : f.vol + cmd.d)); f.muted = false; toast(n + ' · volumen ' + f.vol + ' (simulado)'); renderHeader(); return; }
@@ -223,18 +221,12 @@
     var r = S.room; if (!r) return;
     if (S.fake) { renderHeader(); renderNow(); return; }
     renderHeader(); renderNow(); renderGame(); renderPad2();
-    /* si el tiempo de apagado se eligió en la TV, la hoja del celular se cierra sola */
-    if (S.sheet === 'sleep' && S.sleepAsk) {
-      if (r.dialog === 'sleep') S.sleepAsk.seen = true;
-      else if (S.sleepAsk.seen) { S.sleepAsk = null; closeSheet(); toast(r.sleepLeft ? '🌙 Elegido en la TV: se apaga en ' + r.sleepLeft + ' min' : 'Elegido en la TV: sin apagado'); }
-    }
     /* al entrar al partido, el celular pasa solo a "Ahora en la TV" con alineación, estadísticas y datos */
     var inMatch = r.screen === 'player' && r.content === 'match';
     if (S.wasMatch === undefined) S.wasMatch = inMatch;
     if (inMatch && !S.wasMatch) { S.wasMatch = true; if (S.tab !== 'ahora' && !S.sheet) { setTimeout(function () { setTab('ahora'); toast('📊 Alineación y estadísticas del partido'); }, 0); buzz(); } }
     else if (!inMatch) S.wasMatch = false;
     if (S.tab === 'ahora') renderAhora();
-    if (S.tab === 'seguir') renderSeguir();
     /* A4 · aviso de "Está sonando" */
     if (S.songSeen === null) S.songSeen = r.songSeq || 0;
     if ((r.songSeq || 0) > S.songSeen) { S.songSeen = r.songSeq; if (r.content === 'series') showSongBanner(sceneNow().song); }
@@ -316,24 +308,6 @@
     return h + '</div></div>';
   }
 
-  function renderSeguir() {
-    var r = S.room, sv = C.SERIES, a = sv.scenes[0].art;
-    loadSin();
-    var onTv = r.screen === 'player' && r.content === 'series', p = onTv ? pos() : (r.saved || sv.saved);
-    var html = '<p class="eyebrow">Seguir viendo</p><div class="series-card" style="margin-top:8px"><div class="art" style="' + sinArt(a, true) + '"><span>Los Pecadores</span></div><div class="body">' +
-      '<div style="font-weight:700">Película · 2025</div><div class="muted" style="font-size:13px">Ryan Coogler · 2 h 17 min</div>' +
-      '<div class="prog"><i style="width:' + (p / sv.duration * 100) + '%"></i></div><div class="muted" style="font-size:12px;margin-bottom:14px">' +
-      (onTv ? 'Reproduciéndose en la TV · ' + C.fmt(p) : 'Te quedaste en ' + C.fmt(p) + ' · quedan ' + C.fmt(sv.duration - p)) + '</div>' +
-      (onTv ? '<button class="btn ghost" data-go="ahora">Ver qué hay en esta escena</button>'
-            : '<div class="stack"><button class="btn" data-open="series" data-from="resume">Continuar en la TV</button><button class="btn ghost" data-open="series" data-from="start">Desde el inicio</button></div>') +
-      '</div></div>';
-    var bOn = r.screen === 'player' && r.content === 'video', bs = r.vsaved || 0;
-    html += '<div class="series-card" style="margin-top:14px"><div class="art" style="background:#000 url(' + C.BUNNY.poster + ') center/cover"><span>Big Buck Bunny</span></div><div class="body">' +
-      '<div style="font-weight:700">Corto animado · 2008</div><div class="muted" style="font-size:13px">' + esc(C.BUNNY.credit) + '</div>' +
-      '<div class="prog"><i style="width:' + ((bOn ? pos() : bs) / C.BUNNY.dur * 100) + '%"></i></div><div class="muted" style="font-size:12px;margin-bottom:14px">' + (bOn ? 'Reproduciéndose en la TV' : bs > 1 ? 'Te quedaste en ' + C.fmt(bs) : 'Fragmento de 1 minuto con corte a comerciales') + '</div>' +
-      (bOn ? '' : '<div class="stack"><button class="btn" data-open="bunny">' + (bs > 1 ? 'Continuar en la TV' : 'Ver en la TV') + '</button></div>') + '</div></div>';
-    $('seguir').innerHTML = html;
-  }
 
   /* ---------- C2 · gamepad ---------- */
   function renderGame() {
@@ -596,13 +570,11 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (name === 'voice' ? ' voice' : name === 'match' ? ' dark' : '');
-    $('sheet').innerHTML = (name === 'voice' ? '' : '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>') + html;
+    $('sheet').className = 'sheet' + (name === 'match' ? ' dark' : '');
+    $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
   function closeSheet() {
-    if (S.sheet === 'voice') stopListening();
-    if (S.sheet === 'find' && !S.fake) send({ t: 'find', on: false });
     S.sheet = null; $('sheet').hidden = true; $('scrim').hidden = true;
   }
 
@@ -658,241 +630,18 @@
     send({ t: 'search', q: q.value });
   }
 
-  /* ---------- control por voz (reconocimiento de voz del navegador) ---------- */
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, listening = false;
-  /* Onda: barras en forma de píldora que se mueven mientras escucha (CSS) y respiran en reposo. */
-  function voiceWave() {
-    var H = [14, 24, 40, 60, 84, 108, 84, 60, 40, 24, 14], html = '<div class="vwave" id="vWave" aria-hidden="true"><span class="vline"></span>';
-    for (var i = 0; i < H.length; i++) html += '<span class="vbar" style="height:' + H[i] + 'px;animation-delay:' + (Math.abs(i - 5) * 0.09).toFixed(2) + 's"></span>';
-    return html + '<span class="vline"></span></div>';
-  }
-  var V_ICONS = {
-    app: '<path d="M3.5 5.5h17v11h-17zM9 20h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.5 8.5v5l4-2.5z" fill="currentColor"/>',
-    vol: '<path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
-    tv: '<path d="M3 5.5h18v11.5H3zM8 20.5h8M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
-    search: '<circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
-  };
-  var V_SUGG = [['app', 'Abre Netflix'], ['vol', 'Sube el volumen'], ['tv', 'Cambia al canal 5'], ['search', 'Busca una película']];
-  var vAwait = null; /* 'search' = lo siguiente que digas es el título a buscar */
-  function openVoice() {
-    var sg = '';
-    for (var i = 0; i < V_SUGG.length; i++) sg += '<button class="vsug" data-say="' + V_SUGG[i][1] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + V_ICONS[V_SUGG[i][0]] + '</svg><span>“' + V_SUGG[i][1] + '”</span></button>';
-    vAwait = null;
-    openSheet('voice', '<div class="vhead"><button data-act="closeSheet" aria-label="Regresar"><svg viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-      '<h2>Control por voz</h2><button data-act="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>' +
-      voiceWave() +
-      '<p class="vtext" id="vText">' + (SR ? 'Te escucho…' : 'Escribe lo que dirías') + '</p><p class="vreply" id="vReply"></p>' +
-      '<div class="vsugs">' + sg + '</div>' +
-      '<div class="vfoot"><button class="vmic" id="micBtn" data-act="listen" aria-label="Hablar"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>' +
-      '<form class="vform" id="vForm"' + (SR ? ' hidden' : '') + '><input class="in-l" id="vIn" placeholder="Escríbelo aquí" autocomplete="off"><button>Enviar</button></form>' +
-      '<button class="vtype" data-act="vtype"' + (SR ? '' : ' hidden') + '>Escribir en lugar de hablar</button></div>');
-    $('vForm').onsubmit = function (e) { e.preventDefault(); var v = $('vIn').value.trim(); if (v) { $('vIn').value = ''; runVoice(v); } };
-    if (SR) listen(); else setListening(false);
-  }
-  /* Estado visual: la onda se mueve y el micrófono brilla solo mientras escucha. */
-  function setListening(on) {
-    if ($('micBtn')) $('micBtn').className = 'vmic' + (on ? ' on' : '');
-    if ($('vWave')) $('vWave').className = 'vwave' + (on ? ' on' : '');
-  }
-  function listen() {
-    if (!SR) { $('vReply').textContent = 'Tu navegador no tiene dictado por voz: escríbelo abajo.'; return; }
-    if (listening) { stopListening(); return; }
-    try {
-      rec = new SR(); rec.lang = 'es-MX'; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
-      rec.onresult = function (e) {
-        var txt = '', fin = false;
-        for (var i = e.resultIndex; i < e.results.length; i++) { txt += e.results[i][0].transcript; if (e.results[i].isFinal) fin = true; }
-        if ($('vText')) $('vText').textContent = '«' + txt + '»';
-        if (fin) runVoice(txt);
-      };
-      rec.onerror = function (e) {
-        var m = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Permite el micrófono para usar la voz, o escríbelo abajo.' : e.error === 'no-speech' ? 'No te escuché. Toca el micrófono e intenta de nuevo.' : 'No se pudo usar el micrófono. Escríbelo abajo.';
-        if ($('vReply')) $('vReply').textContent = m;
-      };
-      rec.onend = function () { listening = false; setListening(false); if ($('vText') && $('vText').textContent === 'Te escucho…') $('vText').textContent = 'Toca para hablar'; };
-      rec.start(); listening = true; setListening(true); $('vText').textContent = 'Te escucho…'; $('vReply').textContent = '';
-    } catch (e) { listening = false; $('vReply').textContent = 'No se pudo usar el micrófono. Escríbelo abajo.'; }
-  }
-  function stopListening() { if (rec && listening) { try { rec.stop(); } catch (e) { /* ignore */ } } listening = false; setListening(false); }
-
-  var NUM = { uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, veinte: 20, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80, noventa: 90, cien: 100 };
-  function norm(t) { return t.toLowerCase().replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u').replace(/[¿?¡!.,]/g, ' ').replace(/\s+/g, ' ').replace(/^ | $/g, ''); }
-  function numIn(t) { var m = /(\d+)/.exec(t); if (m) return Number(m[1]); for (var w in NUM) if (NUM.hasOwnProperty(w) && new RegExp('\\b' + w + '\\b').test(t)) return NUM[w]; return null; }
-  /* Texto → comando(s) para la TV, más una respuesta corta. null = no entendido. */
-  function parseVoice(raw) {
-    var t = norm(raw), n, m;
-    if (/(encuentra|busca|donde esta|suena|hacer sonar).*(control)/.test(t)) return { cmds: [{ t: 'find', on: true }], reply: 'Haciendo sonar tu control', sheet: 'find' };
-    if (/(solo escuchar|solo audio|apaga la pantalla)/.test(t)) return { exp: 'listen' };
-    if (/modo noche/.test(t)) return { exp: 'night' };
-    if (/(modo gaming|modo juego|modo gamer)/.test(t)) return { exp: 'gaming' };
-    if (/noche de peliculas/.test(t)) return { exp: 'movies' };
-    if (/(quita|sin) (la )?experiencia/.test(t)) return { exp: 'none' };
-    if (/(apaga|apagar)/.test(t)) return { cmds: [{ t: 'power', on: false }], reply: 'Apagando la TV' };
-    if (/(enciende|prende|encender|prender)/.test(t)) return { cmds: [{ t: 'power', on: true }], reply: 'Encendiendo la TV' };
-    if (/(quita el silencio|activa el sonido|con sonido|desilencia)/.test(t)) return { cmds: [{ t: 'mute', on: false }], reply: 'Sonido activado' };
-    if (/(silencio|silencia|mute|sin sonido|quita el sonido)/.test(t)) return { cmds: [{ t: 'mute', on: true }], reply: 'TV en silencio' };
-    if (/(volumen|sonido)/.test(t)) {
-      n = numIn(t);
-      if (n !== null && /(volumen|sonido) (a|en|al)? ?\d|(pon|deja|ajusta)/.test(t)) return { cmds: [{ t: 'vol', v: n }], reply: 'Volumen en ' + Math.min(100, n) };
-      if (/(sube|subir|aumenta|mas alto|mas fuerte|mas)/.test(t)) return { cmds: [{ t: 'vol', d: 10 }], reply: 'Subiendo el volumen' };
-      if (/(baja|bajar|disminuye|mas bajo|menos)/.test(t)) return { cmds: [{ t: 'vol', d: -10 }], reply: 'Bajando el volumen' };
-      if (n !== null) return { cmds: [{ t: 'vol', v: n }], reply: 'Volumen en ' + Math.min(100, n) };
-    }
-    if (/(canal|pon el|cambia al)/.test(t) && (n = numIn(t)) !== null) {
-      if (C.channel(n)) return { cmds: [{ t: 'channel', n: n }], reply: 'Cambiando al canal ' + n };
-      return { reply: 'No hay canal ' + n + '. Prueba con el 2, 5, 7 o 9.' };
-    }
-    if (/(siguiente canal|canal siguiente|sube (de |el )?canal)/.test(t)) return { cmds: [{ t: 'chstep', d: 1 }], reply: 'Siguiente canal' };
-    if (/(canal anterior|baja (de |el )?canal)/.test(t)) return { cmds: [{ t: 'chstep', d: -1 }], reply: 'Canal anterior' };
-    if (/(tv en vivo|television en vivo|canales)/.test(t)) return { cmds: [{ t: 'open', id: 'tv' }], reply: 'Abriendo TV en vivo' };
-    if (/netflix/.test(t)) return { cmds: [{ t: 'app', id: 'netflix' }], reply: 'Abriendo Netflix' };
-    if (/(prime|amazon)/.test(t)) return { cmds: [{ t: 'app', id: 'prime' }], reply: 'Abriendo Prime Video' };
-    if (/(youtube|you tube)/.test(t)) return { cmds: [{ t: 'app', id: 'youtube' }], reply: 'Abriendo YouTube' };
-    if (/disney/.test(t)) return { cmds: [{ t: 'app', id: 'disney' }], reply: 'Abriendo Disney+' };
-    if (/(hbo|\bmax\b)/.test(t)) return { cmds: [{ t: 'app', id: 'max' }], reply: 'Abriendo Max' };
-    if (/apple/.test(t)) return { cmds: [{ t: 'app', id: 'appletv' }], reply: 'Abriendo Apple TV+' };
-    if (/paramount/.test(t)) return { cmds: [{ t: 'app', id: 'paramount' }], reply: 'Abriendo Paramount+' };
-    if (/universal/.test(t)) return { cmds: [{ t: 'app', id: 'universal' }], reply: 'Abriendo Universal+' };
-    if (/on demand/.test(t)) return { cmds: [{ t: 'app', id: 'ondemand' }], reply: 'Abriendo On Demand' };
-    if (/^(busca|buscar|buscame|encuentra|quiero ver) (una |algo |alguna )?(pelicula|peli|serie|algo)( para ver)?$/.test(t)) return { cmds: [{ t: 'search', q: '' }], reply: 'Abrí la búsqueda en la TV. ¿Cuál quieres ver? Dime el título.', await: 'search' };
-    if ((m = /^(busca|buscar|buscame|encuentra) (.+)$/.exec(t))) return { cmds: [{ t: 'search', q: m[2] }], reply: 'Buscando «' + m[2] + '»' };
-    if (/(partido|futbol|halcones|toros|deportes)/.test(t)) return { cmds: [{ t: 'open', id: 'match' }], reply: 'Poniendo el partido en vivo' };
-    if (/(pecadores|sinners|seguir viendo)/.test(t)) return { cmds: [{ t: 'open', id: 'series', from: 'resume' }], reply: 'Continuando Los Pecadores' };
-    if (/(que vemos|match de peliculas)/.test(t)) return { cmds: [{ t: 'open', id: 'swipe' }], reply: 'Abriendo ¿Qué vemos?' };
-    if (/(receta|enchiladas|cocina)/.test(t)) return { cmds: [{ t: 'open', id: 'recipe' }], reply: 'Poniendo la receta de enchiladas verdes' };
-    if (/(nave|espacial)/.test(t)) return { cmds: [{ t: 'open', id: 'ship' }], reply: 'Abriendo Nave espacial' };
-    if (/(big buck|bunny|conejo)/.test(t)) return { cmds: [{ t: 'open', id: 'bunny' }], reply: 'Poniendo Big Buck Bunny' };
-    if (/(atrapa estrellas|juego|jugar)/.test(t)) return { cmds: [{ t: 'game' }], reply: 'Abriendo Atrapa estrellas' };
-    if (/(adelanta)/.test(t)) return { cmds: [{ t: 'key', k: 'FF' }], reply: 'Adelantando 30 segundos' };
-    if (/(retrocede|rebobina)/.test(t)) return { cmds: [{ t: 'key', k: 'REW' }], reply: 'Regresando 30 segundos' };
-    if (/(pausa|pausar|deten|detener)/.test(t)) return { cmds: [{ t: 'pause' }], reply: 'En pausa' };
-    if (/(reproduce|reanuda|continua|play|dale play|sigue)/.test(t)) return { cmds: [{ t: 'play' }], reply: 'Reproduciendo' };
-    if (/(inicio|pantalla principal|home)/.test(t)) return { cmds: [{ t: 'home' }], reply: 'Yendo al inicio' };
-    if (/menu/.test(t)) return { cmds: [{ t: 'menu' }], reply: 'Abriendo el menú' };
-    if (/(regresa|atras|volver)/.test(t)) return { cmds: [{ t: 'key', k: 'BACK' }], reply: 'Regresando' };
-    return null;
-  }
-  function runVoice(text) {
-    stopListening();
-    /* Después de «Busca una película», lo que digas es el título (salvo que sea otro comando). */
-    var r = parseVoice(text), reply;
-    if (vAwait === 'search' && (!r || (r.cmds && r.cmds[0].t === 'search' && !r.cmds[0].q))) r = { cmds: [{ t: 'search', q: text }], reply: 'Buscando «' + text + '» en la TV' };
-    vAwait = r && r.await ? r.await : null;
-    if (r && r.exp) { var e = expById(r.exp); if (e) { applyExp(e, true); reply = r.exp === 'none' ? 'Experiencia quitada' : 'Activando ' + e.name; } }
-    else if (r && r.cmds) { reply = r.reply; send({ t: 'say', text: text, reply: reply }); for (var i = 0; i < r.cmds.length; i++) send(r.cmds[i]); }
-    else if (r) reply = r.reply;
-    if (!reply) { reply = 'No entendí «' + text + '». Prueba «abre YouTube» o «canal 5».'; buzz(); }
-    else buzz();
-    if (r && r.exp) send({ t: 'say', text: text, reply: reply });
-    if ($('vText')) $('vText').textContent = '«' + text + '»';
-    if ($('vReply')) $('vReply').textContent = reply;
-    if (r && r.sheet === 'find') openFind(true);
-    if (r && r.exp === 'night') setTimeout(openSleepSheet, 1200);
-    if (vAwait === 'search' && SR) setTimeout(function () { if (S.sheet === 'voice' && !listening) listen(); }, 1400);
-  }
-
-  /* ---------- experiencias: ajustes de la TV en un toque (volumen, brillo, pantalla) ---------- */
-  var PRESETS = [
-    { id: 'movies', ic: '🍿', name: 'Noche de películas', vol: 60, bright: 65, desc: 'Películas recomendadas con tus gustos · luz baja' },
-    { id: 'night', ic: '🌙', name: 'Modo noche', vol: 20, bright: 35, sleep: -1, desc: 'Volumen y brillo bajos · tú eliges en cuánto se apaga' },
-    { id: 'gaming', ic: '🎮', name: 'Modo gaming', vol: 70, bright: 100, desc: 'Te lleva a los juegos · volumen alto' },
-    { id: 'listen', ic: '🎧', name: 'Solo escuchar', vol: 45, bright: 100, audio: true, desc: 'Apaga la pantalla y sigue sonando la música' }
-  ];
-  function customs() { return lsJSON('cp-exps', []); }
-  function expById(id) {
-    if (id === 'none') return { id: 'none', name: '' };
-    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];
-    var c = customs(); for (var j = 0; j < c.length; j++) if (c[j].id === id) return c[j];
-    return null;
-  }
-  function applyExp(e, quiet) {
-    if (e.id === 'none') { send({ t: 'exp', id: 'none' }); if (!quiet) toast('Experiencia quitada'); }
-    else { send({ t: 'exp', id: e.id, name: e.name, vol: e.vol, bright: e.bright, audio: !!e.audio, sleep: e.sleep || 0, genres: e.id === 'movies' ? tastes() : [], who: ls.get('cp-name') || '' }); if (!quiet) toast('✨ ' + e.name + ' en la TV'); }
-    if (S.fake) return;
-    if (S.sheet === 'exps') closeSheet();
-  }
-  function expRow(e, custom) {
-    var on = S.room && S.room.exp === e.name;
-    return '<button class="opt' + (on ? ' on' : '') + '" data-exp="' + esc(e.id) + '"><span class="ic">' + (e.ic || '⭐') + '</span><span class="grow"><span class="t">' + esc(e.name) + '</span><span class="s" style="display:block">' + esc(e.desc || ('Volumen ' + e.vol + ' · brillo ' + e.bright + '%' + (e.audio ? ' · solo audio' : ''))) + '</span></span>' +
-      (custom ? '<span class="del" data-delexp="' + esc(e.id) + '" aria-label="Borrar">✕</span>' : (on ? '<b style="color:#7A4CC4">✓</b>' : '')) + '</button>';
-  }
-  function openExps() {
-    var html = '<h2>Experiencias</h2><p class="sub">Ajusta la TV para cada momento en un toque.</p>';
-    for (var i = 0; i < PRESETS.length; i++) html += expRow(PRESETS[i]);
-    var c = customs(); if (c.length) { html += '<p class="lf">Tus experiencias</p>'; for (var j = 0; j < c.length; j++) html += expRow(c[j], true); }
-    html += '<div class="stack" style="margin-top:8px"><button class="btn" data-act="newExp">＋ Crear experiencia</button>' + (S.room && S.room.exp ? '<button class="btn ghost" data-exp="none">Quitar experiencia actual</button>' : '') + '</div>';
-    openSheet('exps', html);
-  }
-  /* Gustos para Noche de películas: se eligen una vez y se recuerdan en este celular */
-  var GENRES = [[35, 'Comedia'], [28, 'Acción'], [18, 'Drama'], [27, 'Terror'], [10749, 'Romance'], [878, 'Ciencia ficción'], [16, 'Animación'], [53, 'Suspenso'], [12, 'Aventura'], [10751, 'Familia'], [99, 'Documental'], [80, 'Crimen']];
-  function tastes() { var t = lsJSON('cp-tastes', []); return Object.prototype.toString.call(t) === '[object Array]' ? t.slice(0, 3) : []; }
-  function openTastes() {
-    var mine = tastes(), html = '<h2>🍿 Noche de películas</h2><p class="sub">¿Qué se te antoja? Elige hasta 3 y te recomendamos en la TV.</p><div class="chips">';
-    for (var i = 0; i < GENRES.length; i++) html += '<button class="' + (mine.indexOf(GENRES[i][0]) >= 0 ? 'on' : '') + '" data-gen="' + GENRES[i][0] + '">' + GENRES[i][1] + '</button>';
-    html += '</div><div class="stack"><button class="btn" data-act="tastesGo">Ver recomendaciones en la TV</button><button class="btn ghost" data-act="exps">Volver</button></div>';
-    openSheet('tastes', html);
-  }
-  function openNewExp() {
-    var v = S.room && S.room.vol != null ? S.room.vol : 30, b = S.room && S.room.bright != null ? S.room.bright : 100;
-    openSheet('newExp', '<h2>Crear experiencia</h2><p class="sub">Se guarda en este celular.</p>' +
-      '<label class="lf">Nombre</label><input class="in-l" id="xName" maxlength="22" placeholder="Ej. Domingo de series">' +
-      '<label class="lf">Volumen · <span id="xVolL">' + v + '</span></label><input type="range" id="xVol" min="0" max="100" step="5" value="' + v + '">' +
-      '<label class="lf">Brillo · <span id="xBriL">' + b + '%</span></label><input type="range" id="xBri" min="20" max="100" step="5" value="' + b + '">' +
-      '<label class="lf" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="xAudio"> Solo audio (apaga la pantalla)</label>' +
-      '<div class="stack" style="margin-top:14px"><button class="btn" data-act="saveExp">Guardar y aplicar</button><button class="btn ghost" data-act="exps">Cancelar</button></div>');
-    $('xVol').oninput = function () { $('xVolL').textContent = this.value; };
-    $('xBri').oninput = function () { $('xBriL').textContent = this.value + '%'; };
-  }
-  function saveExp() {
-    var name = $('xName').value.trim() || 'Mi experiencia';
-    var e = { id: 'c' + Date.now().toString(36), name: name, vol: Number($('xVol').value), bright: Number($('xBri').value), audio: $('xAudio').checked };
-    var list = customs(); list.unshift(e); ls.set('cp-exps', JSON.stringify(list.slice(0, 8)));
-    applyExp(e); closeSheet();
-  }
-
-  /* ---------- encontrar mi control (simulado en la TV) ---------- */
-  function openFind(already) {
-    if (!already) send({ t: 'find', on: true });
-    openSheet('find', '<div style="text-align:center"><div class="mic on" style="background:#7A4CC4">🔊</div><h2>Haciendo sonar tu control</h2>' +
-      '<p class="sub">' + (S.fake ? S.fake.name + ' es simulado: aquí no suena nada.' : 'Escucha el pitido y busca cerca de la TV. En la pantalla también lo verás.') + '</p></div>' +
-      '<button class="btn" data-act="closeSheet">Ya lo encontré</button>');
-  }
-
-  /* Modo noche: ¿en cuánto se apaga? Se puede elegir aquí o en la TV con el control (lo que pase primero). */
-  function openSleepSheet() {
-    var html = '<h2>🌙 Modo noche</h2><p class="sub">¿En cuánto se apaga la TV? También puedes elegirlo en la TV con el control.</p><div class="chips">';
-    var opts = [15, 30, 45, 60, 90, 0];
-    for (var i = 0; i < opts.length; i++) html += '<button data-sleep="' + opts[i] + '">' + (opts[i] ? opts[i] + ' min' : 'No apagar') + '</button>';
-    html += '</div><label class="lf">O escribe cuántos minutos</label><div class="stepper"><button data-sstep="-5" aria-label="Menos">−</button>' +
-      '<input id="slIn" type="number" inputmode="numeric" min="1" max="300" value="25"><span>min</span><button data-sstep="5" aria-label="Más">＋</button></div>' +
-      '<button class="btn" data-act="sleepGo" style="margin-top:12px">Programar apagado</button>';
-    openSheet('sleep', html);
-    S.sleepAsk = { seen: false };
-  }
-
   /* ---------- eventos (delegación) ---------- */
   document.addEventListener('click', function (e) {
-    var el = e.target.closest('button,[data-go],[data-delexp]'); if (!el) return;
+    var el = e.target.closest('button,[data-go]'); if (!el) return;
     if (el.tagName === 'BUTTON') buzz();
     var g = function (a) { return el.getAttribute(a); };
     var k = g('data-key'), cmd = g('data-cmd'), go = g('data-go'), open = g('data-open'), act = g('data-act'), seg = g('data-seg');
-    if (g('data-delexp')) { e.stopPropagation(); var id = g('data-delexp'), l = customs().filter(function (x) { return x.id !== id; }); ls.set('cp-exps', JSON.stringify(l)); openExps(); return; }
     if (k) send({ t: 'key', k: k });
     else if (g('data-vol')) { var d = Number(g('data-vol')); send({ t: 'vol', d: d }); if (!S.fake) { var nv = Math.max(0, Math.min(100, (S.room.vol == null ? 30 : S.room.vol) + d)); S.room.vol = nv; S.room.muted = false; renderHeader(); toast('Volumen ' + nv); } }
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
     else if (g('data-room')) pickRoom(g('data-room'));
     else if (g('data-fake') !== null && g('data-fake') !== undefined && el.hasAttribute('data-fake')) pickFake(Number(g('data-fake')));
     else if (g('data-q')) { var q = $('sq'); if (q) { q.value = g('data-q'); send({ t: 'search', q: q.value }); } }
-    else if (g('data-say')) runVoice(g('data-say'));
-    else if (g('data-exp')) { var ex = expById(g('data-exp')); if (ex && ex.id === 'movies') openTastes(); else if (ex && ex.id === 'night') { applyExp(ex); openSleepSheet(); } else if (ex) applyExp(ex); }
-    else if (g('data-sstep')) { var si = $('slIn'); si.value = Math.max(1, Math.min(300, (Number(si.value) || 0) + Number(g('data-sstep')))); }
-    else if (act === 'sleepGo') { var sv = Math.round(Number($('slIn').value)); if (!(sv >= 1 && sv <= 300)) { toast('Escribe entre 1 y 300 minutos', true); return; } send({ t: 'sleep', min: sv }); S.sleepAsk = null; closeSheet(); toast('🌙 La TV se apagará en ' + sv + ' min'); }
-    else if (g('data-sleep') !== null && el.hasAttribute('data-sleep')) { var mn = Number(g('data-sleep')); send({ t: 'sleep', min: mn }); S.sleepAsk = null; closeSheet(); toast(mn ? '🌙 La TV se apagará en ' + mn + ' min' : 'Sin apagado automático'); }
-    else if (g('data-gen')) {
-      if (!el.classList.contains('on') && document.querySelectorAll('[data-gen].on').length >= 3) toast('Máximo 3: quita uno primero');
-      else el.classList.toggle('on');
-    }
-    else if (act === 'tastesGo') { var on = document.querySelectorAll('[data-gen].on'), ids = []; for (var gi = 0; gi < on.length; gi++) ids.push(Number(on[gi].getAttribute('data-gen'))); ls.set('cp-tastes', JSON.stringify(ids)); applyExp(expById('movies')); closeSheet(); }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
@@ -902,13 +651,6 @@
     else if (act === 'decoders') openDecoders();
     else if (act === 'saveName') { var nm = ($('nameIn').value || '').trim().substring(0, 18); if (nm) { S.name = nm; ls.set('cp-name', nm); if (S.pid) store.updatePlayer(S.code, S.pid, { name: nm }, function () {}); toast('Listo: en la TV apareces como ' + nm); closeSheet(); } }
     else if (act === 'search') openSearch();
-    else if (act === 'voice') openVoice();
-    else if (act === 'vtype') { $('vForm').hidden = false; el.hidden = true; stopListening(); setTimeout(function () { try { $('vIn').focus(); } catch (e2) { /* ignore */ } }, 50); }
-    else if (act === 'listen') listen();
-    else if (act === 'exps') openExps();
-    else if (act === 'newExp') openNewExp();
-    else if (act === 'saveExp') saveExp();
-    else if (act === 'find') openFind();
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);

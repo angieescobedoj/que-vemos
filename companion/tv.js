@@ -20,8 +20,8 @@
     game: { state: 'idle', endsAt: 0, scores: {}, baskets: {}, stars: [], timer: null, lastSpawn: 0 },
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
-    tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7, bright: 100, audioOnly: false,
-    exp: null, menu: false, guide: false, finding: false, lat: 0, sleepAt: 0, movie: null, ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
+    tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7,
+    menu: false, guide: false, lat: 0, movie: null, ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -56,9 +56,9 @@
       kind: 'companion', screen: S.screen, content: S.content, playing: S.playing, pos: Math.round(curPos()), posAt: now(),
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
-      tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel, bright: S.bright,
-      audioOnly: S.audioOnly, exp: S.exp || '', movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, finding: S.finding, tvLat: S.lat, aliveAt: now(), ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
-      ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }, sleepLeft: S.sleepAt ? Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) : 0
+      tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
+      movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, tvLat: S.lat, aliveAt: now(), ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
+      ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }
     };
   }
   function pushState() {
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.bright, snap.audioOnly, snap.exp, snap.menu, snap.finding, snap.sleepLeft, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -682,235 +682,21 @@
     $('volBar').style.width = (S.muted ? 0 : S.vol) + '%'; $('volN').textContent = S.muted ? 'Silencio' : S.vol;
     $('volHud').hidden = false; clearTimeout(volTimer); volTimer = setTimeout(function () { $('volHud').hidden = true; }, 2600);
   }
-  function setVol(v) { S.vol = Math.max(0, Math.min(100, Math.round(v))); S.muted = false; showVol(); musicVol(); pushState(); }
-  function applyLook() {
-    $('dim').style.opacity = String(Math.round((100 - S.bright) * 0.0075 * 100) / 100);
-    $('audioOnly').hidden = !S.audioOnly;
-    if (S.audioOnly && !S.off) startMusic(); else stopMusic();
-    var chip = $('expChip'); chip.hidden = !S.exp; chip.textContent = S.exp ? '✨ ' + S.exp + sleepTxt() : '';
-    if ($('xChip')) $('xChip').textContent = S.exp ? '✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt() : '';
-  }
-  function applyExperience(c, who) {
-    if (c.id === 'none') { S.exp = null; S.bright = 100; S.audioOnly = false; S.sleepAt = 0; applyLook(); toast(who + ' quitó la experiencia'); if (S.screen === 'exp') goHome(); pushState(); return; }
-    S.exp = c.name || 'Experiencia';
-    if (typeof c.vol === 'number') setVol(c.vol);
-    S.bright = Math.max(10, Math.min(100, c.bright || 100));
-    S.audioOnly = !!c.audio;
-    S.sleepAt = c.sleep > 0 ? now() + c.sleep * 60000 : 0;
-    applyLook();
-    if (c.sleep === -1) openSleep();
-    if (c.id === 'movies') openExpScreen('movies', c, c.who);
-    else if (c.id === 'gaming') openExpScreen('gaming', c, c.who);
-    else if (c.sleep !== -1) toast('✨ ' + S.exp + ' · volumen ' + S.vol + ' · brillo ' + S.bright + '%' + sleepTxt(), 4200);
-    pushState();
-  }
-  /* --- Modo noche: el apagado se elige en la TV (este diálogo) o en el celular, lo que pase primero --- */
-  var SLEEP_OPTS = [15, 30, 45, 60, 90, 0];
-  function openSleep() {
-    var html = '';
-    for (var i = 0; i < SLEEP_OPTS.length; i++) html += '<button class="btn ghost" data-focusable data-action="sleep" data-min="' + SLEEP_OPTS[i] + '">' + (SLEEP_OPTS[i] ? SLEEP_OPTS[i] + ' min' : 'No apagar') + '</button>';
-    html += '<button class="btn ghost" data-focusable data-action="sleepCustom">Otro tiempo…</button>';
-    $('sleepOpts').className = 'sleep-opts'; $('sleepOpts').innerHTML = html; closeMenu(); closeGuide();
-    S.dialog = 'sleep'; $('sleepDlg').hidden = false;
-    TP.focus.setFocus(null); TP.focus.setScope($('sleepDlg'), '[data-min="30"]');
-    pushState();
-  }
-  /* "Otro tiempo": − / + de 5 en 5 minutos con el control */
-  var sleepCustom = 25;
-  function fmtMin(m) { return m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
-  function openSleepCustom() {
-    $('sleepOpts').className = 'sleep-opts col';
-    $('sleepOpts').innerHTML = '<div class="sleep-step"><button class="btn ghost" data-focusable data-action="sleepStep" data-d="-5">−</button>' +
-      '<span class="sleep-val" id="sleepVal">' + fmtMin(sleepCustom) + '</span><button class="btn ghost" data-focusable data-action="sleepStep" data-d="5">+</button></div>' +
-      '<button class="btn" data-focusable data-action="sleep" data-min="' + sleepCustom + '" id="sleepOk">Apagar en ' + fmtMin(sleepCustom) + '</button>' +
-      '<button class="btn ghost" data-focusable data-action="sleepBack">Volver</button>';
-    TP.focus.setFocus(null); TP.focus.setScope($('sleepDlg'), '[data-d="5"]');
-  }
-  function stepSleep(d) {
-    sleepCustom = Math.max(5, Math.min(300, sleepCustom + d));
-    $('sleepVal').textContent = fmtMin(sleepCustom); $('sleepOk').setAttribute('data-min', sleepCustom); $('sleepOk').textContent = 'Apagar en ' + fmtMin(sleepCustom);
-  }
-  function setSleep(min, who) {
-    S.sleepAt = min > 0 ? now() + min * 60000 : 0;
-    if (S.dialog === 'sleep') closeDialog();
-    applyLook();
-    toast(min > 0 ? '🌙 La TV se apagará en ' + fmtMin(min) + (who ? ' · lo eligió ' + who : '') : 'Sin apagado automático', 3500);
-    pushState();
-  }
-
-  /* --- Solo escuchar: música de fondo (audio/ambient.mp3, compuesta para este prototipo, sin derechos de terceros).
-     Se usa un <audio> normal porque varios STB no traen Web Audio. Si el navegador bloquea el sonido hasta que alguien
-     toque la pantalla, la TV lo dice y basta con OK en el control para que empiece. */
-  var bgm = null, bgmBlocked = false, bgmPrimed = false;
-  function bgmEl() {
-    if (!bgm) {
-      bgm = document.createElement('audio'); bgm.src = 'audio/ambient.mp3?v=1'; bgm.loop = true; bgm.preload = 'auto';
-      bgm.addEventListener('ended', function () { try { bgm.currentTime = 0; bgm.play(); } catch (e) { /* ignore */ } });
-      document.body.appendChild(bgm);
-    }
-    return bgm;
-  }
-  function musicVol() { if (bgm) bgm.volume = S.muted ? 0 : Math.max(0, Math.min(1, S.vol / 100)); }
-  function musicHint(blocked) {
-    bgmBlocked = blocked;
-    $('audioWhat').textContent = blocked ? 'Pulsa OK en el control de la TV para escuchar la música' : 'Pantalla apagada · pulsa cualquier botón para encenderla';
-  }
-  function startMusic() {
-    var a = bgmEl(); a.muted = false; musicVol();
-    try {
-      var pr = a.play();
-      if (pr && pr.then) pr.then(function () { musicHint(false); }, function (err) { musicHint(true); TP.debug.log('bgm: ' + (err && err.name)); });
-      else musicHint(false);
-    } catch (e) { musicHint(true); }
-  }
-  function stopMusic() { if (bgm) { try { bgm.pause(); } catch (e) { /* ignore */ } } }
-  /* Primera tecla del control: "desbloquea" el audio para que después pueda sonar aunque la orden venga del celular. */
-  function primeAudio() {
-    if (bgmPrimed) return; bgmPrimed = true;
-    var a = bgmEl();
-    if (S.audioOnly) { startMusic(); return; }
-    try { a.muted = true; var pr = a.play(); if (pr && pr.then) pr.then(function () { if (!S.audioOnly) a.pause(); a.muted = false; }, function () { a.muted = false; bgmPrimed = false; }); } catch (e) { a.muted = false; }
-  }
-
-  function sleepTxt() { return S.sleepAt ? ' · se apaga en ' + Math.max(1, Math.ceil((S.sleepAt - now()) / 60000)) + ' min' : ''; }
-
-  /* --- Experiencias que cambian la pantalla ---
-     Noche de películas: recomendaciones reales de TMDB con los géneros que la persona eligió en su celular.
-     Modo gaming: lleva directo a los juegos disponibles. */
-  var GN = { 28: 'Acción', 12: 'Aventura', 16: 'Animación', 35: 'Comedia', 80: 'Crimen', 99: 'Documental', 18: 'Drama', 10751: 'Familia', 14: 'Fantasía', 27: 'Terror', 9648: 'Misterio', 10749: 'Romance', 878: 'Ciencia ficción', 53: 'Suspenso' };
-  var PROV_APP = { 8: 'netflix', 9: 'prime', 119: 'prime', 192: 'youtube', 188: 'youtube' };
-  var X = { kind: null, movies: [], seq: 0, cur: null };
-  function joinNames(list) { return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' y ' + list[list.length - 1]; }
-  function openExpScreen(kind, c, who) {
-    closeOverlays();
-    if (S.screen === 'player') { if (S.content === 'series') S.saved = curPos(); S.content = null; S.playing = false; }
-    if (S.screen === 'game') stopGame();
-    X.kind = kind; show('exp'); applyLook();
-    var off = '<button class="btn ghost" data-focusable data-action="expOff">Quitar experiencia</button>';
-    if (kind === 'gaming') {
-      $('xBrand').textContent = 'Modo gaming'; $('xEyebrow').textContent = 'Experiencia · Modo gaming';
-      $('xTitle').textContent = '¿A qué jugamos?';
-      $('xSub').textContent = 'Cada quien usa su celular como control. Elige con las flechas y OK.';
-      $('xRow').innerHTML = gameCard(C.GAME, '1 a 4 jugadores · 45 segundos') + gameCard(C.SHIP, 'Control clásico · 60 segundos') + gameCard(C.SWIPE, '2 o más · encuentren qué ver');
-      $('xBtns').innerHTML = off;
-      TP.focus.setFocus(null); TP.focus.ensure('.x-game');
-      return;
-    }
-    var genres = (c && c.genres) || [], names = [];
-    for (var i = 0; i < genres.length; i++) if (GN[genres[i]]) names.push(GN[genres[i]]);
-    $('xBrand').textContent = 'Noche de películas'; $('xEyebrow').textContent = 'Experiencia · Noche de películas';
-    $('xTitle').textContent = 'Elegidas para ' + (who || 'ti');
-    $('xSub').textContent = names.length ? 'Porque te gusta ' + joinNames(names).toLowerCase() + ' · en streaming en México' : 'Lo más visto en streaming en México';
-    $('xRow').innerHTML = '<p class="x-msg">Buscando recomendaciones…</p>';
-    $('xBtns').innerHTML = '<button class="btn" data-focusable data-action="open" data-id="swipe">¿No se deciden? Jueguen ¿Qué vemos?</button>' + off;
-    TP.focus.setFocus(null); TP.focus.ensure();
-    var list = C.recommend(genres, 6), html = '';
-    X.movies = list;
-    for (var k = 0; k < list.length; k++) {
-      var m = list[k];
-      html += '<button class="x-poster" data-focusable data-action="movie" data-i="' + k + '">' +
-        '<span class="x-art" style="background:radial-gradient(40% 30% at 60% 38%,' + m.art[2] + ' 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,' + m.art[0] + ' 0%,' + m.art[1] + ' 100%)"></span>' +
-        '<span class="x-pt">' + esc(m.title) + '<small>★ ' + m.score + ' · ' + m.year + '</small></span>' +
-        '<span class="x-app">' + (CP.logos.img(m.app, 'w92', 'x-applogo') || '') + esc(appTitle(m.app)) + '</span></button>';
-    }
-    $('xRow').innerHTML = html;
-    TP.focus.setFocus(null); TP.focus.ensure('.x-poster');
-  }
+  function setVol(v) { S.vol = Math.max(0, Math.min(100, Math.round(v))); S.muted = false; showVol(); pushState(); }
   function appTitle(id) { var a = C.byId(id); return a ? a.title : ''; }
-  /* OK en una recomendación: se "abre" su app y empieza a reproducirse directo */
-  var mvTimer = null;
-  function playMovie(i) {
-    var m = X.movies[i], a = m && C.byId(m.app); if (!m) return;
-    closeOverlays();
-    show('app'); S.app = m.app; pushState();
-    $('appAccent').style.background = a.color; $('appLogo').innerHTML = CP.logos.img(m.app, 'w185', 'a-logo');
-    $('appEyebrow').textContent = 'Abriendo en ' + a.title; $('appName').textContent = m.title;
-    $('appNote').hidden = true; $('appBtns').hidden = true;
-    var pr = $('appProgress'); pr.hidden = false; pr.className = 'app-progress'; setTimeout(function () { pr.className = 'app-progress go'; }, 30);
-    clearTimeout(mvTimer); clearTimeout(appTimer);
-    mvTimer = setTimeout(function () {
-      if (S.screen !== 'app') return;
-      S.movie = m; S.content = 'movie'; setPos(0, true);
-      show('player'); paintPlayer();
-      toast('▶ ' + m.title + ' · ' + a.title, 3000);
-    }, 1400);
-  }
-  function gameCard(item, sub) {
-    return '<button class="x-game" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
-      '<span class="xg-body"><span class="xg-t">' + esc(item.title) + '</span><span class="xg-s">' + esc(sub) + '</span></span></button>';
-  }
-  function openMovie(i) {
-    var m = X.movies[i]; if (!m) return;
-    X.cur = m; S.dialog = 'movie';
-    $('mvPoster').src = QV.catalog.img(m.poster_path, 'w342');
-    $('mvTitle').textContent = m.title;
-    $('mvMeta').textContent = (m.release_date || '').substring(0, 4) + ' · ★ ' + (Math.round((m.vote_average || 0) * 10) / 10);
-    $('mvOv').textContent = m.overview || '';
-    $('mvProvs').innerHTML = '<p class="mv-none">Buscando dónde verla…</p>';
-    $('movieDlg').hidden = false;
-    TP.focus.setFocus(null); TP.focus.setScope($('movieDlg'));
-    pushState();
-    QV.catalog.real.details(m.id, function (err, d) {
-      if (X.cur !== m || S.dialog !== 'movie') return;
-      var pv = err ? { flat: [], other: [] } : QV.catalog.providersOf(d), list = pv.flat.length ? pv.flat : pv.other, html = '';
-      for (var j = 0; j < list.length && j < 6; j++) {
-        var p = list[j];
-        html += '<button class="prov-btn" data-focusable data-action="prov" data-pid="' + p.provider_id + '" data-name="' + esc(p.provider_name) + '" data-logo="' + esc(p.logo_path || '') + '">' +
-          (p.logo_path ? '<img src="' + QV.catalog.img(p.logo_path, 'w92') + '" alt="">' : '') + 'Ver en ' + esc(p.provider_name) + '</button>';
-      }
-      $('mvProvs').innerHTML = html || '<p class="mv-none">Por ahora no está en streaming en México.</p>';
-      TP.focus.setFocus(null); TP.focus.setScope($('movieDlg'), '.prov-btn');
-    });
-  }
-  function openProvider(el) {
-    var pid = Number(el.getAttribute('data-pid')), app = PROV_APP[pid], name = el.getAttribute('data-name');
-    closeDialog();
-    if (app) openApp(app);
-    else openApp('p' + pid, { title: name, color: '#7A4CC4', logo: el.getAttribute('data-logo') });
-  }
 
   function setOff(off) {
     if (off === S.off) return;
     S.off = off;
-    if (off) { closeOverlays(); stopFind(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
+    if (off) { closeOverlays(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
     $('standby').hidden = !off;
-    applyLook();
     pushState();
-  }
-  var findTimer = null, beepTimer = null, actx = null;
-  function beep() {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-      actx = actx || new AC();
-      if (actx.state === 'suspended' && actx.resume) actx.resume();
-      var o = actx.createOscillator(), g = actx.createGain();
-      o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(actx.destination);
-      o.start(); setTimeout(function () { try { o.stop(); } catch (e) { /* ignore */ } }, 220);
-    } catch (e) { /* sin audio en este navegador */ }
-  }
-  function startFind() {
-    S.finding = true; $('findDlg').hidden = false; beep();
-    clearInterval(beepTimer); beepTimer = setInterval(beep, 900);
-    clearTimeout(findTimer); findTimer = setTimeout(stopFind, 15000);
-    pushState();
-  }
-  function stopFind() {
-    if (!S.finding) return;
-    S.finding = false; $('findDlg').hidden = true; clearInterval(beepTimer); clearTimeout(findTimer); pushState();
-  }
-  var sayTimer = null;
-  function showSay(text, reply) {
-    var b = $('voiceBubble');
-    b.innerHTML = '<span class="mic">🎤</span><div><div class="q">«' + esc(text) + '»</div>' + (reply ? '<div class="a">' + esc(reply) + '</div>' : '') + '</div>';
-    b.hidden = false; clearTimeout(sayTimer); sayTimer = setTimeout(function () { b.hidden = true; }, 4500);
   }
 
   function leavePlayer() {
     if (S.content === 'recipe') { S.rsaved = curPos() >= C.RECIPE.dur - 1 ? 0 : curPos(); S.playing = false; }
     if (S.content === 'video') stopVideo();
     if (S.content === 'series') { S.saved = curPos(); S.playing = false; }
-    /* de una película recomendada se regresa a la lista de recomendaciones */
-    if (S.content === 'movie' && X.kind === 'movies' && S.exp) { S.content = null; S.movie = null; S.playing = false; show('exp'); TP.focus.ensure('.x-poster'); return; }
     if (S.content === 'movie') S.movie = null;
     S.content = null; S.sceneIdx = -1;
     show('home'); renderHome();
@@ -1083,7 +869,7 @@
   }
   function closeDialog() {
     if (!S.dialog) return;
-    S.dialog = null; $('resumeDlg').hidden = true; $('movieDlg').hidden = true; $('sleepDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
+    S.dialog = null; $('resumeDlg').hidden = true; TP.focus.setScope(null); TP.focus.ensure(); pushState();
   }
 
   /* --- C2 · juego: atrapa estrellas --- */
@@ -1153,9 +939,6 @@
   /* ---------------- control remoto (teclado del STB o del celular) ---------------- */
   function handleKey(k) {
     if (S.off) { if (k === 'OK' || k === 'POWER') setOff(false); return; }
-    if (S.finding) { stopFind(); return; }
-    if (S.audioOnly && bgmBlocked && k === 'OK') { startMusic(); return; }
-    if (S.audioOnly && k !== 'PLAY' && k !== 'REW' && k !== 'FF') { S.audioOnly = false; applyLook(); pushState(); toast('Pantalla encendida', 1500); return; }
     if (S.menu || S.guide || S.dialog) {
       if (k === 'BACK') { if (S.menu) closeMenu(); else if (S.guide) closeGuide(); else closeDialog(); return; }
       if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') { TP.focus.move(k.toLowerCase()); return; }
@@ -1223,14 +1006,14 @@
       }
       if (k === 'BACK') { exitGame(); return; }
     }
-    if ((S.screen === 'app' || S.screen === 'exp') && k === 'BACK') { goHome(); return; }
+    if (S.screen === 'app' && k === 'BACK') { goHome(); return; }
     if (S.screen === 'rent' && k === 'BACK') { if (R.ch) tune(R.ch.n); else goHome(); return; }
     if (S.screen === 'search' && k === 'BACK') { S.query = ''; show('home'); renderHome(); return; }
     if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') TP.focus.move(k.toLowerCase());
     else if (k === 'OK') TP.focus.activate();
     /* BACK en la raíz (inicio): vacío a propósito (R6) */
   }
-  function atRoot() { return S.screen === 'home' && !S.dialog && !S.menu && !S.guide && !S.finding && !S.off && !S.audioOnly; }
+  function atRoot() { return S.screen === 'home' && !S.dialog && !S.menu && !S.guide && !S.off; }
 
   TP.focus.onActivate(function (el) {
     var a = el.getAttribute('data-action');
@@ -1247,14 +1030,6 @@
     else if (a === 'home') goHome();
     else if (a === 'channel' || a === 'tune') tune(Number(el.getAttribute('data-n')));
     else if (a === 'menuGo') menuGo(el.getAttribute('data-id'));
-    else if (a === 'movie') playMovie(Number(el.getAttribute('data-i')));
-    else if (a === 'closeMovie') closeDialog();
-    else if (a === 'prov') openProvider(el);
-    else if (a === 'expOff') applyExperience({ id: 'none' }, 'Se');
-    else if (a === 'sleep') setSleep(Number(el.getAttribute('data-min')), '');
-    else if (a === 'sleepCustom') openSleepCustom();
-    else if (a === 'sleepStep') stepSleep(Number(el.getAttribute('data-d')));
-    else if (a === 'sleepBack') openSleep();
   });
 
   /* ---------------- comandos de los celulares ---------------- */
@@ -1274,11 +1049,7 @@
     else if (c.t === 'home') goHome();
     else if (c.t === 'menu') { if (S.menu) closeMenu(); else openMenu(); }
     else if (c.t === 'vol') { if (typeof c.v === 'number') setVol(c.v); else setVol((S.muted ? S.vol : S.vol) + (c.d || 0)); }
-    else if (c.t === 'mute') { S.muted = typeof c.on === 'boolean' ? c.on : !S.muted; showVol(); musicVol(); pushState(); }
-    else if (c.t === 'exp') applyExperience(c, name);
-    else if (c.t === 'find') { if (c.on === false) stopFind(); else startFind(); }
-    else if (c.t === 'say') showSay(c.text || '', c.reply || '');
-    else if (c.t === 'sleep') setSleep(Number(c.min) || 0, name);
+    else if (c.t === 'mute') { S.muted = typeof c.on === 'boolean' ? c.on : !S.muted; showVol(); pushState(); }
     else if (c.t === 'pad') { var b = S.game.baskets[p.id]; if (b) b.dir = c.dir || 0; }
     else if (c.t === 'game') startGame();
     else if (c.t === 'ship') shipInput(p.id, c);
@@ -1397,14 +1168,11 @@
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
     if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); }
     tickSongCard();
-    if (S.sleepAt) { if (now() >= S.sleepAt) { S.sleepAt = 0; S.exp = null; S.bright = 100; applyLook(); setOff(true); } else if (d.getSeconds() === 0) applyLook(); }
   }, 1000);
 
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */
   window.addEventListener('keydown', function (e) {
     if (TP.lifecycle.handlePlatformEvent(e)) return;
-    if (actx && actx.state === 'suspended' && actx.resume) { try { actx.resume(); } catch (err) { /* ignore */ } }
-    primeAudio();   /* una tecla del control desbloquea el audio */
     var k = TP.keys.normalizeKey(e);
     if (!k) return;
     if (k === 'MENU' || k === 'EXIT') { TP.lifecycle.handleMenu(e); return; }

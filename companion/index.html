@@ -64,12 +64,11 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .pad .ok:active{background:#8E5FD8}
 .quick{display:grid;grid-template-columns:1fr 1.45fr 1fr;gap:8px;margin-bottom:6px}
 .quick button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 4px;font-size:12.5px;white-space:nowrap;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
-.quick button.voice{background:var(--violet);border-color:var(--violet)}
 .quick i{font-style:normal;font-size:17px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .keys3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
 .row2 button,.vol button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 6px;font-size:13px;font-weight:700}
-.row2 button:active,.vol button:active,.quick button:active,.apps button:active,.more button:active{transform:scale(.97)}
+.row2 button:active,.vol button:active,.quick button:active,.apps button:active{transform:scale(.97)}
 .vol{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr;gap:10px;align-items:center;margin-bottom:6px}
 .vol button{padding:11px 6px;color:#fff;display:flex;align-items:center;justify-content:center}
 .vol span{text-align:center;font-size:13px;font-weight:700;color:var(--ink-2)}
@@ -83,12 +82,6 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .apps button img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
 .apps button.has-logo{background:#000}
 .apps button.has-logo .nm{visibility:hidden}
-.apps .live-tile{background:linear-gradient(160deg,#2B57C9 0%,#13285E 100%)}
-.apps .live-tile small{display:block;font-size:10px;font-weight:600;opacity:.8}
-.apps .live-tile .nm{font-size:14px}
-.more{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.more button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px}
-.more i{font-style:normal;font-size:20px}
 .sec-c{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
 .keys3 button{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px}
 .keys3 button:active{background:var(--card-2)}
@@ -121,12 +114,6 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .empty{text-align:center;padding:30px 10px}
 .empty p{margin:8px 0 18px}
 .stack{display:flex;flex-direction:column;gap:10px}
-.prog{height:6px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;margin:10px 0 4px}
-.prog i{display:block;height:100%;background:var(--lilac)}
-.series-card{border-radius:20px;overflow:hidden;border:1px solid var(--line)}
-.series-card .art{height:150px;position:relative}
-.series-card .art span{position:absolute;left:16px;bottom:12px;font-size:22px;font-weight:700}
-.series-card .body{background:var(--card);padding:16px}
 
 /* banner */
 .banner{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));max-width:436px;margin:0 auto;background:#fff;color:#1E1A1A;border-radius:18px;padding:12px 14px;display:flex;gap:12px;align-items:center;z-index:30;box-shadow:0 12px 30px rgba(0,0,0,.35)}
@@ -168,46 +155,8 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .chips button{background:#F1EDF6;color:#4A2E7A;font-size:13px;font-weight:600;border-radius:999px;padding:8px 12px}
 .chips button.on{background:var(--violet);color:#fff}
-.mic{width:96px;height:96px;border-radius:50%;background:var(--violet);color:#fff;font-size:38px;display:flex;align-items:center;justify-content:center;margin:8px auto 10px}
-.mic.on{background:var(--red);animation:pl 1s ease-in-out infinite}
-@keyframes pl{50%{transform:scale(1.07)}}
-.vtext{text-align:center;font-weight:700;font-size:17px;min-height:24px}
-.vreply{text-align:center;color:#666;font-size:13.5px;min-height:20px;margin-top:4px}
 .vform{display:flex;gap:8px}
 .vform button{background:var(--violet);color:#fff;font-weight:700;border-radius:12px;padding:0 16px}
-.stepper{display:flex;align-items:center;gap:10px}
-.stepper button{width:48px;height:48px;border-radius:12px;background:#F1EDF6;color:#4A2E7A;font-size:22px;font-weight:700;flex:none}
-.stepper input{flex:1;min-width:0;text-align:center;font-size:22px;font-weight:700;border:1px solid #DDD3EA;border-radius:12px;padding:9px;color:#1E1A1A}
-.stepper span{font-weight:700;color:#555}
-/* control por voz: pantalla completa oscura con onda neón (imagen de referencia) */
-.sheet.voice{top:0;border-radius:0;max-height:none;height:100%;color:#fff;display:flex;flex-direction:column;align-items:stretch;padding:calc(12px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
-  background:radial-gradient(70% 38% at 50% 26%,rgba(150,60,230,.32) 0%,rgba(150,60,230,0) 70%),radial-gradient(90% 40% at 50% 100%,rgba(120,50,200,.28) 0%,rgba(120,50,200,0) 70%),linear-gradient(180deg,#140A24 0%,#0B0614 100%);box-shadow:none}
-.vhead{display:flex;align-items:center;justify-content:space-between;height:48px}
-.vhead h2{font-size:18px;margin:0}
-.vhead button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff}
-.vhead svg{width:24px;height:24px}
-.vwave{display:flex;align-items:center;justify-content:center;gap:7px;height:150px;margin:22px 0 8px}
-.vline{flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(190,110,255,0),#C07CFF);box-shadow:0 0 8px #A855F7}
-.vline:last-child{background:linear-gradient(270deg,rgba(190,110,255,0),#C07CFF)}
-.vbar{width:11px;border-radius:999px;border:2px solid #D7A8FF;box-shadow:0 0 10px #A855F7,0 0 22px rgba(168,85,247,.7),inset 0 0 6px rgba(168,85,247,.6);transform:scaleY(.8);animation:vbreath 2.4s ease-in-out infinite}
-.vbar:nth-child(5),.vbar:nth-child(6),.vbar:nth-child(7),.vbar:nth-child(8),.vbar:nth-child(9){background:linear-gradient(180deg,#E9CCFF,#B266FF);border-color:#F1DDFF}
-.vwave.on .vbar{animation:vtalk .9s ease-in-out infinite}
-@keyframes vbreath{0%,100%{transform:scaleY(.8)}50%{transform:scaleY(.92)}}
-@keyframes vtalk{0%,100%{transform:scaleY(.5)}30%{transform:scaleY(1.05)}60%{transform:scaleY(.75)}}
-.sheet.voice .vtext{font-size:26px;font-weight:700;margin:14px 0 4px;min-height:34px;text-align:center;overflow-wrap:anywhere}
-.sheet.voice .vreply{color:#CDB6EA;font-size:14px;min-height:20px;margin:0 0 18px}
-.vsugs{display:flex;flex-direction:column;gap:12px}
-.vsug{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 18px;font-size:16px;font-weight:600;color:#fff}
-.vsug svg{width:26px;height:26px;color:#C07CFF;flex:none}
-.vsug:active{background:rgba(168,85,247,.22)}
-.vfoot{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
-.vmic{width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
-  background:radial-gradient(circle,#3A1660 0%,#200C38 70%);border:2px solid #B266FF;box-shadow:0 0 0 7px rgba(168,85,247,.16),0 0 26px rgba(168,85,247,.55)}
-.vmic svg{width:38px;height:38px}
-.vmic.on{animation:vglow 1.3s ease-in-out infinite}
-@keyframes vglow{50%{box-shadow:0 0 0 13px rgba(168,85,247,.22),0 0 40px rgba(168,85,247,.85)}}
-.sheet.voice .vform{width:100%}
-.vtype{color:#CDB6EA;font-size:13px;font-weight:600;text-decoration:underline}
 .scrim{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:35}
 
 /* gamepad */
@@ -227,8 +176,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
    en cuanto el dedo toca el botón y lo deja al menos 140 ms para que se alcance a ver aunque el toque sea rapidísimo. */
 button{transition:background-color .08s,transform .08s,filter .08s}
 button.pressed{transform:scale(.95);filter:brightness(1.4)}
-.quick button.pressed,.row2 button.pressed,.keys3 button.pressed,.vol button.pressed,.more button.pressed,.apps button.pressed,.dec.pressed,.tab.pressed{background:#3D3060;border-color:rgba(185,160,214,.7);filter:none}
-.quick button.voice.pressed{background:#9D6FE6;border-color:#9D6FE6}
+.quick button.pressed,.row2 button.pressed,.keys3 button.pressed,.vol button.pressed,.apps button.pressed,.dec.pressed,.tab.pressed{background:#3D3060;border-color:rgba(185,160,214,.7);filter:none}
 .pad button.pressed{background:var(--card-2);color:#fff;filter:none;transform:none}
 .pad .ok.pressed{background:#9D6FE6;transform:scale(.96)}
 .sheet button.pressed,.banner button.pressed{filter:brightness(.88)}
@@ -339,17 +287,9 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .keys3.vol{margin-bottom:4px}
 .vol button.on{background:rgba(217,54,79,.35);border-color:#F87171}
 .vol-lbl{text-align:center;font-size:12px;font-weight:600;color:var(--ink-3);margin-bottom:10px}
-.more{grid-template-columns:1fr 1fr;gap:12px;margin:0 6px 14px}
-.more button{flex-direction:row;justify-content:center;gap:7px;padding:13px 6px;font-size:12.5px;font-weight:700;border-radius:14px}
-.more button svg{width:20px;height:20px;color:#D8B4FE;flex:none}
 /* apps + voz: siempre abajo, sobre las pestañas */
-.dock{margin:0 2px;padding-top:2px}  /* estático: ya no flota, queda al final del control */
-.vcta{width:100%;display:flex;align-items:center;gap:14px;padding:22px 20px 16px;border-radius:24px;font-size:16px;font-weight:700;color:#fff;
-  background:linear-gradient(180deg,#2A1252,#1C0B38);border:1.5px solid #B266FF;box-shadow:0 0 18px rgba(168,85,247,.5)}
-.vcta span{flex:1;text-align:center}
-.vcta svg{width:24px;height:24px}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(13,7,24,.96);border-top:1px solid rgba(255,255,255,.07);padding-bottom:env(safe-area-inset-bottom)}
-.tabs .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tabs .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 10px;font-size:11px;font-weight:600;color:var(--ink-3)}
 .tab svg{width:22px;height:22px}
 .tab.on{color:#D8B4FE}
@@ -358,7 +298,7 @@ body{background:radial-gradient(90% 45% at 50% 30%,rgba(124,58,237,.22) 0%,rgba(
 .apps{display:flex;justify-content:space-between;margin:2px 6px 14px;gap:0}
 .apps button{flex:none;width:66px;height:66px;aspect-ratio:1/1;border-radius:14px}
 .apps button img{object-fit:contain}
-.gl.pressed,.corner.pressed,.vcta.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
+.gl.pressed,.corner.pressed{background:rgba(168,85,247,.3);border-color:#C084FC;filter:none}
 
 /* v7.10 · mini control fuera de la pestaña Control */
 .mini{max-width:460px;margin:0 auto;display:grid;grid-template-columns:1fr 64px 1fr;gap:10px;padding:10px 16px 2px}
@@ -428,23 +368,14 @@ body.has-mini .wrap{padding-bottom:160px}
         <button data-app="youtube" style="--c:#FF0033" aria-label="YouTube"><span class="nm">YouTube</span></button>
         <button data-app="ondemand" style="--c:#6B2BD9" aria-label="On Demand"><span class="nm">On Demand</span></button>
       </div>
-      <div class="more">
-        <button class="gl" data-act="exps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" fill="currentColor"/></svg><span>Experiencias</span></button>
-        <button class="gl" data-act="find"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Encontrar control</span></button>
-      </div>
-
-      <div class="dock">
-        <button class="vcta" data-act="voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Control por voz</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
     </div>
 
     <div data-tab="ahora" hidden><div id="ahora"></div></div>
-    <div data-tab="seguir" hidden><div id="seguir"></div></div>
   </section>
 </div>
 
 <nav class="tabs" id="tabs" hidden>
-  <!-- mini control en "Ahora en la TV" y "Seguir viendo" -->
+  <!-- mini control en "Ahora en la TV" -->
   <div class="mini" id="mini" hidden>
     <button class="gl" data-key="BACK" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5L4.5 12 9 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h10a4.5 4.5 0 0 1 4.5 4.5V18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Regresar</span></button>
     <button class="gl" data-key="PLAY" id="miniPlay" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
@@ -453,7 +384,6 @@ body.has-mini .wrap{padding-bottom:160px}
   <div class="in">
   <button class="tab on" data-go="control"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 15h4M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button>
   <button class="tab" data-go="ahora"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5h18v11.5H3zM8 20.5h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ahora en la TV</button>
-  <button class="tab" data-go="seguir"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 8.6v6.8l5.2-3.4z" fill="currentColor"/></svg>Seguir viendo</button>
 </div></nav>
 
 <div class="banner" id="banner" hidden></div>
@@ -493,11 +423,11 @@ body.has-mini .wrap{padding-bottom:160px}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.12"></script>
-<script src="../src/services/firestore-rest.js?v=7.12"></script>
-<script src="content.js?v=7.12"></script>
-<script src="logos.js?v=7.12"></script>
-<script src="store.js?v=7.12"></script>
-<script src="phone.js?v=7.12"></script>
+<script src="../src/services/http.js?v=7.13"></script>
+<script src="../src/services/firestore-rest.js?v=7.13"></script>
+<script src="content.js?v=7.13"></script>
+<script src="logos.js?v=7.13"></script>
+<script src="store.js?v=7.13"></script>
+<script src="phone.js?v=7.13"></script>
 </body>
 </html>
