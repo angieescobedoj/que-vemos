@@ -92,8 +92,7 @@
   /* Canales en vivo (ficticios). Se llega a ellos con el control de la TV (arriba/abajo) o por voz, nunca con una lista en el celular.
      El canal 7 transmite el partido, así que el contenido "En vivo" del inicio es ese canal. */
   var CHANNELS = [
-    { n: 2, name: 'Cine 2', show: 'Beetlejuice', tmdb: 4011, next: 'Función de medianoche', art: ['#C792C9', '#3A2160'],
-      offer: { kind: 'rent', tmdb: 917496, title: 'Beetlejuice Beetlejuice', price: 59 } },
+    { n: 2, name: 'Cine 2', show: 'Beetlejuice', tmdb: 4011, next: 'Función de medianoche', art: ['#C792C9', '#3A2160'] },   /* sin sugerencia al pausar */
     { n: 5, name: 'Familia 5', show: 'Mi pobre angelito', tmdb: 771, next: 'Caricaturas clásicas', art: ['#E5484D', '#4A1420'],
       offer: { kind: 'delivery', place: 'Pizzería Rayo', eta: 35,
         menu: [
