@@ -436,6 +436,14 @@ body.light .dname-in{background:#fff}
 .dic-b.ok{color:#4ADE80}
 body.light .dic-b.ok{color:#15803D}
 .dcard.editing{border-color:#B266FF}
+
+/* v7.23 · Configuración a pantalla completa */
+.cfg-list{display:flex;flex-direction:column;gap:8px}
+.cfg-list .set-row{margin-top:0}
+#cfgView .set-link{margin-top:24px}
+#cfgView .lf{color:var(--ink-2);margin-top:24px}
+#cfgView .sub{color:var(--ink-2)}
+body.light #cfgView .set-link{color:var(--violet)}
 </style>
 </head>
 <body>
@@ -491,6 +499,7 @@ body.light .dic-b.ok{color:#15803D}
     </div>
 
     <div data-tab="decs" hidden><div id="decsView"></div></div>
+    <div data-tab="cfg" hidden><div id="cfgView"></div></div>
     <div data-tab="ahora" hidden><button class="back-ctl" data-go="control"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button><div id="ahora"></div></div>
   </section>
 </div>
@@ -541,11 +550,11 @@ body.light .dic-b.ok{color:#15803D}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.22"></script>
-<script src="../src/services/firestore-rest.js?v=7.22"></script>
-<script src="content.js?v=7.22"></script>
-<script src="logos.js?v=7.22"></script>
-<script src="store.js?v=7.22"></script>
-<script src="phone.js?v=7.22"></script>
+<script src="../src/services/http.js?v=7.23"></script>
+<script src="../src/services/firestore-rest.js?v=7.23"></script>
+<script src="content.js?v=7.23"></script>
+<script src="logos.js?v=7.23"></script>
+<script src="store.js?v=7.23"></script>
+<script src="phone.js?v=7.23"></script>
 </body>
 </html>

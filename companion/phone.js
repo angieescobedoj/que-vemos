@@ -530,7 +530,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (/^(match|settings|favs|prefs|look|unlink)$/.test(name) ? ' dark' : '');
+    $('sheet').className = 'sheet' + (/^(match|unlink)$/.test(name) ? ' dark' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -685,23 +685,31 @@
     var row = $('appsRow'); row.innerHTML = html;
     paintAppLogos();
   }
-  var BACK_SET = '<button class="sh-back" data-act="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Configuración</button>';
+  /* v7.23 · Configuración es una pantalla completa: flecha de regreso + nombre de la sección (sin encabezado del control) */
+  function cfgBar(title, back) {
+    return '<div class="dv-bar"><button class="dv-back" data-act="' + back + '" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="dv-title">' + title + '</span><span></span></div>';
+  }
+  function cfgShow(page, html) {
+    S.cfgPage = page; closeSheet();
+    $('cfgView').innerHTML = html;
+    if (S.tab !== 'cfg') setTab('cfg'); else window.scrollTo(0, 0);
+  }
   function setRow(act, ic, t, sub) {
     return '<button class="set-row" data-act="' + act + '"><span class="set-ic">' + ic + '</span><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="go">›</span></button>';
   }
   function openSettings() {
     var th = { dark: 'Oscuro', light: 'Claro', auto: 'Automático' }[themeMode()];
-    openSheet('settings', '<h2>Configuración</h2>' +
+    cfgShow('main', cfgBar('Configuración', 'cfgClose') + '<div class="cfg-list">' +
       setRow('setApps', '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16.75 13.8v6M13.75 16.8h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         'Aplicaciones favoritas', 'Agregar, eliminar y ordenar · ' + favs().length + ' en el control') +
       setRow('setPrefs', '<svg viewBox="0 0 24 24"><rect x="7.5" y="3" width="9" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 9v6M20 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         'Preferencias del control', 'Vibración ' + (PREF.vib ? 'activada' : 'desactivada') + ' · respuesta táctil ' + (PREF.touch ? 'activada' : 'desactivada')) +
       setRow('setLook', '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
         'Apariencia', 'Tema ' + th.toLowerCase()) +
-      (S.fake ? '' : '<button class="set-link" data-act="ahoraGo">Ver lo que está en la TV ›</button>'));
+      '</div>' + (S.fake ? '' : '<button class="set-link" data-act="ahoraGo">Ver lo que está en la TV ›</button>'));
   }
   function openFavs() {
-    var f = favs(), html = BACK_SET + '<h2>Aplicaciones favoritas</h2><p class="sub">Aparecen en el control en este orden. Caben ' + FAV_MAX + ': para agregar otra, quita una primero.</p><div class="fav-list">';
+    var f = favs(), html = cfgBar('Aplicaciones favoritas', 'settings') + '<p class="dv-hint">Aparecen en el control en este orden. Caben ' + FAV_MAX + ': para agregar otra, quita una primero.</p><div class="fav-list">';
     for (var i = 0; i < f.length; i++) html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(f[i]) + '">' + (CP.logos.img(f[i], 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[f[i]]) + '</span>' +
       '<button data-fup="' + i + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-fdn="' + i + '" aria-label="Bajar"' + (i === f.length - 1 ? ' disabled' : '') + '>↓</button><button class="del" data-fdel="' + i + '" aria-label="Eliminar"' + (f.length < 2 ? ' disabled' : '') + '>✕</button></div>';
     html += '</div><p class="lf" style="margin-top:18px">Agregar al control</p><div class="fav-list">';
@@ -709,15 +717,14 @@
     for (var j = 0; j < C.APPS.length; j++) { var id = C.APPS[j].id; if (f.indexOf(id) >= 0) continue; more++;
       html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(id) + '">' + (CP.logos.img(id, 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[id]) + '</span><button class="add" data-fadd="' + id + '"' + (f.length >= FAV_MAX ? ' disabled' : '') + '>＋ Agregar</button></div>'; }
     if (!more) html += '<p class="sub">Ya tienes todas las apps en el control.</p>';
-    var keep = $('sheet').scrollTop;
-    openSheet('favs', html + '</div>'); if (S.sheet === 'favs') $('sheet').scrollTop = keep;
+    var keep = window.scrollY; cfgShow('favs', html + '</div>'); window.scrollTo(0, keep);
   }
   function favEdit(fn) { var f = favs(); fn(f); ls.set(FKEY, JSON.stringify(f)); renderApps(); openFavs(); }
   function sw(key, t, sub) { return '<button class="set-row sw-row" data-pref="' + key + '"><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="sw' + (PREF[key] ? ' on' : '') + '"><i></i></span></button>'; }
   function openPrefs() {
-    openSheet('prefs', BACK_SET + '<h2>Preferencias del control</h2>' +
+    cfgShow('prefs', cfgBar('Preferencias del control', 'settings') + '<div class="cfg-list">' +
       sw('vib', 'Vibración', 'El celular vibra al tocar un botón y con los avisos') +
-      sw('touch', 'Respuesta táctil', 'Los botones se iluminan al presionarlos'));
+      sw('touch', 'Respuesta táctil', 'Los botones se iluminan al presionarlos') + '</div>');
   }
   function themeMode() { var m = ls.get('cp-theme'); return m === 'light' || m === 'auto' ? m : 'dark'; }
   var mqLight = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
@@ -729,7 +736,7 @@
   if (mqLight) { var onMq = function () { if (themeMode() === 'auto') applyTheme(); }; if (mqLight.addEventListener) mqLight.addEventListener('change', onMq); else if (mqLight.addListener) mqLight.addListener(onMq); }
   function openLook() {
     var m = themeMode(), opt = function (v, t, sub) { return '<button class="set-row radio' + (m === v ? ' on' : '') + '" data-theme="' + v + '"><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="rd"></span></button>'; };
-    openSheet('look', BACK_SET + '<h2>Apariencia</h2>' + opt('dark', 'Oscuro', 'Fondo morado oscuro') + opt('light', 'Claro', 'Fondo claro') + opt('auto', 'Automático', 'Sigue el tema de tu celular'));
+    cfgShow('look', cfgBar('Apariencia', 'settings') + '<div class="cfg-list">' + opt('dark', 'Oscuro', 'Fondo morado oscuro') + opt('light', 'Claro', 'Fondo claro') + opt('auto', 'Automático', 'Sigue el tema de tu celular') + '</div>');
   }
 
   /* ---------- eventos (delegación) ---------- */
@@ -769,6 +776,7 @@
     else if (act === 'setLook') openLook();
     else if (act === 'settings') openSettings();
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
+    else if (act === 'cfgClose') setTab('control');
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
@@ -818,7 +826,7 @@
     var mini = t === 'ahora';
     $('mini').hidden = !mini; document.body.classList.toggle('has-mini', mini);
     $('tabs').classList.toggle('empty', !mini);
-    document.body.classList.toggle('in-decs', t === 'decs');   /* en la lista no se muestra el encabezado del control */
+    document.body.classList.toggle('in-decs', t === 'decs' || t === 'cfg');   /* en Decodificadores y Configuración no se muestra el encabezado del control */
     if (t === 'decs') { S.decEdit = null; renderDecs(); if (!S.decScanned) { S.decScanned = true; scanDecs(); } }   /* sin pestañas: la barra de abajo solo existe para el mini control */
     render(); window.scrollTo(0, 0);
   }
