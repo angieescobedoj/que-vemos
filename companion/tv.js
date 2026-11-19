@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep, snap.matchStart]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -301,11 +301,12 @@
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
     S.content = 'match'; S.playing = true;
-    if (!S.matchStart) S.matchStart = now();
+    /* si nunca se abrió o ya terminó hace rato, el partido vuelve a empezar desde la previa */
+    if (!S.matchStart || now() - S.matchStart > (CP.moments.match.T.end + 120) * 1000) { S.matchStart = now(); S.evSeen = undefined; S.mPhase = null; }
     $('pausePanel').hidden = true;
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer();
-    if (connected().length) setTimeout(function () { toast('📱 Alineación y estadísticas en tu celular', 3500); }, 700);
+    if (connected().length) setTimeout(function () { toast(matchNow().phase === 'pre' ? '📱 Previa en tu celular: alineaciones, tabla y quiniela' : '📱 Marcador y momentos del partido en tu celular', 3500); }, 700);
   }
   function stepChannel(d) {
     var list = C.CHANNELS, i = 0;
@@ -710,7 +711,52 @@
     setPos(curPos() + delta, S.playing); paintPlayer(); pushState();
     toast((delta > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(delta) + ' s', 1500);
   }
-  function matchMinute() { return C.MATCH.startMinute + Math.floor((now() - S.matchStart) / 10000); }
+  /* v7.26 · el partido sigue la línea de tiempo simulada de moments.js (previa, 1.er tiempo, medio tiempo, 2.º tiempo, final) */
+  function matchNow() { return CP.moments.match.matchAt(S.matchStart, now()); }
+  function matchMinute() { return matchNow().minute; }
+  var EV_TXT = { goal: '⚽ ¡Gol!', card: '🟨 Tarjeta', sub: '🔄 Cambio', 'var': '📺 Revisión del VAR' };
+  function tickMatch() {
+    if (S.content !== 'match' || S.screen !== 'player') return;
+    var t = matchNow(), n = t.events.length;
+    if (S.evSeen === undefined || n < S.evSeen) S.evSeen = n;
+    if (n > S.evSeen) {   /* aviso mínimo en el momento fuerte; el detalle va al celular después */
+      var ev = t.events[n - 1], team = ev.team === 'home' ? C.MATCH.home.name : C.MATCH.away.name;
+      toast(ev.k === 'goal' ? '⚽ ¡GOOOL de ' + team + '! ' + ev.who + ' ' + ev.m + '\'' : ev.k === 'card' ? (ev.color === 'roja' ? '🟥 ' : '🟨 ') + 'Tarjeta ' + ev.color + ' · ' + ev.who
+        : ev.k === 'sub' ? '🔄 Cambio en ' + team + ' · entra ' + ev.inn[1] : '📺 El VAR revisa la jugada', 3500);
+      S.evSeen = n;
+      if (ev.k === 'goal' && connected().length) setTimeout(function () { if (S.content === 'match') toast('📱 Repetición desde otro ángulo en tu celular', 3500); }, 10000);
+    }
+    if (S.mPhase !== t.phase) {
+      if (S.mPhase && connected().length) {
+        if (t.phase === 'half') toast('📱 Medio tiempo: resumen, mapa de calor y encuesta en tu celular', 5000);
+        if (t.phase === 'final') toast('📱 Final: califica a los jugadores y vota por el MVP en tu celular', 5000);
+      }
+      S.mPhase = t.phase;
+    }
+  }
+  /* simulación: saltar a un momento (lo pide el celular) */
+  function simulate(c) {
+    var X = CP.moments;
+    if (c.what === 'match') {
+      if (S.content !== 'match' || S.screen !== 'player') openMatch();
+      S.matchStart = now() - (X.match.JUMP[c.to] || 0) * 1000; S.evSeen = undefined; S.mPhase = null;
+      if (!S.playing) togglePause();
+      paintPlayer(); pushState(); return;
+    }
+    if (c.what === 'series') {
+      if (S.content !== 'series' || S.screen !== 'player') openContent('series');
+      setPos(X.movie.JUMP[c.to] || 0, true); paintPlayer(); pushState(); return;
+    }
+    if (c.what === 'recipe' && S.content === 'recipe') { setPos(X.recipe.JUMP[c.to] || 0, true); if (c.to === 'start') S.recipeSeq = 0; paintPlayer(); pushState(); return; }
+    if (c.what === 'bunny' && S.content === 'video') {
+      var v = $('vid'), B = C.BUNNY;
+      if (V.inAd) return;
+      var to = c.to === 'ad' ? B.adAt - 2 : c.to === 'credits' ? X.bunny.creditsAt : 0;
+      if (c.to !== 'credits') V.adDone = false; else V.adDone = true;
+      try { v.currentTime = to; v.play(); } catch (e) { /* ignore */ }
+      pokeUI();
+    }
+  }
   function paintPlayer() {
     var scene = $('scene');
     $('chLogo').hidden = true;
@@ -761,10 +807,14 @@
       scene.style.background = 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.65) 100%),url(' + C.PHOTOS.match + '1600) center/cover no-repeat,repeating-linear-gradient(90deg,#2E7D49 0 8%,#2A7243 8% 16%)';
       $('pTag').textContent = 'En vivo · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
       $('scorebug').hidden = false;
-      $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + m.score[0] + ' – ' + m.score[1] +
-        '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + matchMinute() + '\'</span>';
+      var mt = matchNow(), mmin = mt.phase === 'pre' ? 'Previa' : mt.phase === 'half' ? 'MT' : mt.phase === 'final' ? 'Final' : mt.minute + '\'';
+      $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + mt.score[0] + ' – ' + mt.score[1] +
+        '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + mmin + '</span>';
+      if (mt.phase === 'pre') $('pSub').textContent = 'Previa del partido · empieza en ' + C.fmt(mt.countdown);
+      else if (mt.phase === 'half') $('pSub').textContent = 'Medio tiempo · el segundo tiempo empieza en ' + C.fmt(mt.countdown);
+      else if (mt.phase === 'final') $('pSub').textContent = 'Final del partido';
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
-      $('liveMin').textContent = S.playing ? 'Minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
+      $('liveMin').textContent = !S.playing ? 'Pausado · en vivo en segundo plano' : mt.phase === 'pre' ? 'Previa' : mt.phase === 'half' ? 'Medio tiempo' : mt.phase === 'final' ? 'Final' : 'Minuto ' + mt.minute;
       $('pausePanel').hidden = true;
       return;
     }
@@ -1041,6 +1091,8 @@
     else if (c.t === 'shipStart') { if (S.screen === 'ship') pauseShip(); else startShip(); }
     else if (c.t === 'offer') goOffer(c.ch === 'match' ? 'match' : Number(c.ch));
     else if (c.t === 'notice') toast(c.text || '', 4500);
+    else if (c.t === 'sim') simulate(c);
+    else if (c.t === 'poll') toast(name + ' votó en su celular: ' + (c.what || ''), 3000);
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
     else if (c.t === 'save') toast(name + ' guardó «' + c.what + '» en su soundtrack', 3500);
     else if (c.t === 'product') toast(name + ' abrió «' + c.what + '» en su celular', 3500);
@@ -1151,7 +1203,7 @@
   setInterval(function () {
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); }
+    if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); tickMatch(); }
     tickSongCard();
   }, 1000);
 
