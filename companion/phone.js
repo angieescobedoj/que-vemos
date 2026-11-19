@@ -678,7 +678,7 @@
   /* ---------- v7.19 · Configuración (engrane del encabezado): apps favoritas, preferencias del control y apariencia ---------- */
   var FKEY = 'cp-favs', FAV_DEF = ['netflix', 'prime', 'youtube', 'ondemand'], FAV_MAX = 4;   /* el control muestra 4 */
   var PREF = lsJSON('cp-prefs', { vib: true, touch: true });
-  function favs() { var f = lsJSON(FKEY, null); if (!f || !f.length) f = FAV_DEF.slice(); return f.filter(function (id) { return !!APP_NAMES[id]; }).slice(0, FAV_MAX); }
+  function favs() { var f = lsJSON(FKEY, null); if (!f) f = FAV_DEF.slice(); return f.filter(function (id) { return !!APP_NAMES[id]; }).slice(0, FAV_MAX); }
   function appTile(id) { return '<button data-app="' + id + '" style="--c:' + appColor(id) + '" aria-label="' + esc(APP_NAMES[id]) + '"><span class="nm">' + esc(APP_NAMES[id]) + '</span></button>'; }
   function renderApps() {
     var f = favs(), html = ''; for (var i = 0; i < f.length; i++) html += appTile(f[i]);
@@ -701,23 +701,23 @@
     var th = { dark: 'Oscuro', light: 'Claro', auto: 'Automático' }[themeMode()];
     cfgShow('main', cfgBar('Configuración', 'cfgClose') + '<div class="cfg-list">' +
       setRow('setApps', '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16.75 13.8v6M13.75 16.8h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-        'Aplicaciones favoritas', 'Agregar, eliminar y ordenar · ' + favs().length + ' en el control') +
+        'Aplicaciones favoritas', 'Elige hasta ' + FAV_MAX + ' · ' + favs().length + ' de ' + FAV_MAX + ' elegidas') +
       setRow('setPrefs', '<svg viewBox="0 0 24 24"><rect x="7.5" y="3" width="9" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 9v6M20 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
         'Preferencias del control', 'Vibración ' + (PREF.vib ? 'activada' : 'desactivada') + ' · respuesta táctil ' + (PREF.touch ? 'activada' : 'desactivada')) +
       setRow('setLook', '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
         'Apariencia', 'Tema ' + th.toLowerCase()) +
       '</div>' + (S.fake ? '' : '<button class="set-link" data-act="ahoraGo">Ver lo que está en la TV ›</button>'));
   }
+  /* v7.24 · todas las apps con Agregar / Quitar (como los decodificadores); máximo 4; contador abajo */
   function openFavs() {
-    var f = favs(), html = cfgBar('Aplicaciones favoritas', 'settings') + '<p class="dv-hint">Aparecen en el control en este orden. Caben ' + FAV_MAX + ': para agregar otra, quita una primero.</p><div class="fav-list">';
-    for (var i = 0; i < f.length; i++) html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(f[i]) + '">' + (CP.logos.img(f[i], 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[f[i]]) + '</span>' +
-      '<button data-fup="' + i + '" aria-label="Subir"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-fdn="' + i + '" aria-label="Bajar"' + (i === f.length - 1 ? ' disabled' : '') + '>↓</button><button class="del" data-fdel="' + i + '" aria-label="Eliminar"' + (f.length < 2 ? ' disabled' : '') + '>✕</button></div>';
-    html += '</div><p class="lf" style="margin-top:18px">Agregar al control</p><div class="fav-list">';
-    var more = 0;
-    for (var j = 0; j < C.APPS.length; j++) { var id = C.APPS[j].id; if (f.indexOf(id) >= 0) continue; more++;
-      html += '<div class="fav-row"><span class="fav-ic" style="background:' + appColor(id) + '">' + (CP.logos.img(id, 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[id]) + '</span><button class="add" data-fadd="' + id + '"' + (f.length >= FAV_MAX ? ' disabled' : '') + '>＋ Agregar</button></div>'; }
-    if (!more) html += '<p class="sub">Ya tienes todas las apps en el control.</p>';
-    var keep = window.scrollY; cfgShow('favs', html + '</div>'); window.scrollTo(0, keep);
+    var f = favs(), full = f.length >= FAV_MAX, html = cfgBar('Aplicaciones favoritas', 'settings') + '<p class="dv-hint">Agrega tus apps favoritas</p><div class="fav-list">';
+    for (var j = 0; j < C.APPS.length; j++) {
+      var id = C.APPS[j].id, on = f.indexOf(id) >= 0;
+      html += '<div class="fav-row' + (on ? ' on' : '') + '"><span class="fav-ic" style="background:' + appColor(id) + '">' + (CP.logos.img(id, 'w92', 'logo') || '') + '</span><span class="grow">' + esc(APP_NAMES[id]) + '</span>' +
+        (on ? '<button class="dcta warn" data-fdel="' + f.indexOf(id) + '">Quitar</button>' : '<button class="dcta pri" data-fadd="' + id + '"' + (full ? ' disabled' : '') + '>Agregar</button>') + '</div>';
+    }
+    html += '</div><div class="fav-foot"><span>Elige ' + FAV_MAX + '</span><span class="fav-count' + (full ? ' full' : '') + '">' + f.length + ' de ' + FAV_MAX + (full ? ' · listo' : '') + '</span></div>';
+    var keep = window.scrollY; cfgShow('favs', html); window.scrollTo(0, keep);
   }
   function favEdit(fn) { var f = favs(); fn(f); ls.set(FKEY, JSON.stringify(f)); renderApps(); openFavs(); }
   function sw(key, t, sub) { return '<button class="set-row sw-row" data-pref="' + key + '"><span class="grow"><span class="t">' + t + '</span><span class="s">' + sub + '</span></span><span class="sw' + (PREF[key] ? ' on' : '') + '"><i></i></span></button>'; }
@@ -754,10 +754,8 @@
     else if (g('data-rsave')) saveRename(g('data-rsave'));
     else if (g('data-dunl')) askUnlink(g('data-dunl'));
     else if (g('data-dlink')) doLink(g('data-dlink'), el);
-    else if (g('data-fup') !== null && el.hasAttribute('data-fup')) favEdit(function (f) { var i = Number(g('data-fup')); f.splice(i - 1, 0, f.splice(i, 1)[0]); });
-    else if (g('data-fdn') !== null && el.hasAttribute('data-fdn')) favEdit(function (f) { var i = Number(g('data-fdn')); f.splice(i + 1, 0, f.splice(i, 1)[0]); });
     else if (g('data-fdel') !== null && el.hasAttribute('data-fdel')) favEdit(function (f) { f.splice(Number(g('data-fdel')), 1); });
-    else if (g('data-fadd')) favEdit(function (f) { if (f.length < FAV_MAX) f.push(g('data-fadd')); });
+    else if (g('data-fadd')) favEdit(function (f) { if (f.length < FAV_MAX) f.push(g('data-fadd')); else toast('Ya elegiste ' + FAV_MAX + ': quita una para agregar otra', true); });
     else if (g('data-pref')) { var pk = g('data-pref'); PREF[pk] = !PREF[pk]; ls.set('cp-prefs', JSON.stringify(PREF)); if (pk === 'vib' && PREF.vib) buzz(); openPrefs(); }
     else if (g('data-theme')) { ls.set('cp-theme', g('data-theme')); applyTheme(); openLook(); }
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }

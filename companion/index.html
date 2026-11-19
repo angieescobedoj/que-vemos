@@ -444,6 +444,24 @@ body.light .dic-b.ok{color:#15803D}
 #cfgView .lf{color:var(--ink-2);margin-top:24px}
 #cfgView .sub{color:var(--ink-2)}
 body.light #cfgView .set-link{color:var(--violet)}
+
+/* v7.24 · apps favoritas: Agregar / Quitar y contador fijo abajo */
+.fav-row{padding:8px 8px 8px 8px;min-height:64px}
+.fav-ic{width:48px;height:48px;border-radius:12px}
+.fav-row.on{border-color:#B266FF}
+.fav-row button.dcta{width:auto;height:40px;min-width:96px;padding:0 16px;font-size:13px;border-radius:999px}
+.fav-row button.dcta.warn{background:rgba(255,255,255,.07)}
+.fav-row button.dcta.pri{background:var(--violet);color:#fff}
+body.light .fav-row button.dcta.warn{background:#FFF5F5}
+.fav-row .dcta:disabled{opacity:.35}
+#cfgView .fav-list{padding-bottom:88px}
+.fav-foot{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:460px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 24px calc(env(safe-area-inset-bottom));
+  background:rgba(13,7,24,.96);border-top:1px solid rgba(196,150,255,.2);font-size:15px;font-weight:700}
+.fav-count{font-size:14px;color:#D8B4FE;background:rgba(168,85,247,.18);border-radius:999px;padding:6px 14px}
+.fav-count.full{color:#4ADE80;background:rgba(74,222,128,.14)}
+body.light .fav-foot{background:rgba(255,255,255,.97);border-top-color:rgba(122,76,196,.18)}
+body.light .fav-count{color:#6B3FC0;background:#EFE5FF}
+body.light .fav-count.full{color:#15803D;background:#DCFCE7}
 </style>
 </head>
 <body>
@@ -550,11 +568,11 @@ body.light #cfgView .set-link{color:var(--violet)}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.23"></script>
-<script src="../src/services/firestore-rest.js?v=7.23"></script>
-<script src="content.js?v=7.23"></script>
-<script src="logos.js?v=7.23"></script>
-<script src="store.js?v=7.23"></script>
-<script src="phone.js?v=7.23"></script>
+<script src="../src/services/http.js?v=7.24"></script>
+<script src="../src/services/firestore-rest.js?v=7.24"></script>
+<script src="content.js?v=7.24"></script>
+<script src="logos.js?v=7.24"></script>
+<script src="store.js?v=7.24"></script>
+<script src="phone.js?v=7.24"></script>
 </body>
 </html>
