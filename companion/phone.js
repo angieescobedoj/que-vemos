@@ -166,6 +166,7 @@
 
   /* ---------- helpers de estado ---------- */
   function pos() { var r = S.room; if (!r) return 0; return r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos; }
+  function matchMinute() { return C.MATCH.startMinute + Math.floor(Math.max(0, Date.now() - (S.room.matchStart || Date.now())) / 10000); }
   function sceneNow() { return C.SERIES.scenes[C.sceneAt(pos())]; }
   function soundtrack() { try { return JSON.parse(ls.get('cp-soundtrack') || '[]'); } catch (e) { return []; } }
   function saveSong(song) {
@@ -180,11 +181,11 @@
     var r = S.room; if (!r) return;
     if (S.fake) { renderHeader(); return; }
     renderHeader(); renderGame(); renderPad2();
-    /* v7.26 · al empezar partido, película, corto o receta, el celular abre "Ahora en la TV" (segunda pantalla) */
-    var ck = r.screen === 'player' && /^(match|series|video|recipe)$/.test(r.content) ? r.content : '';
-    if (S.wasC === undefined) S.wasC = ck;
-    if (ck && ck !== S.wasC && S.tab === 'control' && !S.sheet) { setTimeout(function () { setTab('ahora'); }, 0); buzz(); }
-    S.wasC = ck;
+    /* al entrar al partido, el celular pasa solo a "Ahora en la TV" con alineación, estadísticas y datos */
+    var inMatch = r.screen === 'player' && r.content === 'match';
+    if (S.wasMatch === undefined) S.wasMatch = inMatch;
+    if (inMatch && !S.wasMatch) { S.wasMatch = true; if (S.tab !== 'ahora' && !S.sheet) { setTimeout(function () { setTab('ahora'); toast('📊 Alineación y estadísticas del partido'); }, 0); buzz(); } }
+    else if (!inMatch) S.wasMatch = false;
     if (S.tab === 'ahora') renderAhora();
     /* A4 · aviso de "Está sonando" */
     if (S.songSeen === null) S.songSeen = r.songSeq || 0;
@@ -193,7 +194,7 @@
     if (r.ad && r.ad.seq !== S.adSeen) { S.adSeen = r.ad.seq; showFacts(r.ad); }
     /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
     if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
-    if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; if (S.tab !== 'ahora') showRecipeBanner(); }
+    if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
     if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
     if (!r.ad && S.sheet === 'facts' && !S.factsEnding) endFacts();
     if (S.sheet === 'match' && (r.playing || r.screen !== 'player' || r.content !== 'match')) closeSheet();   /* se reanudó o cambió de canal */
@@ -201,263 +202,20 @@
     if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
     if (r.offer && r.offer.seq !== S.offerSeen) { S.offerSeen = r.offer.seq; showOffer(r.offer); }
   }
-  /* ---------- v7.26 · "Ahora en la TV" según el momento: antes (preparar) · durante (acompañar sin distraer) · después (profundizar) ----------
-     La vista solo se reconstruye cuando cambia lo que muestra; los relojes se actualizan aparte para no perder lo que el usuario está tocando. */
-  var X = CP.moments;
-  S.votes = lsJSON('cp-votes', {}); S.trivia = ls.get('cp-trivia') === '1'; S.rated = lsJSON('cp-rated', {});
-  function vote(key, i, what) { S.votes[key] = i; ls.set('cp-votes', JSON.stringify(S.votes)); send({ t: 'poll', what: what }); buzz(); renderAhora(true); }
-  function secH(t, body, cls) { return '<div class="sec' + (cls ? ' ' + cls : '') + '"><p class="sec-h">' + t + '</p>' + body + '</div>'; }
-  function pollHtml(key, poll) {
-    var my = S.votes[key], h = '<div class="card poll"><p class="pq">' + esc(poll.q) + '</p>';
-    for (var i = 0; i < poll.o.length; i++) {
-      if (my === undefined) { h += '<button class="popt" data-vote="' + key + ':' + i + '">' + esc(poll.o[i]) + '</button>'; continue; }
-      var tot = 0, pc = []; for (var k = 0; k < poll.base.length; k++) { pc[k] = poll.base[k] * 10 + (k === my ? 10 : 0); tot += pc[k]; }
-      var p = Math.round(pc[i] / tot * 100);
-      h += '<div class="pres' + (i === my ? ' mine' : '') + '"><i style="width:' + p + '%"></i><span>' + esc(poll.o[i]) + (i === my ? ' · tu voto' : '') + '</span><b>' + p + '%</b></div>';
+  function renderAhora() {
+    var r = S.room, el = $('ahora'), html = '';
+    if (r.screen === 'player' && r.content === 'match') {
+      var m = C.MATCH;
+      html += '<p class="eyebrow">Partido en vivo · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + m.home.name + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + m.away.name + '</h2>';
+      html += matchInfoHtml();
+      el.innerHTML = html; return;
     }
-    return h + (my === undefined ? '' : '<p class="muted pnote">Gracias por votar · resultados de la comunidad</p>') + '</div>';
-  }
-  function statsHtml(stats) {
-    var m = C.MATCH, h = '<div class="card pad16">';
-    for (var i = 0; i < stats.length; i++) {
-      var st = stats[i], tot = (st[1] + st[2]) || 1;
-      h += '<div class="stat"><div class="row"><span>' + st[1] + st[3] + '</span><span class="muted">' + st[0] + '</span><span>' + st[2] + st[3] + '</span></div><div class="bars"><i style="flex:' + st[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + st[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
-    }
-    return h + '</div>';
-  }
-  function simBar(what, opts) {
-    var h = '<div class="simbar"><p>Simulación · ir al momento</p><div class="chips">';
-    for (var i = 0; i < opts.length; i++) h += '<button data-sim="' + what + ':' + opts[i][0] + '">' + opts[i][1] + '</button>';
-    return h + '</div></div>';
-  }
-  function liRow(av, t, sub, right) { return '<div class="item"><span class="av">' + av + '</span><div class="grow"><div class="t">' + t + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>' + (right || '') + '</div>'; }
-
-  /* ===== ⚽ partido ===== */
-  function mNow() { return X.match.matchAt(S.room.matchStart, Date.now()); }
-  function teamOf(ev) { return ev.team === 'home' ? C.MATCH.home : C.MATCH.away; }
-  function mScoreHtml(t) {
-    var m = C.MATCH, lbl = t.phase === 'pre' ? 'Previa · empieza en <b class="dyn" id="mCd">' + C.fmt(t.countdown) + '</b>'
-      : t.phase === 'half' ? 'Medio tiempo · vuelven en <b class="dyn" id="mCd">' + C.fmt(t.countdown) + '</b>'
-      : t.phase === 'final' ? 'Final del partido' : '<span class="ldot"></span>En vivo · <b class="dyn" id="mMin">' + t.minute + '\'</b>';
-    var g = '';
-    for (var i = 0; i < t.events.length; i++) if (t.events[i].k === 'goal') g += '<span>⚽ ' + esc(t.events[i].who) + ' ' + t.events[i].m + '\'</span>';
-    return '<div class="mscore"><p class="mlbl">' + lbl + '</p><div class="mrow"><span class="mt"><i style="background:' + m.home.color + '"></i>' + m.home.name + '</span><span class="mnum">' + t.score[0] + ' – ' + t.score[1] + '</span><span class="mt r">' + m.away.name + '<i style="background:' + m.away.color + '"></i></span></div>' +
-      (g ? '<div class="mgoals">' + g + '</div>' : '') + '</div>';
-  }
-  function tableHtml(rows, hl) {
-    var h = '<div class="card tbl"><div class="tr th"><span>#</span><span>Equipo</span><span>Pts</span></div>';
-    for (var i = 0; i < rows.length; i++) h += '<div class="tr' + (hl.indexOf(rows[i][0]) >= 0 ? ' hl' : '') + '"><span>' + (i + 1) + '</span><span>' + esc(rows[i][0]) + '</span><span>' + rows[i][1] + '</span></div>';
-    return h + '</div>';
-  }
-  function heatHtml(team) {
-    var g = X.match.heat(team), col = team === 'home' ? '47,111,224' : '217,54,79', h = '<svg class="heat" viewBox="0 0 300 180" aria-label="Mapa de calor"><rect x="0" y="0" width="300" height="180" rx="8" fill="#1F5E36"/>';
-    for (var y = 0; y < 6; y++) for (var x = 0; x < 10; x++) { var v = g[y * 10 + x]; if (v > 0.08) h += '<rect x="' + x * 30 + '" y="' + y * 30 + '" width="30" height="30" fill="rgba(' + col + ',' + (v * 0.85).toFixed(2) + ')"/>'; }
-    h += '<g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"><rect x="4" y="4" width="292" height="172" rx="6"/><path d="M150 4v172"/><circle cx="150" cy="90" r="24"/><rect x="4" y="50" width="34" height="80"/><rect x="262" y="50" width="34" height="80"/></g></svg>';
-    return h;
-  }
-  function momentHtml(ev, t) {
-    var tm = teamOf(ev), d = t.e - ev.at, h = '<div class="moment k-' + ev.k + '">';
-    if (ev.k === 'goal') {
-      h += '<p class="mo-k">⚽ Gol de ' + tm.name + ' · ' + ev.m + '\'</p><h3>' + esc(ev.who) + '</h3><p class="mo-n">' + esc(ev.note) + '</p><p class="muted">' + esc(ev.assist) + '</p>' +
-        '<button class="btn" data-replay="' + ev.id + '">▶  Repetición desde otro ángulo</button></div>' +
-        secH('Así cambia la tabla', tableHtml(X.match.tableAt(t.score, true).slice(0, 5), ['Halcones', 'Toros']) + '<p class="muted tnote">Si el partido terminara así</p>');
-      return h;
-    }
-    if (ev.k === 'card') {
-      h += '<p class="mo-k">' + (ev.color === 'roja' ? '🟥' : '🟨') + ' Tarjeta ' + ev.color + ' · ' + tm.name + ' · ' + ev.m + '\'</p><h3>' + esc(ev.who) + ' <span class="muted">#' + ev.num + '</span></h3><p class="mo-n">' + esc(ev.note) + '</p></div>';
-      return h + secH('Estadísticas parciales', statsHtml(X.match.statsAt(t.minute).slice(0, 4)));
-    }
-    if (ev.k === 'sub') {
-      h += '<p class="mo-k">🔄 Cambio en ' + tm.name + ' · ' + ev.m + '\'</p><p class="mo-n">' + esc(ev.why) + '</p>' +
-        '<div class="subs"><div class="pc out"><span class="pn">' + ev.out[0] + '</span><div><p class="pl1">Sale · ' + esc(ev.out[1]) + '</p><p class="muted">' + esc(ev.out[2]) + '</p></div></div>' +
-        '<div class="pc in"><span class="pn">' + ev.inn[0] + '</span><div><p class="pl1">Entra · ' + esc(ev.inn[1]) + '</p><p class="muted">' + esc(ev.inn[2]) + '</p></div></div></div></div>';
-      return h + secH('Estadísticas parciales', statsHtml(X.match.statsAt(t.minute).slice(0, 4)));
-    }
-    h += '<p class="mo-k">📺 Revisión del VAR · ' + ev.m + '\'</p><p class="mo-n">' + esc(ev.note) + '</p>' +
-      (d < 9 ? '<p class="var-wait"><span class="spin"></span>El árbitro está revisando la jugada…</p>' : '<p class="var-res">Decisión: ' + esc(ev.result) + '</p>') + '</div>';
-    return h + secH('Estadísticas parciales', statsHtml(X.match.statsAt(t.minute).slice(0, 4)));
-  }
-  function matchView(t) {
-    var M = X.match, m = C.MATCH, h = mScoreHtml(t), q = S.votes.quiniela;
-    if (t.phase === 'pre') {
-      h += '<p class="phase-h">Antes del partido</p>';
-      h += secH('Tu quiniela', q === undefined
-        ? '<div class="card poll"><p class="pq">¿Quién gana?</p><div class="qn"><button class="popt" data-quin="0">' + m.home.name + '</button><button class="popt" data-quin="1">Empate</button><button class="popt" data-quin="2">' + m.away.name + '</button></div></div>'
-        : '<div class="card pad16"><p>Elegiste <b>' + ['Gana ' + m.home.name, 'Empate', 'Gana ' + m.away.name][q] + '</b>. Te decimos al final si acertaste.</p><p class="muted" style="margin-top:6px">La comunidad: ' + m.home.name + ' ' + M.quiniela[0] + '% · Empate ' + M.quiniela[1] + '% · ' + m.away.name + ' ' + M.quiniela[2] + '%</p></div>');
-      h += secH('Alineaciones', '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>');
-      var hh = ''; for (var i = 0; i < M.h2h.length; i++) hh += '<div class="hrow">' + esc(M.h2h[i]) + '</div>';
-      h += secH('Historial entre los equipos', '<div class="card pad16"><p class="hsum">' + m.home.name + ' <b>' + M.h2hSum[0] + '</b> · Empates <b>' + M.h2hSum[1] + '</b> · ' + m.away.name + ' <b>' + M.h2hSum[2] + '</b> <span class="muted">(últimos 5)</span></p>' + hh + '</div>');
-      h += secH('Tabla de posiciones', tableHtml(M.tableAt([0, 0], false), ['Halcones', 'Toros']));
-      var inj = ''; for (var j = 0; j < M.injured.length; j++) inj += liRow('🩹', esc(M.injured[j][1]) + ' <span class="muted">· ' + M.injured[j][0] + '</span>', esc(M.injured[j][2]));
-      h += secH('Lesionados', '<div class="card">' + inj + '</div>');
-    } else if (t.phase === 'live') {
-      if (t.moment) h += momentHtml(t.moment, t);
-      else {
-        var ic = ''; for (var k = 0; k < t.events.length; k++) ic += '<span title="' + esc(t.events[k].who || t.events[k].why || '') + '">' + { goal: '⚽', card: t.events[k].color === 'roja' ? '🟥' : '🟨', sub: '🔄', 'var': '📺' }[t.events[k].k] + ' ' + t.events[k].m + '\'</span>';
-        h += '<div class="quiet"><p class="qt">Disfruta la jugada</p><p class="muted">Te avisamos en el momento justo: después de un gol, en las pausas y en el medio tiempo.</p>' + (ic ? '<div class="evline">' + ic + '</div>' : '') + '</div>';
-      }
-    } else if (t.phase === 'half') {
-      h += '<p class="phase-h">Medio tiempo · tu resumen</p>';
-      h += secH('Estadísticas del primer tiempo', statsHtml(M.statsAt(45)));
-      var hm = S.heatTeam || 'home';
-      h += secH('Mapa de calor', '<div class="card pad16"><div class="seg sm"><button data-heat="home"' + (hm === 'home' ? ' class="on"' : '') + '>' + m.home.name + '</button><button data-heat="away"' + (hm === 'away' ? ' class="on"' : '') + '>' + m.away.name + '</button></div>' + heatHtml(hm) + '<p class="muted tnote">Zonas donde más estuvo el equipo · ataca hacia la derecha</p></div>');
-      var bp = ''; for (var b = 0; b < M.saves.length; b++) bp += liRow('🧤', esc(M.saves[b].t) + ' · ' + M.saves[b].m + '\'', esc(M.saves[b].d));
-      for (var e2 = 0; e2 < t.events.length; e2++) { var ev = t.events[e2]; if (ev.m > 45) continue;
-        bp += liRow({ goal: '⚽', card: '🟨', sub: '🔄', 'var': '📺' }[ev.k], esc(ev.k === 'goal' ? 'Gol de ' + ev.who : ev.k === 'card' ? 'Tarjeta a ' + ev.who : ev.k === 'sub' ? 'Entra ' + ev.inn[1] : 'VAR: ' + ev.result) + ' · ' + ev.m + '\'', '', ev.k === 'goal' ? '<button class="btn sm ghost" data-replay="' + ev.id + '">▶ Ver</button>' : ''); }
-      h += secH('Mejores jugadas', '<div class="card">' + bp + '</div>');
-      h += secH('Encuesta', pollHtml('half', M.pollHalf));
-      h += '<div class="promo"><p class="pk">Patrocinado</p><p class="pt">' + esc(M.sponsor.n) + ' · ' + esc(M.sponsor.t) + '</p><p class="muted">' + esc(M.sponsor.s) + '</p><button class="btn sm" data-act="promo">Ver promoción</button></div>';
-    } else {
-      h += '<p class="phase-h">Final del partido</p>';
-      if (q !== undefined) { var res = t.score[0] > t.score[1] ? 0 : t.score[0] === t.score[1] ? 1 : 2;
-        h += '<div class="card pad16 quin ' + (q === res ? 'ok' : 'no') + '">' + (q === res ? '🎉 ¡Acertaste tu quiniela!' : 'Esta vez no acertaste tu quiniela') + '</div>'; }
-      h += secH('Resumen', statsHtml(M.statsAt(90)));
-      var rt = ''; for (var r2 = 0; r2 < M.ratings.length; r2++) rt += '<div class="rrow"><span>' + esc(M.ratings[r2][0]) + ' <span class="muted">' + M.ratings[r2][1] + '</span></span><b class="' + (M.ratings[r2][2] >= 8 ? 'hi' : '') + '">' + M.ratings[r2][2].toFixed(1) + '</b></div>';
-      h += secH('Calificaciones de los jugadores', '<div class="card pad16">' + rt + '</div>');
-      h += secH('Vota por el MVP', pollHtml('mvp', { q: '¿Quién fue el mejor del partido?', o: M.mvp.o, base: M.mvp.base }));
-      h += secH('Próximo partido', '<div class="card pad16 nextm"><div><p class="t">' + esc(M.next.t) + '</p><p class="muted">' + esc(M.next.s) + '</p></div><button class="btn sm' + (S.votes.remind ? ' ghost' : '') + '" data-act="remind">' + (S.votes.remind ? '✓ Te avisamos' : 'Recordármelo') + '</button></div>');
-    }
-    return h + simBar('match', [['pre', 'Previa'], ['live', 'En juego'], ['goal', 'Gol'], ['card', 'Tarjeta'], ['sub', 'Cambio'], ['var', 'VAR'], ['half', 'Medio tiempo'], ['final', 'Final']]);
-  }
-  function openReplay(id) {
-    var ev = X.match.EV[id], tm = teamOf(ev);
-    openSheet('replay', '<p class="eyebrow">Repetición · ' + esc(ev.angle || 'otro ángulo') + '</p><h2>' + esc(ev.who) + ' · ' + ev.m + '\'</h2>' +
-      '<svg class="replay" viewBox="0 0 300 180"><rect width="300" height="180" rx="10" fill="#1F5E36"/><g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"><rect x="4" y="4" width="292" height="172" rx="6"/><path d="M150 4v172"/><circle cx="150" cy="90" r="24"/><rect x="' + (ev.team === 'home' ? 262 : 4) + '" y="50" width="34" height="80"/></g>' +
-      '<path id="rp" d="' + (ev.team === 'home' ? 'M120 140 C170 150 220 120 240 95 S 280 88 296 86' : 'M180 40 C130 30 80 60 60 85 S 20 92 4 92') + '" fill="none" stroke="rgba(255,255,255,.35)" stroke-dasharray="4 4"/>' +
-      '<circle r="6" fill="#fff"><animateMotion dur="2.4s" repeatCount="indefinite" rotate="auto"><mpath href="#rp" xlink:href="#rp"/></animateMotion></circle>' +
-      '<circle r="9" fill="' + tm.color + '" stroke="#fff" stroke-width="2"><animateMotion dur="2.4s" repeatCount="indefinite" keyPoints="0;0.8;0.8" keyTimes="0;0.7;1" calcMode="linear"><mpath href="#rp" xlink:href="#rp"/></animateMotion></circle></svg>' +
-      '<p class="sub" style="margin-top:12px">' + esc(ev.note) + ' · ' + esc(ev.assist || '') + '</p><p class="muted" style="margin-top:6px;font-size:12px">Repetición simulada para el prototipo.</p>');
-  }
-
-  /* ===== 🎬 película ===== */
-  function movieView(r) {
-    var MV = X.movie, p = pos(), mt = X.movieAt(p, C.SERIES.duration), h = '';
-    h += '<p class="eyebrow">' + (r.playing ? 'Película en curso' : 'En pausa') + ' · ' + C.fmt(p) + '</p><h2 style="margin-top:4px">Los Pecadores</h2>';
-    if (!r.playing && mt.phase !== 'credits') {   /* pausa: ahora sí, el detalle de la escena */
+    if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
-      h += '<p class="phase-h">En pausa · lo que hay en esta escena</p><p class="muted">' + esc(sc.place) + '</p><div style="margin-top:12px"><button class="btn ghost" data-act="play">▶  Seguir viendo</button></div>';
-      return h + '__PAUSE__';
-    }
-    var tg = '<button class="set-row sw-row trow" data-act="trivia"><span class="grow"><span class="t">Modo trivia</span><span class="s">Datos curiosos solo en escenas tranquilas, nunca en el clímax</span></span><span class="sw' + (S.trivia ? ' on' : '') + '"><i></i></span></button>';
-    if (mt.phase === 'before') {
-      h += '<p class="phase-h">Antes de empezar</p>';
-      var fi = ''; for (var i = 0; i < MV.info.length; i++) fi += '<div><span class="muted">' + MV.info[i][0] + '</span><b>' + esc(MV.info[i][1]) + '</b></div>';
-      h += secH('Ficha', '<div class="card pad16 ficha">' + fi + '</div>');
-      var ca = ''; for (var c = 0; c < MV.cast.length; c++) ca += liRow(esc(MV.cast[c][0].charAt(0)), esc(MV.cast[c][0]), 'Como ' + esc(MV.cast[c][1]));
-      h += secH('Reparto', '<div class="card">' + ca + '</div>');
-      var kn = ''; for (var k = 0; k < MV.know.length; k++) kn += '<li>' + esc(MV.know[k]) + '</li>';
-      h += secH('Lo que debes saber antes de verla <span class="muted">· sin spoilers</span>', '<div class="card pad16"><ul class="know">' + kn + '</ul></div>');
-      h += secH('Mientras la ves', tg);
-    } else if (mt.phase === 'credits') {
-      h += '<p class="phase-h">Créditos finales</p>';
-      h += secH('Explicación del final', S.showEnd ? '<div class="card pad16"><p>' + esc(MV.endNote) + '</p></div>' : '<button class="card pad16 spoil" data-act="showEnd">⚠️ Contiene spoilers · toca para leer</button>');
-      var bh = ''; for (var b = 0; b < MV.behind.length; b++) bh += liRow('🎬', esc(MV.behind[b]));
-      h += secH('Detrás de cámaras', '<div class="card">' + bh + '</div>');
-      var so = '', scs = C.SERIES.scenes; for (var s2 = 0; s2 < scs.length; s2++) so += liRow('♪', esc(scs[s2].song.t), esc(scs[s2].song.a), '<button class="btn sm ghost" data-song="' + s2 + '">Guardar</button>');
-      h += secH('Banda sonora', '<div class="card">' + so + '</div>');
-      var rc = ''; for (var q = 0; q < MV.recs.length; q++) rc += liRow('▶', esc(MV.recs[q][0]), esc(MV.recs[q][1]), '<button class="btn sm ghost" data-act="recMovie" data-i="' + q + '">Ver</button>');
-      h += secH('Si te gustó, te recomendamos', '<div class="card">' + rc + '</div>');
-      h += secH('Califica la película', starsHtml('series'));
-    } else {
-      h += '<p class="phase-h">Durante la película</p>' + tg;
-      if (!S.trivia) h += '<div class="quiet"><p class="qt">Disfruta la película</p><p class="muted">No te interrumpimos. Si pausas, te mostramos personajes, canción y productos de la escena.</p></div>';
-      else if (mt.phase === 'calm') h += '<div class="moment k-trivia"><p class="mo-k">🎬 Dato · ' + esc(mt.trivia.t) + '</p><p class="mo-n">' + esc(mt.trivia.f) + '</p></div>';
-      else if (mt.phase === 'intense') h += '<div class="quiet"><p class="qt">🤫 Escena importante</p><p class="muted">Ahora no te mostramos nada. El siguiente dato llega en una escena tranquila.</p></div>';
-      else h += '<div class="quiet"><p class="qt">Modo trivia activado</p><p class="muted">El siguiente dato llega en la próxima escena tranquila: transiciones, cambios de locación o escenas sin diálogo.</p></div>';
-    }
-    return h + simBar('series', [['before', 'Antes de empezar'], ['calm', 'Escena tranquila'], ['intense', 'Escena intensa'], ['credits', 'Créditos']]);
-  }
-  function starsHtml(key) {
-    var v = S.rated[key] || 0, h = '<div class="card pad16 stars">';
-    for (var i = 1; i <= 5; i++) h += '<button data-rate="' + key + ':' + i + '" aria-label="' + i + ' estrellas" class="' + (i <= v ? 'on' : '') + '">★</button>';
-    return h + (v ? '<p class="muted">¡Gracias! Calificaste con ' + v + ' de 5</p>' : '<p class="muted">Toca las estrellas</p>') + '</div>';
-  }
-  function bunnyView(r) {
-    var B = C.BUNNY, BX = X.bunny, p = pos(), h = '<p class="eyebrow">Corto animado · ' + C.fmt(p) + '</p><h2 style="margin-top:4px">Big Buck Bunny</h2>';
-    if (p >= BX.creditsAt) {
-      h += '<p class="phase-h">Créditos finales</p>';
-      var bh = ''; for (var i = 0; i < B.facts.length; i++) bh += liRow('🎬', esc(B.facts[i]));
-      h += secH('Detrás de cámaras', '<div class="card">' + bh + '</div>');
-      var rc = ''; for (var q = 0; q < BX.recs.length; q++) rc += liRow('▶', esc(BX.recs[q][0]), esc(BX.recs[q][1]));
-      h += secH('Más cortos como este', '<div class="card">' + rc + '</div>');
-      h += secH('Califica el corto', starsHtml('bunny'));
-    } else h += '<div class="quiet"><p class="qt">Disfruta el corto</p><p class="muted">En el corte comercial te mostramos datos curiosos, la ficha del personaje y una encuesta.</p></div>';
-    return h + simBar('bunny', [['start', 'Inicio'], ['ad', 'Corte comercial'], ['credits', 'Créditos']]);
-  }
-
-  /* ===== 🍳 receta ===== */
-  function recipeView(p, ended) {
-    var RC = C.RECIPE, RX = X.recipe, ra = ended ? { phase: 'final', step: RC.steps.length - 1 } : X.recipeAt(p), st = RC.steps[ra.step], sx = RX.steps[ra.step], h = '';
-    h += '<p class="eyebrow">' + esc(RC.title) + (ended ? ' · terminó en la TV' : ' · ' + C.fmt(p)) + '</p><h2 style="margin-top:4px">' + esc(RC.dish) + '</h2>';
-    var meta = ''; for (var i = 0; i < RX.meta.length; i++) meta += '<div><b>' + RX.meta[i][0] + '</b><span class="muted">' + RX.meta[i][1] + '</span></div>';
-    var saved = S.votes.rcSaved, list = S.votes.rcList;
-    var top = '<div class="card pad16"><div class="rmeta">' + meta + '</div><div class="ract"><button class="btn sm' + (saved ? ' ghost' : '') + '" data-act="rcSave">' + (saved ? '✓ Guardada' : '☆ Guardar receta') + '</button>' +
-      '<button class="btn sm' + (list ? ' ghost' : '') + '" data-act="rcList">' + (list ? '✓ En tu lista del súper' : '＋ Lista del súper') + '</button></div><button class="btn ghost" data-act="recipe" style="margin-top:8px">🛒 Comprar los ingredientes</button></div>';
-    if (ra.phase === 'final') {
-      h += '<p class="phase-h">¡A emplatar!</p>';
-      var pr = ''; for (var a = 0; a < RX.pairing.length; a++) pr += liRow('🥂', esc(RX.pairing[a][0]), esc(RX.pairing[a][1]));
-      h += secH('Para acompañar', '<div class="card">' + pr + '</div>');
-      h += secH('Comparte tu platillo', '<div class="card pad16 share">' + (S.rcPhoto ? '<img src="' + S.rcPhoto + '" alt="Tu platillo"><div class="ract"><button class="btn sm" data-act="rcShare">Compartir foto</button><button class="btn sm ghost" data-act="rcUpload">' + (S.votes.rcUp ? '✓ Publicada' : 'Subir mi versión') + '</button></div>'
-        : '<p class="muted">Toma una foto de tus enchiladas y compártela, o sube tu versión a Recetas para ti.</p><label class="btn sm" style="margin-top:10px">📷 Tomar foto<input type="file" accept="image/*" capture="environment" id="rcPhotoIn" hidden></label>') + '</div>');
-      var rl = ''; for (var b = 0; b < RX.related.length; b++) rl += liRow('🍽', esc(RX.related[b][0]), esc(RX.related[b][1]), '<button class="btn sm ghost" data-act="rcRelated" data-i="' + b + '">Ver</button>');
-      h += secH('Recetas relacionadas', '<div class="card">' + rl + '</div>');
-      h += secH('La receta', top);
-      return h + (ended ? '' : simBar('recipe', [['start', 'Inicio'], ['wait', 'Espera'], ['step', 'Paso a paso'], ['final', 'Final']]));
-    }
-    if (p < 25 && ra.step === 0) h += '<p class="phase-h">Al presentar el platillo</p>' + secH('Receta completa', top + ingHtml());
-    h += '<div class="moment k-step"><p class="mo-k">Paso ' + (ra.step + 1) + ' de ' + RC.steps.length + ' · ahora en la TV</p><h3>' + st.ic + ' ' + esc(st.t) + '</h3><p class="mo-n">' + esc(st.d) + '</p>' +
-      '<div class="rx"><p class="rxk">Cantidades exactas</p><p>' + esc(sx.q) + '</p></div><div class="rx"><p class="rxk">Si no tienes…</p><p>' + esc(sx.s) + '</p></div>' +
-      '<div class="rx tool"><div class="grow"><p class="rxk">Lo que usa el chef</p><p>' + esc(sx.tool[0]) + ' · ' + sx.tool[1] + '</p></div><button class="btn sm ghost" data-act="rcTool" data-i="' + ra.step + '">Ver</button></div></div>';
-    if (ra.phase === 'wait') {
-      var tm = S.rcTimer && S.rcTimer.step === ra.step ? S.rcTimer : null;
-      h += '<p class="phase-h">⏱ Momento de espera · ' + esc(sx.wait.t) + '</p>';
-      h += '<div class="card pad16 timer"><b class="dyn" id="rtLeft">' + C.fmt(tm ? timerLeft(tm) : sx.wait.min * 60) + '</b><div class="ract">' +
-        (tm && tm.endsAt ? '<button class="btn sm ghost" data-act="rtPause">Pausar</button>' : '<button class="btn sm" data-act="rtStart" data-i="' + ra.step + '">' + (tm ? 'Reanudar' : 'Iniciar temporizador') + '</button>') +
-        (tm ? '<button class="btn sm ghost" data-act="rtReset">Reiniciar</button>' : '') + '</div></div>';
-      h += secH('Tip del chef', '<div class="card pad16"><p>💡 ' + esc(sx.tip) + '</p></div>');
-      var nu = ''; for (var n = 0; n < RX.nutrition.length; n++) nu += '<div><b>' + RX.nutrition[n][0] + '</b><span class="muted">' + RX.nutrition[n][1] + '</span></div>';
-      h += secH('Información nutricional <span class="muted">· por porción</span>', '<div class="card pad16 rmeta nut">' + nu + '</div>');
-      var va = ''; for (var v = 0; v < RX.variations.length; v++) va += liRow('✨', esc(RX.variations[v]));
-      h += secH('Variaciones', '<div class="card">' + va + '</div>');
-    }
-    var sl = ''; for (var k = 0; k < RC.steps.length; k++) sl += '<div class="rstep' + (k === ra.step ? ' on' : k < ra.step ? ' done' : '') + '"><span>' + (k < ra.step ? '✓' : k + 1) + '</span>' + esc(RC.steps[k].t) + '</div>';
-    h += secH('Todos los pasos', '<div class="card pad16">' + sl + '</div>');
-    if (!(p < 25 && ra.step === 0)) h += secH('La receta', top);
-    return h + simBar('recipe', [['start', 'Inicio'], ['wait', 'Espera'], ['step', 'Paso a paso'], ['final', 'Final']]);
-  }
-  function ingHtml() { var RC = C.RECIPE, h = '<div class="card ing">'; for (var i = 0; i < RC.ingredients.length; i++) h += '<div class="irow"><span>' + RC.ingredients[i].ic + ' ' + esc(RC.ingredients[i].n) + '</span><span class="muted">' + esc(RC.ingredients[i].q) + '</span></div>'; return h + '</div>'; }
-  function timerLeft(tm) { return tm.endsAt ? Math.max(0, (tm.endsAt - Date.now()) / 1000) : tm.left; }
-
-  /* ===== armar la vista ===== */
-  function renderAhora(force) {
-    var r = S.room, el = $('ahora'), html = '', inP = r.screen === 'player';
-    if (inP) S.after = null;
-    if (inP && r.content === 'match') html = matchView(mNow());
-    else if (inP && r.content === 'series') html = movieView(r);
-    else if (inP && r.content === 'video') html = bunnyView(r);
-    else if (inP && r.content === 'recipe') html = recipeView(pos(), false);
-    else if (S.after && Date.now() - S.after.at < 10 * 60000) html = S.after.k === 'recipe' ? recipeView(0, true) : S.after.k === 'match' ? matchView(X.match.matchAt(1, 1 + (X.match.T.end + 1) * 1000)) : '';
-    if (!html) {
-      html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:6px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
-      '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
-      html += soundtrackHtml();
-      html += soundtrackHtml();
-    }
-    if (html.indexOf('__PAUSE__') >= 0) html = html.replace('__PAUSE__', scenePauseHtml());
-    var key = html.replace(/(<b class="dyn" id="[^"]*">)[^<]*(<\/b>)/g, '$1$2');
-    if (!force && key === el._k) { dynTick(); return; }
-    el._k = key; el.innerHTML = html;
-    var pin = $('rcPhotoIn'); if (pin) pin.onchange = function () { var f = pin.files && pin.files[0]; if (!f) return; try { S.rcPhoto = URL.createObjectURL(f); } catch (e) { return; } renderAhora(true); toast('📷 ¡Se ve delicioso!'); };
-  }
-  /* relojes de la vista (sin reconstruirla) */
-  function dynTick() {
-    if (!S.room) return;
-    var a = $('mCd'), b = $('mMin'), c = $('rtLeft'), t;
-    if ((a || b) && S.room.content === 'match') { t = mNow(); if (a) a.textContent = C.fmt(t.countdown); if (b) b.textContent = t.minute + '\''; }
-    if (c && S.rcTimer) c.textContent = C.fmt(timerLeft(S.rcTimer));
-  }
-  function scenePauseHtml() {
-    var r = S.room, sc = sceneNow(), html = '';
+      html += '<p class="eyebrow">En esta escena · ' + esc(sc.place) + '</p><h2 style="margin-top:4px">Los Pecadores</h2>';
+      html += '<div style="margin-top:12px">' + (r.playing
+        ? '<button class="btn" data-act="pause">❚❚  Pausar y descubrir en la TV</button>'
+        : '<button class="btn ghost" data-act="play">▶  Seguir viendo</button>') + '</div>';
       html += '<div class="sec"><p class="sec-h">Personajes</p><div class="card">';
       for (var c = 0; c < sc.cast.length; c++) html += '<div class="item"><span class="av">' + esc(sc.cast[c][0].charAt(0)) + '</span><div class="grow"><div class="t">' + esc(sc.cast[c][0]) + '</div><div class="s">Interpretado por ' + esc(sc.cast[c][1]) + '</div></div></div>';
       html += '</div></div>';
@@ -465,24 +223,14 @@
       html += '<div class="sec"><p class="sec-h">Productos de la escena</p><div class="card">';
       for (var p = 0; p < sc.products.length; p++) html += '<div class="item"><span class="av">🛍</span><div class="grow"><div class="t">' + esc(sc.products[p][0]) + '</div><div class="s">' + esc(sc.products[p][1]) + '</div></div><button class="btn sm ghost" data-act="product" data-i="' + p + '">Ver</button></div>';
       html += '</div></div>';
-    return html + soundtrackHtml();
-  }
-  /* cada segundo: avisos mínimos del partido, fin del temporizador, "después" y la vista */
-  setInterval(function () {
-    var r = S.room; if (!r || S.fake) return;
-    if (r.screen === 'player' && r.content === 'match' && r.matchStart) {
-      var t = mNow(), n = t.events.length;
-      if (S.mEv === undefined || n < S.mEv) S.mEv = n;
-      if (n > S.mEv) { var ev = t.events[n - 1], tn = teamOf(ev).name; S.mEv = n; buzz();
-        toast(ev.k === 'goal' ? '⚽ Gol de ' + tn + ' · ' + t.score[0] + '–' + t.score[1] : ev.k === 'card' ? (ev.color === 'roja' ? '🟥' : '🟨') + ' Tarjeta · ' + ev.who : ev.k === 'sub' ? '🔄 Cambio en ' + tn : '📺 Revisión del VAR'); }
-      if (S.mPh !== t.phase) { if (S.mPh && (t.phase === 'half' || t.phase === 'final')) { buzz(); toast(t.phase === 'half' ? '⏸ Medio tiempo: tu resumen está listo' : '🏁 Final: califica y vota por el MVP'); } S.mPh = t.phase; }
+      html += soundtrackHtml();
+      el.innerHTML = html; return;
     }
-    /* al terminar, lo de "después" se queda un rato en el celular */
-    if (r.screen === 'player') S.lastC = { k: r.content, done: r.content === 'recipe' ? pos() >= X.recipe.finalFrom : r.content === 'match' ? mNow().phase === 'final' : false };
-    else if (S.lastC) { if (S.lastC.done) S.after = { k: S.lastC.k, at: Date.now() }; S.lastC = null; }
-    if (S.rcTimer && S.rcTimer.endsAt && Date.now() >= S.rcTimer.endsAt) { S.rcTimer.endsAt = 0; S.rcTimer.left = 0; buzz(); setTimeout(buzz, 300); toast('⏱ ¡Tiempo! Ya puedes seguir con la receta'); if (S.tab === 'ahora') renderAhora(true); }
-    if (S.tab === 'ahora') renderAhora();
-  }, 1000);
+    html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:6px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
+      '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
+    html += soundtrackHtml();
+    el.innerHTML = html;
+  }
   /* Alineación / Estadísticas / Datos del partido: se usa en "Ahora en la TV" y en la hoja que sale al pausar */
   function matchInfoHtml() {
     var m = C.MATCH, html = '';
@@ -491,9 +239,8 @@
     if (S.seg === 'lineup') {
       html += '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>';
     } else if (S.seg === 'stats') {
-      var lst = X.match.statsAt(mNow().minute);
-      for (var i = 0; i < lst.length; i++) {
-        var s = lst[i], tot = (s[1] + s[2]) || 1;
+      for (var i = 0; i < m.stats.length; i++) {
+        var s = m.stats[i], tot = s[1] + s[2];
         html += '<div class="stat"><div class="row"><span>' + s[1] + s[3] + '</span><span class="muted">' + s[0] + '</span><span>' + s[2] + s[3] + '</span></div><div class="bars"><i style="flex:' + s[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + s[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
       }
     } else {
@@ -504,8 +251,7 @@
   /* Al pausar el partido, el celular abre sus datos (alineación, estadísticas y datos) + la repetición en Anytime */
   function openMatchSheet() {
     var m = C.MATCH, of = C.offerSource('match').offer;
-    var mt = mNow();
-    openSheet('match', '<p class="eyebrow">Pausaste el partido · ' + (mt.phase === 'pre' ? 'previa' : mt.phase === 'half' ? 'medio tiempo' : mt.phase === 'final' ? 'final' : 'minuto ' + mt.minute) + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + mt.score[0] + ' – ' + mt.score[1] + ' ' + esc(m.away.name) + '</h2>' +
+    openSheet('match', '<p class="eyebrow">Pausaste el partido · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + esc(m.away.name) + '</h2>' +
       matchInfoHtml() +
       (of ? '<div class="mreplay"><div class="grow"><div class="t">' + esc(of.line) + '</div><div class="s">Disponible en Anytime · desde el inicio</div></div><button class="btn sm ghost" data-act="offerGo" data-ch="match">Ver en la TV</button></div>' : '') +
       '<button class="btn" data-act="play" style="margin-top:14px">▶  Seguir viendo el partido</button>');
@@ -586,8 +332,7 @@
     var facts = C.BUNNY.facts, i = 0;
     S.factsEnding = false;
     openSheet('facts', '<p class="eyebrow" style="color:#7A4CC4">Mientras ves el comercial</p><h2>Datos curiosos de Big Buck Bunny</h2><p class="sub" id="fLeft"></p>' +
-      '<div class="fact" id="fact"></div><div class="dots" id="fDots"></div>' +
-      '<div class="fchar"><p class="rxk">El personaje</p><p><b>' + esc(X.bunny.character[0]) + '</b> · ' + esc(X.bunny.character[1]) + '</p></div><div id="fPoll">' + pollHtml('bunny', X.bunny.poll) + '</div>');
+      '<div class="fact" id="fact"></div><div class="dots" id="fDots"></div>');
     function paint() {
       if (S.sheet !== 'facts') return;
       $('fact').innerHTML = '<span class="fn">' + (i + 1) + '/' + facts.length + '</span>' + esc(facts[i]);
@@ -1017,13 +762,6 @@
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
     else if (seg) { S.seg = seg; if (S.sheet === 'match') openMatchSheet(); else renderAhora(); }
-    else if (g('data-vote')) { var vv = g('data-vote').split(':'), vp = vv[0] === 'half' ? X.match.pollHalf : vv[0] === 'mvp' ? X.match.mvp : X.bunny.poll; vote(vv[0], Number(vv[1]), vp.o[Number(vv[1])]); if (vv[0] === 'bunny' && $('fPoll')) $('fPoll').innerHTML = pollHtml('bunny', X.bunny.poll); }
-    else if (g('data-quin')) { var qi = Number(g('data-quin')); vote('quiniela', qi, 'quiniela · ' + ['gana ' + C.MATCH.home.name, 'empate', 'gana ' + C.MATCH.away.name][qi]); }
-    else if (g('data-heat')) { S.heatTeam = g('data-heat'); renderAhora(true); }
-    else if (g('data-replay')) openReplay(Number(g('data-replay')));
-    else if (g('data-sim')) { var sm = g('data-sim').split(':'); if (S.fake) toast('La simulación funciona con la TV real', true); else { send({ t: 'sim', what: sm[0], to: sm[1] }); toast('Simulación: ' + el.textContent); } }
-    else if (g('data-song')) saveSong(C.SERIES.scenes[Number(g('data-song'))].song);
-    else if (g('data-rate')) { var rr = g('data-rate').split(':'); S.rated[rr[0]] = Number(rr[1]); ls.set('cp-rated', JSON.stringify(S.rated)); send({ t: 'poll', what: rr[1] + ' estrellas' }); buzz(); renderAhora(true); }
     else if (act === 'power') { send({ t: 'power' }); if (!S.fake) toast(S.room && S.room.off ? 'Encendiendo la TV' : 'Apagando la TV'); }
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();
@@ -1037,20 +775,6 @@
     else if (act === 'settings') openSettings();
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
     else if (act === 'cfgClose') setTab('control');
-    else if (act === 'trivia') { S.trivia = !S.trivia; ls.set('cp-trivia', S.trivia ? '1' : '0'); toast(S.trivia ? 'Modo trivia activado' : 'Modo trivia desactivado'); renderAhora(true); }
-    else if (act === 'showEnd') { S.showEnd = true; renderAhora(true); }
-    else if (act === 'recMovie') toast('Agregada a tu lista: ' + X.movie.recs[Number(g('data-i'))][0]);
-    else if (act === 'promo') { send({ t: 'product', what: X.match.sponsor.n + ' · ' + X.match.sponsor.t }); toast('Promoción abierta en Shop Totalplay (simulado)'); }
-    else if (act === 'remind') { S.votes.remind = !S.votes.remind; ls.set('cp-votes', JSON.stringify(S.votes)); toast(S.votes.remind ? '⏰ Te avisamos 30 min antes del partido' : 'Recordatorio quitado'); renderAhora(true); }
-    else if (act === 'rcSave') { S.votes.rcSaved = !S.votes.rcSaved; ls.set('cp-votes', JSON.stringify(S.votes)); toast(S.votes.rcSaved ? '★ Receta guardada' : 'Receta quitada de guardadas'); renderAhora(true); }
-    else if (act === 'rcList') { S.votes.rcList = !S.votes.rcList; ls.set('cp-votes', JSON.stringify(S.votes)); toast(S.votes.rcList ? '🛒 ' + C.RECIPE.ingredients.length + ' ingredientes en tu lista del súper' : 'Quitados de tu lista del súper'); renderAhora(true); }
-    else if (act === 'rcTool') { var tl = X.recipe.steps[Number(g('data-i'))].tool; send({ t: 'product', what: tl[0] }); toast(tl[0] + ' · ' + tl[1] + ' en Shop Totalplay (simulado)'); }
-    else if (act === 'rcRelated') toast('Guardada para después: ' + X.recipe.related[Number(g('data-i'))][0]);
-    else if (act === 'rcShare') { if (navigator.share) { try { navigator.share({ title: 'Mis enchiladas verdes', text: 'Las hice con Recetas para ti 🍽️' }); } catch (e3) { toast('Foto lista para compartir'); } } else toast('Foto lista para compartir (simulado)'); }
-    else if (act === 'rcUpload') { S.votes.rcUp = true; ls.set('cp-votes', JSON.stringify(S.votes)); send({ t: 'notice', text: '📷 ' + S.name + ' subió su versión de las enchiladas' }); toast('¡Gracias! Tu versión se publicó en Recetas para ti (simulado)'); renderAhora(true); }
-    else if (act === 'rtStart') { var wi = Number(g('data-i')), w = X.recipe.steps[wi].wait; var tmr = S.rcTimer && S.rcTimer.step === wi ? S.rcTimer : { step: wi, left: w.min * 60 }; tmr.endsAt = Date.now() + tmr.left * 1000; S.rcTimer = tmr; toast('⏱ Temporizador de ' + w.min + ' min iniciado'); renderAhora(true); }
-    else if (act === 'rtPause') { if (S.rcTimer) { S.rcTimer.left = timerLeft(S.rcTimer); S.rcTimer.endsAt = 0; } renderAhora(true); }
-    else if (act === 'rtReset') { S.rcTimer = null; renderAhora(true); }
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
