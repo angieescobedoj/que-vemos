@@ -462,6 +462,18 @@ body.light .fav-row button.dcta.warn{background:#FFF5F5}
 body.light .fav-foot{background:rgba(255,255,255,.97);border-top-color:rgba(122,76,196,.18)}
 body.light .fav-count{color:#6B3FC0;background:#EFE5FF}
 body.light .fav-count.full{color:#15803D;background:#DCFCE7}
+
+/* v7.25 · medidas del control: apagar 56, circulares 48, teclas 104×64 con 12 px entre filas, apps 72×72 arriba de las teclas */
+.top{grid-template-columns:56px 1fr 56px;height:64px}
+.top .pwr{width:56px;height:56px}
+.top .pwr svg{width:26px;height:26px}
+.navc .circ{width:48px;height:48px}
+.navc .circ svg{width:22px;height:22px}
+.keypad{gap:12px}
+.keypad .keys3 button{height:64px}
+#appsRow{grid-template-columns:repeat(4,72px)!important}
+#appsRow button{width:72px;height:72px}
+.keypad #appsRow{width:100%;margin-bottom:4px}   /* 12 + 4 = 16 px hasta la fila de reproducción */
 </style>
 </head>
 <body>
@@ -502,6 +514,7 @@ body.light .fav-count.full{color:#15803D;background:#DCFCE7}
         </div>
       </div>
       <div class="keypad">
+        <div class="apps" id="appsRow"></div>   <!-- favoritas (Configuración → Aplicaciones favoritas), justo arriba de reproducción y volumen -->
       <div class="keys3">
         <button class="gl" data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
         <button class="gl" data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
@@ -513,7 +526,6 @@ body.light .fav-count.full{color:#15803D;background:#DCFCE7}
         <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       </div>
-      <div class="apps" id="appsRow"></div>   <!-- favoritas: se arman desde Configuración → Aplicaciones favoritas -->
     </div>
 
     <div data-tab="decs" hidden><div id="decsView"></div></div>
@@ -568,11 +580,11 @@ body.light .fav-count.full{color:#15803D;background:#DCFCE7}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.24"></script>
-<script src="../src/services/firestore-rest.js?v=7.24"></script>
-<script src="content.js?v=7.24"></script>
-<script src="logos.js?v=7.24"></script>
-<script src="store.js?v=7.24"></script>
-<script src="phone.js?v=7.24"></script>
+<script src="../src/services/http.js?v=7.25"></script>
+<script src="../src/services/firestore-rest.js?v=7.25"></script>
+<script src="content.js?v=7.25"></script>
+<script src="logos.js?v=7.25"></script>
+<script src="store.js?v=7.25"></script>
+<script src="phone.js?v=7.25"></script>
 </body>
 </html>
