@@ -85,14 +85,7 @@
   function recipeStep(pos) { return Math.max(0, Math.min(RECIPE.steps.length - 1, Math.floor(pos / (RECIPE.dur / RECIPE.steps.length)))); }
 
   var BUNNY = { id: 'bunny', kind: 'video', title: 'Big Buck Bunny', sub: 'Corto animado · 2008', tag: 'Seguir viendo', src: 'video/big-buck-bunny.mp4?v=1',
-    poster: 'video/bbb-poster.jpg', dur: 60, adAt: 20, adSecs: 20, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0',
-    facts: [
-      'Lo hizo en 2008 el Blender Institute, en Ámsterdam, como proyecto de la Blender Foundation.',
-      'Se creó completo con software libre: el programa de animación es Blender.',
-      'Su nombre clave durante la producción fue «Proyecto Peach».',
-      'Tiene licencia Creative Commons: cualquiera puede usarlo y compartirlo, como en esta demo.',
-      'Los tres roedores que molestan al conejo se llaman Frank, Rinky y Gimera.'
-    ] };
+    poster: 'video/bbb-poster.jpg', dur: 60, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0' };
 
   var SWIPE = { id: 'swipe', kind: 'game', title: '¿Qué vemos?', sub: 'Match de películas · 2 o más', tag: 'Juego' };
 

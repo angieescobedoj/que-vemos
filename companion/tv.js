@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7,
-    menu: false, guide: false, lat: 0, movie: null, ad: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
+    menu: false, guide: false, lat: 0, movie: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -57,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
-      movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, tvLat: S.lat, aliveAt: now(), ad: S.ad, offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
+      movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }
     };
   }
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.ad && snap.ad.seq, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -386,8 +386,8 @@
     S.query = ''; show('home'); renderHome();
   }
 
-  /* ================= Seguir viendo · Big Buck Bunny con corte a comerciales ================= */
-  var V = { adDone: false, inAd: false, adTimer: null, adTick: null, needSound: false, uiTimer: null, endTimer: null };
+  /* ================= Big Buck Bunny (video real, sin cortes comerciales) ================= */
+  var V = { needSound: false, uiTimer: null, endTimer: null };
   function playerEl() { return document.querySelector('[data-screen="player"]'); }
   function pokeUI() {
     var el = playerEl(); el.className = el.className.replace(/ ?ui-off/g, '');
@@ -414,7 +414,6 @@
     if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
     if (S.screen === 'player' && S.content === 'movie') S.movie = null;
     var start = fromStart ? 0 : (S.vsaved || 0); if (start > B.dur - 3) start = 0;
-    V.adDone = start > B.adAt; V.inAd = false; S.ad = null; $('adBreak').hidden = true;
     S.content = 'video'; S.playing = true; S.posAt = now(); S.pos = start;
     $('pausePanel').hidden = true;
     show('player');
@@ -427,51 +426,28 @@
   }
   function stopVideo() {
     var v = $('vid'); if (!v) return;
-    if (S.content === 'video') { S.vsaved = V.inAd ? Math.max(0, C.BUNNY.adAt - 2) : (v.currentTime || 0); if (V.inAd) V.adDone = false; }
+    if (S.content === 'video') S.vsaved = v.currentTime || 0;
     if (!v.paused) { try { v.pause(); } catch (e) { /* ignore */ } }
     v.hidden = true; $('vidShade').hidden = true;
-    endAd(true);
     clearTimeout(V.endTimer);
     var el = playerEl(); el.className = el.className.replace(/ ?ui-off/g, '');
   }
   function vSeek(d) {
-    var v = $('vid'), B = C.BUNNY; if (V.inAd) { toast('Es un comercial: la película sigue en un momento', 1800); return; }
+    var v = $('vid'), B = C.BUNNY;
     try { v.currentTime = Math.max(0, Math.min(B.dur - 1, (v.currentTime || 0) + d)); } catch (e) { /* ignore */ }
     toast((d > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(d) + ' s', 1200); pokeUI();
   }
-  function startAd() {
-    var B = C.BUNNY, v = $('vid');
-    V.inAd = true; V.adDone = true;
-    try { v.pause(); } catch (e) { /* ignore */ }
-    S.ad = { seq: now(), endsAt: now() + B.adSecs * 1000, secs: B.adSecs };
-    $('adBreak').hidden = false; pokeUI();
-    clearInterval(V.adTick);
-    V.adTick = setInterval(function () {
-      var left = Math.max(0, Math.ceil((S.ad ? S.ad.endsAt - now() : 0) / 1000));
-      $('adLeft').textContent = 'Volvemos en 0:' + (left < 10 ? '0' : '') + left;
-      if (left <= 0) { endAd(false); }
-    }, 250);
-    pushState();
-  }
-  function endAd(silent) {
-    clearInterval(V.adTick);
-    if (!V.inAd && !S.ad) return;
-    V.inAd = false; S.ad = null; $('adBreak').hidden = true;
-    if (!silent && S.content === 'video') { vPlay(); toast('Seguimos con ' + C.BUNNY.title, 2200); }
-    pushState();
-  }
   (function wireVideo() {
     var v = $('vid');
-    function sync() { if (S.content !== 'video') return; S.pos = v.currentTime || 0; S.posAt = now(); S.playing = !v.paused && !V.inAd; pushState(); paintPlayer(); pokeUI(); }
+    function sync() { if (S.content !== 'video') return; S.pos = v.currentTime || 0; S.posAt = now(); S.playing = !v.paused; pushState(); paintPlayer(); pokeUI(); }
     v.addEventListener('play', sync); v.addEventListener('pause', sync); v.addEventListener('seeked', sync);
     v.addEventListener('timeupdate', function () {
       if (S.content !== 'video') return;
-      if (!V.adDone && !V.inAd && v.currentTime >= C.BUNNY.adAt) startAd();
       if (S.screen === 'player') paintPlayer();
     });
     v.addEventListener('ended', function () {
       if (S.content !== 'video') return;
-      S.vsaved = 0; V.adDone = false;
+      S.vsaved = 0;
       toast('Fin del fragmento · el corto completo dura 10 minutos', 3500);
       clearTimeout(V.endTimer); V.endTimer = setTimeout(function () { if (S.content === 'video' && S.screen === 'player') leavePlayer(); }, 2600);
     });
@@ -698,7 +674,7 @@
     show('home'); renderHome();
   }
   function togglePause() {
-    if (S.content === 'video') { var v = $('vid'); if (V.inAd) return; if (v.paused) vPlay(); else v.pause(); return; }
+    if (S.content === 'video') { var v = $('vid'); if (v.paused) vPlay(); else v.pause(); return; }
     if (vod()) setPos(curPos(), !S.playing);
     else { S.playing = !S.playing; if (!S.playing) sendOffer(); else S.offer = null; }
     paintPlayer(); pushState();
@@ -736,7 +712,7 @@
       $('pTag').textContent = 'Seguir viendo · corto animado'; $('pTitle').textContent = B.title;
       $('pSub').textContent = V.needSound ? '🔇 Pulsa OK para activar el sonido' : B.credit;
       $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
-      $('pState').textContent = V.inAd ? 'Comercial' : (vp ? '❚❚  Pausado' : '▶  Reproduciendo');
+      $('pState').textContent = vp ? '❚❚  Pausado' : '▶  Reproduciendo';
       $('pBar').style.width = (vt / B.dur * 100) + '%';
       $('pPos').textContent = C.fmt(vt); $('pDur').textContent = '-' + C.fmt(Math.max(0, B.dur - vt));
       return;
@@ -944,7 +920,6 @@
     if (S.screen === 'player' && S.content === 'video') {
       pokeUI();
       var vv = $('vid');
-      if (V.inAd) { if (k === 'BACK') leavePlayer(); else toast('Es un comercial: la película sigue en un momento', 1800); return; }
       if (k === 'OK' && V.needSound) { V.needSound = false; vv.muted = S.muted; if (vv.paused) vPlay(); toast('🔊 Sonido activado', 1500); paintPlayer(); return; }
       if (k === 'OK' || k === 'PLAY') togglePause();
       else if (k === 'LEFT') vSeek(-10);

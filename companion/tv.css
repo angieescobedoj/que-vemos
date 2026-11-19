@@ -281,12 +281,6 @@ b{font-weight:700}
 .vid-shade{position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 26%,rgba(0,0,0,0) 70%,rgba(0,0,0,.6) 100%);pointer-events:none}
 .screen.player .p-top,.screen.player .p-bottom,.screen.player .vid-shade{transition:opacity .4s}
 .screen.player.ui-off .p-top,.screen.player.ui-off .p-bottom,.screen.player.ui-off .vid-shade{opacity:0}
-.ad-break{position:absolute;left:0;top:0;right:0;bottom:0;z-index:4;background:radial-gradient(50% 60% at 70% 30%,rgba(229,138,195,.45) 0%,rgba(229,138,195,0) 70%),linear-gradient(150deg,#4A2E9A 0%,#1A1030 100%);display:flex;align-items:center;justify-content:center}
-.ad-card{text-align:center}
-.ad-brand{font-size:6rem;font-weight:700;letter-spacing:-.04em;line-height:1}
-.ad-line{font-size:1.6rem;margin-top:.8rem;color:var(--ink-2)}
-.ad-corner{position:absolute;right:4vw;bottom:6vh;display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;font-size:1rem;color:var(--ink-2)}
-.ad-corner b{font-size:1.2rem;color:#fff;background:rgba(0,0,0,.45);padding:.35rem .8rem;border-radius:.6rem}
 /* renta On Demand */
 .screen.rent{margin:-4vh -4vw;position:relative;justify-content:center}
 .rent-bg{position:absolute;left:0;top:0;right:0;bottom:0;background:#120C1E}
@@ -310,9 +304,6 @@ b{font-weight:700}
 .shot{position:absolute;width:.3rem;height:1.1rem;margin-left:-.15rem;border-radius:.2rem;background:#FFE27A}
 .g-help{font-size:.9rem;color:var(--ink-2);line-height:1.5;margin-top:.6rem}
 .ship-paused{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:rgba(14,10,22,.92);border:1px solid var(--line);border-radius:1rem;padding:1rem 1.6rem;font-size:1.4rem;font-weight:700;z-index:4}
-.ad-break{background:radial-gradient(50% 60% at 70% 30%,rgba(255,196,92,.45) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#C2382E 0%,#4A1410 100%)}
-.ad-ic{font-size:6rem;line-height:1;animation:adb 1.4s ease-in-out infinite}
-@keyframes adb{50%{transform:scale(1.12) rotate(-6deg)}}
 /* recetas */
 .tile.wide{width:11rem}
 .tile .t-emoji{position:absolute;right:.7rem;top:.5rem;font-size:2.2rem}

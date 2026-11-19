@@ -190,13 +190,10 @@
     /* A4 · aviso de "Está sonando" */
     if (S.songSeen === null) S.songSeen = r.songSeq || 0;
     if ((r.songSeq || 0) > S.songSeen) { S.songSeen = r.songSeq; if (r.content === 'series') showSongBanner(sceneNow().song); }
-    /* corte a comerciales: datos curiosos de la película mientras dura */
-    if (r.ad && r.ad.seq !== S.adSeen) { S.adSeen = r.ad.seq; showFacts(r.ad); }
     /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
     if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
     if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
     if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
-    if (!r.ad && S.sheet === 'facts' && !S.factsEnding) endFacts();
     if (S.sheet === 'match' && (r.playing || r.screen !== 'player' || r.content !== 'match')) closeSheet();   /* se reanudó o cambió de canal */
     /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
     if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
@@ -324,35 +321,6 @@
     $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
-  }
-
-  /* ---------- datos curiosos durante el comercial ---------- */
-  var factsTimer = null;
-  function showFacts(ad) {
-    var facts = C.BUNNY.facts, i = 0;
-    S.factsEnding = false;
-    openSheet('facts', '<p class="eyebrow" style="color:#7A4CC4">Mientras ves el comercial</p><h2>Datos curiosos de Big Buck Bunny</h2><p class="sub" id="fLeft"></p>' +
-      '<div class="fact" id="fact"></div><div class="dots" id="fDots"></div>');
-    function paint() {
-      if (S.sheet !== 'facts') return;
-      $('fact').innerHTML = '<span class="fn">' + (i + 1) + '/' + facts.length + '</span>' + esc(facts[i]);
-      var d = ''; for (var k = 0; k < facts.length; k++) d += '<i class="' + (k === i ? 'on' : '') + '"></i>'; $('fDots').innerHTML = d;
-      buzz();
-    }
-    function left() { var l = Math.max(0, Math.ceil((ad.endsAt - Date.now()) / 1000)); if ($('fLeft')) $('fLeft').textContent = 'La película vuelve en ' + l + ' s'; }
-    paint(); left();
-    clearInterval(factsTimer);
-    var per = Math.max(3000, Math.floor((ad.secs || 20) * 1000 / facts.length)), last = Date.now();
-    factsTimer = setInterval(function () {
-      if (S.sheet !== 'facts') { clearInterval(factsTimer); return; }
-      left();
-      if (Date.now() - last >= per && i < facts.length - 1) { last = Date.now(); i++; paint(); }
-    }, 500);
-  }
-  function endFacts() {
-    S.factsEnding = true; clearInterval(factsTimer);
-    if ($('fLeft')) $('fLeft').textContent = '¡Ya volvió la película! Mira la TV';
-    setTimeout(function () { if (S.sheet === 'facts') closeSheet(); S.factsEnding = false; }, 2200);
   }
 
   /* ---------- sugerencia al pausar un canal ---------- */
