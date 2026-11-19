@@ -313,16 +313,10 @@ body.has-mini .wrap{padding-bottom:96px}
 .top .pwr{justify-self:end}
 .apps{display:grid;justify-content:space-between;gap:8px}
 .apps button{width:100%;max-width:66px;height:auto;aspect-ratio:1/1}
-.dv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-.dv-top .back-ctl{margin-bottom:0}
-.dv-add{display:inline-flex;align-items:center;gap:6px;background:var(--violet);color:#fff;font-size:13px;font-weight:700;border-radius:999px;padding:9px 14px}
-.dv-add svg{width:16px;height:16px}
-.dv-h{font-size:24px;margin:12px 0 2px}
 .dv-empty{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(217,54,79,.14);border:1px solid rgba(248,113,113,.4);font-size:13.5px}
 .dcard{margin-top:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(196,150,255,.22);overflow:hidden}
 .dcard.cur{border-color:#B266FF;box-shadow:0 0 14px rgba(168,85,247,.35)}
 .btn.warn{background:var(--red)}
-#decsView .lf{color:var(--ink-2)}
 .sh-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--violet);margin:-4px 0 10px}
 .sheet.dark .sh-back{color:#D8B4FE}
 .sh-back svg{width:18px;height:18px}
@@ -423,6 +417,25 @@ body.light .dcta.pri{background:var(--violet);color:#fff}
 #appsRow{display:grid;grid-template-columns:repeat(4,64px)!important;justify-content:space-between;gap:0}
 #appsRow button{width:64px;height:64px;max-width:none;border-radius:16px;padding:0}
 body.light .navc.pressed .circ{background:#EEE3FF}
+
+/* ---------- v7.22 · lista de decodificadores tipo Bluetooth ---------- */
+body.in-decs .top,body.in-decs .fake-note{display:none!important}
+.dv-bar{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;height:56px;margin:0 0 8px}
+.dv-back{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);margin-left:-8px}
+.dv-back svg{width:24px;height:24px}
+.dv-back:active{background:rgba(168,85,247,.2)}
+.dv-title{text-align:center;font-size:16px;font-weight:700}
+.dv-hint{font-size:14px;color:var(--ink-2);margin:0 0 8px}
+.dv-scan{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;padding:16px;font-size:13px;color:var(--ink-2)}
+.dv-scan .spin{width:16px;height:16px;border-width:2px}
+.dv-scan.done{flex-direction:column;gap:8px;text-align:center}
+.dv-scan button{color:#D8B4FE;font-weight:700;text-decoration:underline}
+body.light .dv-scan button{color:var(--violet)}
+.dname-in{flex:1;min-width:0;height:40px;border-radius:8px;border:1.5px solid #B266FF;background:rgba(255,255,255,.06);color:inherit;font:inherit;font-size:16px;font-weight:700;padding:0 8px;margin-right:4px;outline:none}
+body.light .dname-in{background:#fff}
+.dic-b.ok{color:#4ADE80}
+body.light .dic-b.ok{color:#15803D}
+.dcard.editing{border-color:#B266FF}
 </style>
 </head>
 <body>
@@ -528,11 +541,11 @@ body.light .navc.pressed .circ{background:#EEE3FF}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.21"></script>
-<script src="../src/services/firestore-rest.js?v=7.21"></script>
-<script src="content.js?v=7.21"></script>
-<script src="logos.js?v=7.21"></script>
-<script src="store.js?v=7.21"></script>
-<script src="phone.js?v=7.21"></script>
+<script src="../src/services/http.js?v=7.22"></script>
+<script src="../src/services/firestore-rest.js?v=7.22"></script>
+<script src="content.js?v=7.22"></script>
+<script src="logos.js?v=7.22"></script>
+<script src="store.js?v=7.22"></script>
+<script src="phone.js?v=7.22"></script>
 </body>
 </html>

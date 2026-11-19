@@ -530,7 +530,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (/^(match|settings|favs|prefs|look|rename|unlink|add)$/.test(name) ? ' dark' : '');
+    $('sheet').className = 'sheet' + (/^(match|settings|favs|prefs|look|unlink)$/.test(name) ? ' dark' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -542,6 +542,8 @@
      Las TVs reales son las que este celular escaneó (QR); Recámara/Estudio/Terraza y las que agregues son simuladas. */
   var DKEY = 'cp-decs' + (CP.DEMO ? '-demo' : ''), RKEY = 'cp-rooms' + (CP.DEMO ? '-demo' : '');
   var FAKE_BY = {}, DEC_ST = {};
+  var OK_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var X_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   var PEN_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.7 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.8 7l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
   var STAR_IC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9.9 5.6L12 16.6l-5 2.6.9-5.6-4-3.9 5.6-.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
   function decs() {
@@ -572,26 +574,33 @@
     var list = decs(), cur = curDecId(), anyLinked = false, html = '', i;
     list.sort(function (a, b) { return (b.main ? 1 : 0) - (a.main ? 1 : 0); });
     for (i = 0; i < list.length; i++) if (list[i].linked) anyLinked = true;
-    html += '<div class="dv-top"><button class="back-ctl" data-act="decsBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Control</button>' +
-      '<button class="dv-add" data-act="decAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Agregar decodificador</button></div>' +
-      '<h1 class="dv-h">Decodificadores</h1><p class="sub">Toca uno para controlarlo.</p>';
-    if (!anyLinked) html += '<div class="dv-empty">No tienes decodificadores vinculados. Vincula uno o agrega uno nuevo para usar el control.</div>';
+    /* v7.22 · solo flecha + sección; texto guía; búsqueda tipo Bluetooth (lo que encuentra aparece en la lista) */
+    html += '<div class="dv-bar"><button class="dv-back" data-act="decsBack" aria-label="Regresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="dv-title">Decodificadores</span><span></span></div>' +
+      '<p class="dv-hint">Vincula tu control a un decodificador Totalplay</p>';
+    if (!anyLinked) html += '<div class="dv-empty">No tienes decodificadores vinculados. Vincula uno para usar el control.</div>';
     for (i = 0; i < list.length; i++) {
       var d = list[i], st = decState(d), isCur = d.linked && d.id === cur && !S.noDec;
       /* v7.20 · nombre + lápiz (renombrar) + estrella (principal); estado abajo; Desvincular/Vincular a la derecha */
-      html += '<div class="dcard' + (isCur ? ' cur' : '') + (d.linked ? '' : ' unl') + '">' +
-        '<div class="dinfo" data-dpick="' + d.id + '" role="button" aria-label="Controlar ' + esc(d.name) + '">' +
-          '<div class="dline"><span class="dname">' + esc(d.name) + '</span>' +
-          '<button class="dic-b" data-dren="' + d.id + '" aria-label="Editar nombre">' + PEN_IC + '</button>' +
-          '<button class="dic-b star' + (d.main ? ' on' : '') + '" data-dmain="' + d.id + '" aria-label="' + (d.main ? 'Es tu principal' : 'Hacer principal') + '"' + (d.linked ? '' : ' disabled') + '>' + STAR_IC + '</button></div>' +
+      var editing = S.decEdit === d.id;
+      html += '<div class="dcard' + (isCur ? ' cur' : '') + (d.linked ? '' : ' unl') + (editing ? ' editing' : '') + '">' +
+        (editing ? '<div class="dinfo">' : '<div class="dinfo" data-dpick="' + d.id + '" role="button" aria-label="Controlar ' + esc(d.name) + '">') +
+          (editing
+            ? '<div class="dline"><input class="dname-in" id="decNameIn" maxlength="20" value="' + esc(d.name) + '" autocomplete="off" aria-label="Nombre del decodificador">' +
+              '<button class="dic-b ok" data-rsave="' + d.id + '" aria-label="Guardar nombre">' + OK_IC + '</button><button class="dic-b" data-act="renCancel" aria-label="Cancelar">' + X_IC + '</button></div>'
+            : '<div class="dline"><span class="dname">' + esc(d.name) + '</span>' +
+              '<button class="dic-b" data-dren="' + d.id + '" aria-label="Editar nombre">' + PEN_IC + '</button>' +
+              '<button class="dic-b star' + (d.main ? ' on' : '') + '" data-dmain="' + d.id + '" aria-label="' + (d.main ? 'Es tu principal' : 'Hacer principal') + '"' + (d.linked ? '' : ' disabled') + '>' + STAR_IC + '</button></div>') +
           '<span class="s"><span class="sdot ' + (st === 'on' ? '' : st === 'unlinked' ? 'off' : st) + '" id="dst-' + d.id + '"></span><span id="dsx-' + d.id + '">' + DEC_TXT[st] + '</span>' +
           (isCur ? ' · Controlando' : '') + (d.kind === 'real' ? '' : ' · Simulado') + '</span>' +
         '</div>' +
         (d.linked ? '<button class="dcta warn" data-dunl="' + d.id + '">Desvincular</button>' : '<button class="dcta pri" data-dlink="' + d.id + '">Vincular</button>') +
         '</div>';
     }
-    html += '<label class="lf" style="margin-top:22px">Apareces en la TV como</label><div class="vform"><input class="in-l" id="nameIn" maxlength="18" value="' + esc(S.name) + '"><button data-act="saveName">Guardar</button></div>';
+    html += S.decScan ? '<div class="dv-scan"><span class="spin"></span>Buscando decodificadores cercanos…</div>'
+      : '<div class="dv-scan done">' + '<span>' + (S.decFound ? 'Se encontró ' + esc(S.decFound) + ' cerca de ti' : 'No hay más decodificadores cerca') + '</span><button data-act="decScan">Buscar de nuevo</button></div>';
     $('decsView').innerHTML = html;
+    if (S.decEdit && $('decNameIn')) { var ni = $('decNameIn'); ni.focus(); try { ni.setSelectionRange(ni.value.length, ni.value.length); } catch (e) { /* ignore */ }
+      ni.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); saveRename(S.decEdit); } else if (e.key === 'Escape') { S.decEdit = null; renderDecs(); } }; }
     for (i = 0; i < list.length; i++) if (list[i].kind === 'real' && list[i].linked) (function (d) {
       store.getRoom(d.code, function (err, room) {
         var st = 'off';
@@ -620,19 +629,11 @@
     var d = decUpdate(id, function (x, l) { for (var i = 0; i < l.length; i++) l[i].main = false; x.main = true; });
     renderDecs(); if (d) toast('★ ' + d.name + ' ahora es tu principal');
   }
-  function openRename(id) {
-    var d = decById(decs(), id); if (!d) return;
-    openSheet('rename', '<h2>Renombrar decodificador</h2><p class="sub">Así lo verás en el control y en la lista.</p>' +
-      '<input class="in-l" id="renIn" maxlength="20" value="' + esc(d.name) + '" autocomplete="off">' +
-      '<div class="chips"><button data-renq="Sala">Sala</button><button data-renq="Recámara">Recámara</button><button data-renq="Cocina">Cocina</button><button data-renq="Estudio">Estudio</button><button data-renq="Cuarto de niños">Cuarto de niños</button></div>' +
-      '<button class="btn" data-act="renSave" data-id="' + id + '">Guardar</button>');
-    setTimeout(function () { try { $('renIn').focus(); $('renIn').select(); } catch (e) { /* ignore */ } }, 60);
-  }
   function saveRename(id) {
-    var nm = ($('renIn').value || '').trim().substring(0, 20); if (!nm) { toast('Escribe un nombre', true); return; }
+    var nm = ($('decNameIn').value || '').trim().substring(0, 20); if (!nm) { toast('Escribe un nombre', true); return; }
     var d = decUpdate(id, function (x) { x.name = nm; });
     if (d && d.kind !== 'real') fakeFor(d);
-    closeSheet(); renderDecs(); renderHeader(); toast('Listo: ahora se llama ' + nm);
+    S.decEdit = null; renderDecs(); renderHeader(); toast('Listo: ahora se llama ' + nm);
   }
   function askUnlink(id) {
     var d = decById(decs(), id); if (!d) return;
@@ -661,21 +662,17 @@
       renderDecs(); if (d) { buzz(); toast('✓ Vinculado con ' + d.name); }
     }, 1200);
   }
-  function openAdd() {
-    openSheet('add', '<h2>Agregar decodificador</h2><p class="sub">Enciende el decodificador y conéctalo a la misma red Wi‑Fi que tu celular.</p>' +
-      '<label class="lf">Nombre</label><input class="in-l" id="addName" maxlength="20" value="Cocina" autocomplete="off">' +
-      '<div class="chips"><button data-addq="Cocina">Cocina</button><button data-addq="Comedor">Comedor</button><button data-addq="Cuarto de visitas">Cuarto de visitas</button><button data-addq="Cuarto de niños">Cuarto de niños</button></div>' +
-      '<button class="btn" id="addGo" data-act="addGo">Buscar y vincular</button><p class="sub" style="margin-top:12px;text-align:center">También puedes escanear el código QR que aparece en la TV.</p>');
-  }
-  function doAdd() {
-    var nm = ($('addName').value || '').trim().substring(0, 20); if (!nm) { toast('Escribe un nombre', true); return; }
-    var b = $('addGo'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Buscando en tu red…';
-    setTimeout(function () { if ($('addGo')) $('addGo').innerHTML = '<span class="spin"></span>Vinculando con ' + esc(nm) + '…'; }, 1300);
+  /* Búsqueda simulada: como Bluetooth, los decodificadores cercanos aparecen solos en la lista (sin vincular) */
+  var NEARBY = [{ id: 'nCocina', name: 'Cocina' }, { id: 'nVisitas', name: 'Cuarto de visitas' }];
+  function scanDecs() {
+    if (S.decScan) return;
+    S.decScan = true; S.decFound = null; renderDecs();
     setTimeout(function () {
-      var l = decs(); l.push({ id: 'n' + Date.now(), kind: 'new', name: nm, linked: true }); saveDecs(l); saveDecs(decs());
-      closeSheet(); buzz(); renderDecs(); toast('✓ ' + nm + ' agregado y vinculado');
-      if (S.noDec) pickDec(l[l.length - 1].id, true), setTab('decs');
-    }, 2300);
+      var l = decs(), found = null;
+      for (var i = 0; i < NEARBY.length && !found; i++) if (!decById(l, NEARBY[i].id)) { found = NEARBY[i]; l.push({ id: found.id, kind: 'new', name: found.name, linked: false }); }
+      saveDecs(l); S.decScan = false; S.decFound = found ? found.name : null;
+      if (S.tab === 'decs') { renderDecs(); if (found) buzz(); }
+    }, 2400);
   }
 
   /* ---------- v7.19 · Configuración (engrane del encabezado): apps favoritas, preferencias del control y apariencia ---------- */
@@ -746,11 +743,10 @@
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
     else if (g('data-dpick')) pickDec(g('data-dpick'));
     else if (g('data-dmain')) setMain(g('data-dmain'));
-    else if (g('data-dren')) openRename(g('data-dren'));
+    else if (g('data-dren')) { S.decEdit = g('data-dren'); renderDecs(); }
+    else if (g('data-rsave')) saveRename(g('data-rsave'));
     else if (g('data-dunl')) askUnlink(g('data-dunl'));
     else if (g('data-dlink')) doLink(g('data-dlink'), el);
-    else if (g('data-renq')) { $('renIn').value = g('data-renq'); }
-    else if (g('data-addq')) { $('addName').value = g('data-addq'); }
     else if (g('data-fup') !== null && el.hasAttribute('data-fup')) favEdit(function (f) { var i = Number(g('data-fup')); f.splice(i - 1, 0, f.splice(i, 1)[0]); });
     else if (g('data-fdn') !== null && el.hasAttribute('data-fdn')) favEdit(function (f) { var i = Number(g('data-fdn')); f.splice(i + 1, 0, f.splice(i, 1)[0]); });
     else if (g('data-fdel') !== null && el.hasAttribute('data-fdel')) favEdit(function (f) { f.splice(Number(g('data-fdel')), 1); });
@@ -765,16 +761,14 @@
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();
     else if (act === 'decsBack') { if (S.noDec) toast('Vincula un decodificador para usar el control', true); else setTab('control'); }
-    else if (act === 'decAdd') openAdd();
-    else if (act === 'addGo') doAdd();
-    else if (act === 'renSave') saveRename(g('data-id'));
+    else if (act === 'renCancel') { S.decEdit = null; renderDecs(); }
+    else if (act === 'decScan') scanDecs();
     else if (act === 'unlinkOk') doUnlink(g('data-id'));
     else if (act === 'setApps') openFavs();
     else if (act === 'setPrefs') openPrefs();
     else if (act === 'setLook') openLook();
     else if (act === 'settings') openSettings();
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
-    else if (act === 'saveName') { var nm = ($('nameIn').value || '').trim().substring(0, 18); if (nm) { S.name = nm; ls.set('cp-name', nm); if (S.pid) store.updatePlayer(S.code, S.pid, { name: nm }, function () {}); toast('Listo: en la TV apareces como ' + nm); closeSheet(); } }
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
@@ -824,7 +818,8 @@
     var mini = t === 'ahora';
     $('mini').hidden = !mini; document.body.classList.toggle('has-mini', mini);
     $('tabs').classList.toggle('empty', !mini);
-    if (t === 'decs') renderDecs();   /* sin pestañas: la barra de abajo solo existe para el mini control */
+    document.body.classList.toggle('in-decs', t === 'decs');   /* en la lista no se muestra el encabezado del control */
+    if (t === 'decs') { S.decEdit = null; renderDecs(); if (!S.decScanned) { S.decScanned = true; scanDecs(); } }   /* sin pestañas: la barra de abajo solo existe para el mini control */
     render(); window.scrollTo(0, 0);
   }
 
