@@ -21,7 +21,7 @@
     timer: null, standby: false, lastCmdAt: 0,
     /* v6 · control renovado */
     tvName: tvNameParam(), vol: 30, muted: false, off: false, app: null, channel: 7,
-    menu: false, guide: false, lat: 0, movie: null, offer: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
+    menu: false, guide: false, lat: 0, movie: null, offer: null, fin: null, vsaved: 0, rsaved: 0, recipeSeq: 0, recipeStepIdx: 0
   };
   function tvNameParam() {
     var m = /[?&]tv=([^&#]*)/.exec(location.search), v = '';
@@ -57,7 +57,7 @@
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
-      movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
+      movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, fin: S.fin, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }
     };
   }
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -447,8 +447,8 @@
     });
     v.addEventListener('ended', function () {
       if (S.content !== 'video') return;
-      S.vsaved = 0;
-      toast('Fin del fragmento · el corto completo dura 10 minutos', 3500);
+      S.vsaved = 0; finished('bunny');
+      toast('Fin del fragmento · 📱 música y más cortos en tu celular', 3500);
       clearTimeout(V.endTimer); V.endTimer = setTimeout(function () { if (S.content === 'video' && S.screen === 'player') leavePlayer(); }, 2600);
     });
     v.addEventListener('error', function () { if (S.content === 'video') toast('No se pudo reproducir el video en este equipo', 3500); });
@@ -783,8 +783,16 @@
     } else pp.hidden = true;
   }
   /* A4 · "Está sonando": al entrar a una escena, unos segundos después avisa la canción a TV y celulares. */
+  /* v7.31 · al terminar una película el celular recibe el soundtrack y las recomendadas */
+  function finished(id) { S.fin = { seq: now(), id: id }; pushState(); }
   function tickSeries() {
     if (S.screen !== 'player' || S.content !== 'series') return;
+    if (S.playing && curPos() >= C.SERIES.duration) {
+      setPos(0, false); S.saved = 0; finished('series');
+      toast('Terminó Los Pecadores · 📱 el soundtrack y más películas en tu celular', 4000);
+      setTimeout(function () { if (S.content === 'series' && S.screen === 'player') leavePlayer(); }, 2600);
+      return;
+    }
     var idx = C.sceneAt(curPos());
     if (idx !== S.sceneIdx) { S.sceneIdx = idx; S.songAt = now() + 5000; pushState(); }
     if (S.songAt && S.playing && now() >= S.songAt) { S.songAt = 0; openSongCard(idx); }
@@ -1016,6 +1024,10 @@
     else if (c.t === 'shipStart') { if (S.screen === 'ship') pauseShip(); else startShip(); }
     else if (c.t === 'offer') goOffer(c.ch === 'match' ? 'match' : Number(c.ch));
     else if (c.t === 'notice') toast(c.text || '', 4500);
+    else if (c.t === 'toEnd') {   /* demo: adelantar al final de la película */
+      if (S.content === 'series') { setPos(C.SERIES.duration - 8, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
+      else if (S.content === 'video') { try { var vv = $('vid'); vv.currentTime = Math.max(0, C.BUNNY.dur - 6); vPlay(); } catch (e) { /* ignore */ } }
+    }
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
     else if (c.t === 'save') toast(name + ' guardó «' + c.what + '» en su soundtrack', 3500);
     else if (c.t === 'product') toast(name + ' abrió «' + c.what + '» en su celular', 3500);

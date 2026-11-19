@@ -196,6 +196,7 @@
     if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
     if (S.sheet === 'match' && (r.playing || r.screen !== 'player' || r.content !== 'match')) closeSheet();   /* se reanudó o cambió de canal */
     /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
+    mvWatch(r);
     if (S.offerSeen === undefined) S.offerSeen = r.offer ? r.offer.seq : 0;
     if (r.offer && r.offer.seq !== S.offerSeen) { S.offerSeen = r.offer.seq; showOffer(r.offer); }
   }
@@ -321,6 +322,122 @@
     $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
+  }
+
+  /* ---------- v7.31 · Películas en tres momentos (bottom sheets) ----------
+     1) al elegirla: la misma ficha del juego ¿Qué vemos? (título, sinopsis, duración, director, calificación, plataformas, reparto)
+     2) al pausarla: información extra (datos de la película y, en Los Pecadores, lo que hay en la escena)
+     3) al terminar: el soundtrack y películas recomendadas. Los datos salen de TMDB; si no hay internet, se usa lo local. */
+  var MV = {
+    series: { title: 'Los Pecadores', search: [C.SERIES.tmdbQuery, C.SERIES.tmdbYear],
+      fallback: { overview: 'Mississippi, 1932. Los gemelos Smoke y Stack regresan a su pueblo para abrir un juke joint y empezar de nuevo, pero algo más oscuro los espera esa noche.', year: '2025', genres: 'Terror, Drama, Música', runtime: 137, director: 'Ryan Coogler',
+        cast: [['Michael B. Jordan', 'Smoke y Stack'], ['Hailee Steinfeld', 'Mary'], ['Miles Caton', 'Sammie'], ["Jack O'Connell", 'Remmick'], ['Wunmi Mosaku', 'Annie'], ['Delroy Lindo', 'Delta Slim']] },
+      extra: [['Música original', 'Ludwig Göransson'], ['Formato', 'Filmada en IMAX 65 mm y Ultra Panavision 70']],
+      recs: [['Nosferatu', '2024'], ['Huye', '2017'], ['Pantera Negra', '2018']] },
+    bunny: { title: 'Big Buck Bunny', id: 10378,
+      fallback: { overview: 'Un conejo gigante y bonachón disfruta del bosque hasta que tres roedores empiezan a molestarlo. Es hora de darles una lección.', year: '2008', genres: 'Animación, Comedia, Familia', runtime: 10, director: 'Sacha Goedegebure', cast: [] },
+      facts: ['Lo hizo en 2008 el Blender Institute, en Ámsterdam, como proyecto de la Blender Foundation.', 'Se creó completo con software libre: el programa de animación es Blender.', 'Su nombre clave durante la producción fue «Proyecto Peach».',
+        'Tiene licencia Creative Commons: cualquiera puede usarlo y compartirlo, como en esta demo.', 'Los tres roedores que molestan al conejo se llaman Frank, Rinky y Gimera.'],
+      songs: [{ t: 'Big Buck Bunny (música original)', a: 'Jan Morgenstern' }],
+      recs: [['Sintel', '2010'], ['Elephants Dream', '2006'], ['Spring', '2019']] }
+  };
+  var MVD = {};   /* detalles de TMDB por película */
+  function mvLoad(k, cb) {
+    if (MVD[k]) return cb(MVD[k]);
+    var m = MV[k], url = function (id) { return 'https://api.themoviedb.org/3/movie/' + id + '?api_key=' + KEY + '&language=es-MX&append_to_response=credits,watch/providers,recommendations'; };
+    var got = function (err, d) { if (!err && d && d.id) MVD[k] = d; cb(MVD[k] || null); };
+    if (m.id) return QV.http.get(url(m.id), got);
+    QV.http.get('https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(m.search[0]) + '&year=' + m.search[1], function (err, d) {
+      var r = !err && d && d.results && d.results[0]; if (!r) return cb(null); m.id = r.id; QV.http.get(url(r.id), got);
+    });
+  }
+  var TP = 'https://image.tmdb.org/t/p/';
+  function mvHead(k, d, eyebrow) {
+    var m = MV[k], fb = m.fallback, t = d ? d.title : m.title, ot = d && d.original_title && d.original_title !== d.title ? d.original_title : '';
+    var y = d ? (d.release_date || '').substring(0, 4) : fb.year, g = d ? (d.genres || []).map(function (x) { return x.name; }).slice(0, 3).join(', ') : fb.genres;
+    var po = d && d.poster_path ? '<img class="mv-po" src="' + TP + 'w185' + d.poster_path + '" alt="">' : '<span class="mv-po ph">🎬</span>';
+    return '<div class="mv-head">' + po + '<div><p class="eyebrow" style="color:#7A4CC4">' + eyebrow + '</p><h2>' + esc(t) + '</h2><p class="sub">' + esc([ot, y, g].filter(Boolean).join(' · ')) + '</p></div></div>';
+  }
+  function provChips(list) {
+    var h = '<span class="mv-prov">';
+    for (var i = 0; i < list.length; i++) h += '<span>' + (list[i].logo_path ? '<img src="' + TP + 'w92' + list[i].logo_path + '" alt="">' : '') + esc(list[i].provider_name) + '</span>';
+    return h + '</span>';
+  }
+  /* 1) al elegir la película: la ficha del juego ¿Qué vemos? */
+  function mvInfoHtml(k, d) {
+    var m = MV[k], fb = m.fallback, h = mvHead(k, d, 'Estás viendo en la TV');
+    h += '<p class="mv-syn">' + esc(d && d.overview ? d.overview : fb.overview) + '</p>';
+    var rt = d ? d.runtime : fb.runtime, dir = d ? ((d.credits && d.credits.crew) || []).filter(function (c) { return c.job === 'Director'; }).map(function (c) { return c.name; }).slice(0, 2).join(', ') : fb.director;
+    var mx = d && d['watch/providers'] && d['watch/providers'].results && d['watch/providers'].results.MX || {}, flat = mx.flatrate || [];
+    h += '<div class="mv-rows">' + (rt ? '<div><span>⏱</span>' + (rt >= 60 ? Math.floor(rt / 60) + ' h ' + (rt % 60) + ' min' : rt + ' min') + '</div>' : '') +
+      (dir ? '<div><span>🎬</span>Dirigida por ' + esc(dir) + '</div>' : '') + (d && d.vote_average ? '<div><span>★</span>' + d.vote_average.toFixed(1) + ' de 10 en TMDB</div>' : '') +
+      '<div><span>📺</span><span>' + (flat.length ? 'También disponible en ' + provChips(flat) : 'Disponible en Totalplay') + '</span></div></div>';
+    var cast = d && d.credits ? d.credits.cast.slice(0, 10).map(function (p) { return [p.name, p.character]; }) : fb.cast;
+    if (cast.length) {
+      h += '<p class="lf">Reparto</p><div class="mv-cast">';
+      for (var i = 0; i < cast.length; i++) h += '<div class="person"><span class="ph">' + esc(cast[i][0].charAt(0)) + '</span><b>' + esc(cast[i][0]) + '</b><small>' + esc(cast[i][1] || '') + '</small></div>';
+      h += '</div>';
+    }
+    return h + '<button class="btn" data-act="closeSheet" style="margin-top:16px">Ver en la TV</button>';
+  }
+  /* 2) al pausar: información extra */
+  function fmtDate(s2) { var p = (s2 || '').split('-'), mm = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return p.length === 3 ? Number(p[2]) + ' de ' + mm[Number(p[1]) - 1] + ' de ' + p[0] : ''; }
+  function usd(n) { return n >= 1e6 ? 'US$' + Math.round(n / 1e6) + ' millones' : ''; }
+  function mvExtraHtml(k, d) {
+    var m = MV[k], h = mvHead(k, d, 'En pausa · ' + C.fmt(pos()));
+    if (d && d.tagline) h += '<p class="mv-tag">«' + esc(d.tagline) + '»</p>';
+    if (k === 'series') {
+      var sc = sceneNow();
+      h += '<p class="lf">En esta escena · ' + esc(sc.place) + '</p><div class="mv-list">';
+      for (var i = 0; i < sc.cast.length; i++) h += '<div class="opt"><span class="ic">' + esc(sc.cast[i][1].charAt(0)) + '</span><span class="grow"><span class="t">' + esc(sc.cast[i][0]) + '</span><span class="s">' + esc(sc.cast[i][1]) + '</span></span></div>';
+      h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(sc.song.t) + '</span><span class="s">' + esc(sc.song.a) + ' · suena en esta escena</span></span><button class="btn sm ghost" data-mvsong="series:s">Guardar</button></div></div>';
+    } else {
+      h += '<p class="lf">Datos curiosos</p><div class="mv-list">';
+      for (var f = 0; f < m.facts.length; f++) h += '<div class="opt"><span class="ic">' + (f + 1) + '</span><span class="grow"><span class="t" style="font-weight:600">' + esc(m.facts[f]) + '</span></span></div>';
+      h += '</div>';
+    }
+    var rows = [];
+    if (d) {
+      if (d.release_date) rows.push(['Estreno', fmtDate(d.release_date)]);
+      if (d.original_title && d.original_title !== d.title) rows.push(['Título original', d.original_title]);
+      if (d.production_companies && d.production_companies.length) rows.push(['Producción', d.production_companies.slice(0, 2).map(function (x) { return x.name; }).join(', ')]);
+      if (d.production_countries && d.production_countries.length) rows.push(['País', d.production_countries.map(function (x) { return x.name; }).slice(0, 2).join(', ')]);
+      if (usd(d.budget)) rows.push(['Presupuesto', usd(d.budget)]);
+      if (usd(d.revenue)) rows.push(['Taquilla mundial', usd(d.revenue)]);
+    }
+    rows = rows.concat(m.extra || []);
+    if (rows.length) { h += '<p class="lf">Sobre la película</p><div class="mv-facts">'; for (var r = 0; r < rows.length; r++) h += '<div><span>' + esc(rows[r][0]) + '</span><b>' + esc(rows[r][1]) + '</b></div>'; h += '</div>'; }
+    return h + '<button class="btn" data-act="play" style="margin-top:16px">▶  Seguir viendo</button><button class="mv-end" data-act="mvToEnd">Ir al final (demo)</button>';
+  }
+  /* 3) al terminar: soundtrack y recomendadas */
+  function mvSongs(k) { if (k === 'bunny') return MV.bunny.songs; var l = [], sc = C.SERIES.scenes; for (var i = 0; i < sc.length; i++) l.push(sc[i].song); return l; }
+  function mvEndHtml(k, d) {
+    var m = MV[k], h = mvHead(k, d, 'Terminó en la TV'), songs = mvSongs(k);
+    h += '<p class="lf">Soundtrack</p><div class="mv-list">';
+    for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="btn sm ghost" data-mvsong="' + k + ':' + i + '">Guardar</button></div>';
+    h += '</div>' + (k === 'series' ? '<p class="sub" style="margin-top:6px">Música original de Ludwig Göransson.</p>' : '');
+    var recs = d && d.recommendations && d.recommendations.results && d.recommendations.results.length ? d.recommendations.results.slice(0, 8).map(function (x) { return [x.title, (x.release_date || '').substring(0, 4), x.poster_path]; }) : m.recs;
+    h += '<p class="lf">Películas recomendadas</p><div class="mv-recs">';
+    for (var r = 0; r < recs.length; r++) h += '<button class="mv-rec" data-mvrec="' + esc(recs[r][0]) + '">' + (recs[r][2] ? '<img src="' + TP + 'w185' + recs[r][2] + '" alt="" loading="lazy">' : '<span class="ph">🎬</span>') + '<b>' + esc(recs[r][0]) + '</b><small>' + esc(recs[r][1] || '') + '</small></button>';
+    return h + '</div><button class="btn" data-act="closeSheet" style="margin-top:16px">Listo</button>';
+  }
+  function mvOpen(kind, k) {
+    var build = kind === 'info' ? mvInfoHtml : kind === 'extra' ? mvExtraHtml : mvEndHtml, name = 'mv-' + kind;
+    openSheet(name, build(k, MVD[k] || null)); S.mvK2 = k; buzz();
+    if (!MVD[k]) mvLoad(k, function (d) { if (d && S.sheet === name) { var t = $('sheet').scrollTop; openSheet(name, build(k, d)); $('sheet').scrollTop = t; } });
+  }
+  /* cuándo sale cada hoja: al empezar la película, al pausarla y cuando la TV avisa que terminó */
+  function mvWatch(r) {
+    var k = r.screen === 'player' && r.content === 'series' ? 'series' : r.screen === 'player' && r.content === 'video' ? 'bunny' : '';
+    if (S.mvK === undefined) { S.mvK = k; S.mvPlay = r.playing; S.finSeen = r.fin ? r.fin.seq : 0; return; }
+    if (k && k !== S.mvK) mvOpen('info', k);
+    else if (k && S.mvPlay && !r.playing) {
+      var nearEnd = k === 'bunny' ? pos() >= C.BUNNY.dur - 1.5 : pos() >= C.SERIES.duration - 2;
+      if (!nearEnd) mvOpen('extra', k);
+    }
+    if (S.sheet === 'mv-extra' && r.playing) closeSheet();   /* al reanudar se cierra sola */
+    if (r.fin && r.fin.seq !== S.finSeen) { S.finSeen = r.fin.seq; mvOpen('end', r.fin.id); }
+    S.mvK = k; S.mvPlay = r.playing;
   }
 
   /* ---------- sugerencia al pausar un canal ---------- */
@@ -743,6 +860,9 @@
     else if (act === 'settings') openSettings();
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
     else if (act === 'cfgClose') setTab('control');
+    else if (act === 'mvToEnd') { closeSheet(); send({ t: 'toEnd' }); }
+    else if (g('data-mvsong')) { var ms = g('data-mvsong').split(':'); saveSong(ms[1] === 's' ? sceneNow().song : mvSongs(ms[0])[Number(ms[1])]); }
+    else if (g('data-mvrec')) toast('Agregada a tu lista: ' + g('data-mvrec'));
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }
     else if (act === 'play') send({ t: 'play' });
     else if (act === 'saveSong') saveSong(sceneNow().song);
