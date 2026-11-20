@@ -279,7 +279,7 @@
       S.sceneIdx = -1;
     }
     S.content = id;
-    $('pausePanel').hidden = true;
+   
     show('player');
     paintPlayer();
   }
@@ -291,7 +291,7 @@
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
     S.channel = n; S.content = 'live'; S.playing = true;
-    $('pausePanel').hidden = true;
+   
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer(); showChBanner();
   }
@@ -302,7 +302,7 @@
     if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
     S.content = 'match'; S.playing = true;
     if (!S.matchStart) S.matchStart = now();
-    $('pausePanel').hidden = true;
+   
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer();
     if (connected().length) setTimeout(function () { toast('📱 Alineación y estadísticas en tu celular', 3500); }, 700);
@@ -415,7 +415,7 @@
     if (S.screen === 'player' && S.content === 'movie') S.movie = null;
     var start = fromStart ? 0 : (S.vsaved || 0); if (start > B.dur - 3) start = 0;
     S.content = 'video'; S.playing = true; S.posAt = now(); S.pos = start;
-    $('pausePanel').hidden = true;
+   
     show('player');
     if (!v.getAttribute('src')) v.setAttribute('src', B.src);
     var seekTo = function () { try { v.currentTime = start; } catch (e) { /* ignore */ } };
@@ -462,7 +462,7 @@
     var start = S.rsaved > 1 && S.rsaved < C.RECIPE.dur - 5 ? S.rsaved : 0;
     S.content = 'recipe'; S.movie = null; setPos(start, true);
     if (start < C.RECIPE.sendAt) S.recipeSeq = 0;
-    $('pausePanel').hidden = true;
+   
     show('player'); paintPlayer();
     if (start) toast('Continuando la receta · paso ' + (C.recipeStep(start) + 1) + ' de ' + C.RECIPE.steps.length);
   }
@@ -699,7 +699,7 @@
       scene.style.background = 'linear-gradient(180deg,rgba(10,7,16,.55) 0%,rgba(10,7,16,.25) 40%,rgba(10,7,16,.6) 100%),url(' + C.PHOTOS.recipe + '1600) center/cover no-repeat,linear-gradient(160deg,#3E6A36 0%,#1A2E18 100%)';
       $('pTag').textContent = RC.title + ' · cocina en casa'; $('pTitle').textContent = RC.dish;
       $('pSub').textContent = S.recipeSeq ? '📱 La receta y los ingredientes ya están en tu celular' : 'Receta para 4 personas · 25 min';
-      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
+      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
       $('rcNum').textContent = 'Paso ' + (si + 1) + ' de ' + RC.steps.length; $('rcIc').textContent = step.ic; $('rcT').textContent = step.t; $('rcD').textContent = step.d;
       $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
       $('pBar').style.width = (rp / RC.dur * 100) + '%';
@@ -711,7 +711,7 @@
       scene.className = 'scene'; scene.style.background = '#000';
       $('pTag').textContent = 'Seguir viendo · corto animado'; $('pTitle').textContent = B.title;
       $('pSub').textContent = V.needSound ? '🔇 Pulsa OK para activar el sonido' : B.credit;
-      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
+      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
       $('pState').textContent = vp ? '❚❚  Pausado' : '▶  Reproduciendo';
       $('pBar').style.width = (vt / B.dur * 100) + '%';
       $('pPos').textContent = C.fmt(vt); $('pDur').textContent = '-' + C.fmt(Math.max(0, B.dur - vt));
@@ -726,7 +726,7 @@
       scene.style.background = tm ? 'linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 65%,rgba(0,0,0,.6) 100%),#000 url(' + QV.catalog.img(tm, 'w1280') + ') center/cover no-repeat'
         : 'linear-gradient(160deg,' + ch.art[0] + ' 0%,' + ch.art[1] + ' 100%)';
       $('pTag').textContent = 'Canal ' + ch.n + ' · ' + ch.name; $('pTitle').textContent = ch.show; $('pSub').textContent = 'A continuación: ' + ch.next;
-      $('scorebug').hidden = true; $('pBottom').hidden = true; $('liveStrip').hidden = false; $('pausePanel').hidden = true;
+      $('scorebug').hidden = true; $('pBottom').hidden = true; $('liveStrip').hidden = false;
       $('liveMin').textContent = S.playing ? 'Canal ' + ch.n : 'Pausado';
       $('chLogo').innerHTML = '<div class="n">' + ch.n + '</div><div class="nm">' + esc(ch.name) + '</div>'; $('chLogo').hidden = false;
       return;
@@ -741,7 +741,7 @@
         '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + matchMinute() + '\'</span>';
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
       $('liveMin').textContent = S.playing ? 'Minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
-      $('pausePanel').hidden = true;
+     
       return;
     }
     if (S.content === 'movie') {
@@ -753,7 +753,7 @@
         : 'radial-gradient(35% 45% at 65% 40%,' + (mv.art[2] || 'rgba(255,255,255,.2)') + ' 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,' + mv.art[0] + ' 0%,' + mv.art[1] + ' 100%)';
       $('pTag').textContent = mv.label || ('Película · en ' + appTitle(mv.app)); $('pTitle').textContent = mv.title;
       $('pSub').textContent = mv.label ? (mv.sub || '') : mv.year + ' · ' + names.join(' · ') + ' · ' + mv.min + ' min';
-      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false; $('pausePanel').hidden = true;
+      $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
       $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
       $('pBar').style.width = (mp / dur() * 100) + '%';
       $('pPos').textContent = C.fmt(mp); $('pDur').textContent = '-' + C.fmt(dur() - mp);
@@ -765,22 +765,11 @@
     scene.className = sb ? 'scene img' : 'scene';
     scene.style.background = sb ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.65) 100%),#000 url(' + QV.catalog.img(sb, 'w1280') + ') center/cover no-repeat'
       : 'linear-gradient(170deg,' + sc.art[0] + ' 0%,' + sc.art[1] + ' 55%,' + sc.art[2] + ' 100%)';
-    $('pTag').textContent = C.SERIES.tag + ' · ' + sc.place; $('pTitle').textContent = C.SERIES.title; $('pSub').textContent = C.SERIES.sub;
+    $('pTag').textContent = C.SERIES.tag; $('pTitle').textContent = C.SERIES.title; $('pSub').textContent = C.SERIES.sub;
     $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
     $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
     $('pBar').style.width = (p / C.SERIES.duration * 100) + '%';
     $('pPos').textContent = C.fmt(p); $('pDur').textContent = '-' + C.fmt(C.SERIES.duration - p);
-    /* A2 · pausa enriquecida */
-    var pp = $('pausePanel');
-    if (!S.playing) {
-      $('ppPlace').textContent = sc.place;
-      var cast = ''; for (var i = 0; i < sc.cast.length; i++) cast += '<div class="pp-item"><span class="pp-dot"></span><span>' + esc(sc.cast[i][0]) + '<small>' + esc(sc.cast[i][1]) + '</small></span></div>';
-      $('ppCast').innerHTML = cast;
-      $('ppSong').innerHTML = '<div class="pp-item"><span class="pp-dot"></span><span>' + esc(sc.song.t) + '<small>' + esc(sc.song.a) + '</small></span></div>';
-      var pr = ''; for (var j = 0; j < sc.products.length; j++) pr += '<div class="pp-item"><span class="pp-dot"></span><span>' + esc(sc.products[j][0]) + '<small>' + esc(sc.products[j][1]) + '</small></span></div>';
-      $('ppProd').innerHTML = pr;
-      pp.hidden = false;
-    } else pp.hidden = true;
   }
   /* A4 · "Está sonando": al entrar a una escena, unos segundos después avisa la canción a TV y celulares. */
   /* v7.31 · al terminar una película el celular recibe el soundtrack y las recomendadas */
