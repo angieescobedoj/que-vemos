@@ -217,12 +217,10 @@
       html += '<div class="sec"><p class="sec-h">Personajes</p><div class="card">';
       for (var c = 0; c < sc.cast.length; c++) html += '<div class="item"><span class="av">' + esc(sc.cast[c][0].charAt(0)) + '</span><div class="grow"><div class="t">' + esc(sc.cast[c][0]) + '</div><div class="s">Interpretado por ' + esc(sc.cast[c][1]) + '</div></div></div>';
       html += '</div></div>';
-      html += '<div class="sec"><p class="sec-h">Está sonando</p><div class="card"><div class="item"><span class="av">♪</span><div class="grow"><div class="t">' + esc(sc.song.t) + '</div><div class="s">' + esc(sc.song.a) + ' · de la película</div></div></div><div class="songbtns"><a class="btn sm" href="' + listenUrl(sc.song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button class="btn sm ghost" data-act="saveSong">Guardar</button></div></div></div>';
       html += '<div class="sec"><p class="sec-h">Productos de la escena</p><div class="card">';
       for (var p = 0; p < sc.products.length; p++) html += '<div class="item"><span class="av">🛍</span><div class="grow"><div class="t">' + esc(sc.products[p][0]) + '</div><div class="s">' + esc(sc.products[p][1]) + '</div></div><button class="btn sm ghost" data-act="product" data-i="' + p + '">Ver</button></div>';
       html += '</div></div>';
-      html += soundtrackHtml();
-      el.innerHTML = html; return;
+      el.innerHTML = html; return;   /* el soundtrack de Los Pecadores llega al terminar la película */
     }
     html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:6px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
       '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
@@ -390,7 +388,7 @@
       var sc = sceneNow();
       h += '<p class="lf">En esta escena · ' + esc(sc.place) + '</p><div class="mv-list">';
       for (var i = 0; i < sc.cast.length; i++) h += '<div class="opt"><span class="ic">' + esc(sc.cast[i][1].charAt(0)) + '</span><span class="grow"><span class="t">' + esc(sc.cast[i][0]) + '</span><span class="s">' + esc(sc.cast[i][1]) + '</span></span></div>';
-      h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(sc.song.t) + '</span><span class="s">' + esc(sc.song.a) + ' · suena en esta escena</span></span><button class="btn sm ghost" data-mvsong="series:s">Guardar</button></div></div>';
+      h += '</div>';   /* la canción y el soundtrack salen al terminar la película, no al pausar */
     } else {
       h += '<p class="lf">Datos curiosos</p><div class="mv-list">';
       for (var f = 0; f < m.facts.length; f++) h += '<div class="opt"><span class="ic">' + (f + 1) + '</span><span class="grow"><span class="t" style="font-weight:600">' + esc(m.facts[f]) + '</span></span></div>';
