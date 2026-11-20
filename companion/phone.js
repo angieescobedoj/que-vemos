@@ -154,7 +154,7 @@
   /* ---------- decodificador simulado: responde con feedback, sin TV detrás ---------- */
   function fakeCommand(cmd) {
     var f = S.fake, n = f.name;
-    if (cmd.t === 'peek') return;
+    if (cmd.t === 'peek' || cmd.t === 'vote') return;
     if (cmd.t === 'power') { f.state = f.state === 'sleep' ? 'on' : 'sleep'; toast(n + (f.state === 'sleep' ? ' en reposo' : ' encendida') + ' (simulado)'); renderHeader(); return; }
     if (f.state === 'sleep') { toast(n + ' está en reposo · toca ⏻'); return; }
     if (cmd.t === 'vol') { f.vol = Math.max(0, Math.min(100, typeof cmd.v === 'number' ? cmd.v : f.vol + cmd.d)); f.muted = false; toast(n + ' · volumen ' + f.vol + ' (simulado)'); renderHeader(); return; }
@@ -166,7 +166,8 @@
 
   /* ---------- helpers de estado ---------- */
   function pos() { var r = S.room; if (!r) return 0; return r.playing ? r.pos + Math.max(0, (Date.now() - r.posAt) / 1000) : r.pos; }
-  function matchMinute() { return C.MATCH.startMinute + Math.floor(Math.max(0, Date.now() - (S.room.matchStart || Date.now())) / 10000); }
+  function mck() { return C.matchClock(Math.max(0, Date.now() - (S.room.matchStart || Date.now()))); }
+  function matchMinute() { return mck().label; }
   function sceneNow() { return C.SERIES.scenes[C.sceneAt(pos())]; }
   function soundtrack() { try { return JSON.parse(ls.get('cp-soundtrack') || '[]'); } catch (e) { return []; } }
   function saveSong(song) {
@@ -181,11 +182,11 @@
     var r = S.room; if (!r) return;
     if (S.fake) { renderHeader(); return; }
     renderHeader(); renderGame(); renderPad2();
-    /* al entrar al partido, el celular pasa solo a "Ahora en la TV" con alineación, estadísticas y datos */
+    /* v7.35 · momentos del partido: al elegirlo (previa), jugada clave (gol) y medio tiempo llegan como hojas */
     var inMatch = r.screen === 'player' && r.content === 'match';
-    if (S.wasMatch === undefined) S.wasMatch = inMatch;
-    if (inMatch && !S.wasMatch) { S.wasMatch = true; if (S.tab !== 'ahora' && !S.sheet) { setTimeout(function () { setTab('ahora'); toast('📊 Alineación y estadísticas del partido'); }, 0); buzz(); } }
-    else if (!inMatch) S.wasMatch = false;
+    if (S.mevSeen === undefined) S.mevSeen = r.mev ? r.mev.seq : 0;
+    if (r.mev && r.mev.seq !== S.mevSeen) { S.mevSeen = r.mev.seq; if (inMatch) { openMoment(r.mev.k); buzz(); setTimeout(buzz, 180); } }
+    if (!inMatch && /^(mpre|mgoal|mht)$/.test(S.sheet || '')) closeSheet();
     if (S.tab === 'ahora') renderAhora();
     /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
     if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
@@ -201,8 +202,9 @@
     var r = S.room, el = $('ahora'), html = '';
     if (r.screen === 'player' && r.content === 'match') {
       var m = C.MATCH;
-      html += '<p class="eyebrow">Partido en vivo · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + m.home.name + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + m.away.name + '</h2>';
-      html += matchInfoHtml();
+      var ck0 = mck();
+      html += '<p class="eyebrow">Partido en vivo · ' + ck0.label + '</p><h2 style="margin-top:4px">' + m.home.name + ' ' + ck0.score[0] + ' – ' + ck0.score[1] + ' ' + m.away.name + '</h2>';
+      html += matchInfoHtml(SEG_LIVE);
       el.innerHTML = html; return;
     }
     if (r.screen === 'player' && r.content === 'series') {
@@ -225,29 +227,162 @@
     el.innerHTML = html;
   }
   /* Alineación / Estadísticas / Datos del partido: se usa en "Ahora en la TV" y en la hoja que sale al pausar */
-  function matchInfoHtml() {
+  var SEG_NAMES = { lineup: ['Alineaciones', 'las alineaciones'], h2h: ['Historial', 'el historial'], table: ['Tabla', 'la tabla de posiciones'], inj: ['Lesionados', 'los lesionados'], stats: ['Estadísticas', 'las estadísticas'] };
+  var SEG_PRE = ['lineup', 'h2h', 'table', 'inj'], SEG_LIVE = ['lineup', 'stats', 'h2h', 'table', 'inj'];
+  function statBars(list) {
     var m = C.MATCH, html = '';
-    if (!S.peeked[S.seg]) { S.peeked[S.seg] = true; send({ t: 'peek', what: S.seg === 'lineup' ? 'la alineación' : S.seg === 'stats' ? 'las estadísticas' : 'datos del partido' }); }
-    html += '<div class="seg"><button data-seg="lineup"' + (S.seg === 'lineup' ? ' class="on"' : '') + '>Alineación</button><button data-seg="stats"' + (S.seg === 'stats' ? ' class="on"' : '') + '>Estadísticas</button><button data-seg="facts"' + (S.seg === 'facts' ? ' class="on"' : '') + '>Datos</button></div>';
-    if (S.seg === 'lineup') {
-      html += '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>';
-    } else if (S.seg === 'stats') {
-      for (var i = 0; i < m.stats.length; i++) {
-        var s = m.stats[i], tot = s[1] + s[2];
-        html += '<div class="stat"><div class="row"><span>' + s[1] + s[3] + '</span><span class="muted">' + s[0] + '</span><span>' + s[2] + s[3] + '</span></div><div class="bars"><i style="flex:' + s[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + s[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
-      }
-    } else {
-      for (var f = 0; f < m.facts.length; f++) html += '<div class="mfact">' + esc(m.facts[f]) + '</div>';
+    for (var i = 0; i < list.length; i++) {
+      var s = list[i], tot = (s[1] + s[2]) || 1;
+      html += '<div class="stat"><div class="row"><span>' + s[1] + s[3] + '</span><span class="muted">' + s[0] + '</span><span>' + s[2] + s[3] + '</span></div><div class="bars"><i style="flex:' + s[1] / tot + ';background:' + m.home.color + '"></i><i style="flex:' + s[2] / tot + ';background:' + m.away.color + '"></i></div></div>';
     }
     return html;
   }
-  /* Al pausar el partido, el celular abre sus datos (alineación, estadísticas y datos) + la repetición en Anytime */
+  /* tabla: [equipo, PJ, PTS, DG]; resalta a los dos equipos del partido */
+  function tableHtml(rows, moves) {
+    var m = C.MATCH, h = '<div class="mtable"><div class="mt-h"><span>#</span><span class="grow">Equipo</span><span>PJ</span><span>DG</span><span>PTS</span></div>';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i], hl = r[0] === m.home.name ? m.home.color : r[0] === m.away.name ? m.away.color : '', mv = moves ? moves[r[0]] : 0;
+      h += '<div class="mt-r' + (hl ? ' hl' : '') + '"' + (hl ? ' style="--tc:' + hl + '"' : '') + '><span>' + (i + 1) + '</span><span class="grow">' + esc(r[0]) +
+        (moves ? (mv > 0 ? ' <em class="up">▲' + mv + '</em>' : mv < 0 ? ' <em class="dn">▼' + (-mv) + '</em>' : '') : '') + '</span><span>' + r[1] + '</span><span>' + (r[3] > 0 ? '+' : '') + r[3] + '</span><b>' + r[2] + '</b></div>';
+    }
+    return h + '</div>';
+  }
+  /* Alineaciones / Historial / Tabla / Lesionados (y Estadísticas en vivo): previa, pausa y "Ahora en la TV" */
+  function matchInfoHtml(segs) {
+    var m = C.MATCH, html = '', i;
+    segs = segs || SEG_LIVE; if (segs.indexOf(S.seg) < 0) S.seg = segs[0];
+    if (!S.peeked[S.seg]) { S.peeked[S.seg] = true; send({ t: 'peek', what: SEG_NAMES[S.seg][1] }); }
+    html += '<div class="seg mseg">';
+    for (i = 0; i < segs.length; i++) html += '<button data-seg="' + segs[i] + '"' + (S.seg === segs[i] ? ' class="on"' : '') + '>' + SEG_NAMES[segs[i]][0] + '</button>';
+    html += '</div>';
+    if (S.seg === 'lineup') {
+      html += '<div class="lineup">' + team(m.home, m.lineups.home) + team(m.away, m.lineups.away) + '</div>';
+    } else if (S.seg === 'stats') {
+      html += statBars(m.stats);
+    } else if (S.seg === 'h2h') {
+      var rc = m.h2h.record;
+      html += '<div class="h2h"><div><b style="color:' + m.home.color + '">' + rc[0] + '</b><span>' + esc(m.home.name) + '</span></div><div><b>' + rc[2] + '</b><span>Empates</span></div><div><b style="color:' + m.away.color + '">' + rc[1] + '</b><span>' + esc(m.away.name) + '</span></div></div>';
+      html += '<p class="sec-h" style="margin-top:16px">Últimos 5 partidos</p>';
+      for (i = 0; i < m.h2h.last.length; i++) html += '<div class="mrow"><div class="grow"><div class="t">' + esc(m.h2h.last[i][0]) + '</div><div class="s">' + esc(m.h2h.last[i][1]) + '</div></div></div>';
+      html += '<div class="mfact">' + esc(m.facts[2]) + '</div>';
+    } else if (S.seg === 'table') {
+      html += '<p class="sec-h" style="margin-top:4px">Liga de la Ciudad · antes de la jornada 12</p>' + tableHtml(m.table);
+    } else if (S.seg === 'inj') {
+      var tms = [['home', m.home], ['away', m.away]];
+      for (var t = 0; t < 2; t++) {
+        html += '<p class="sec-h" style="margin-top:' + (t ? 16 : 4) + 'px"><span class="sw" style="background:' + tms[t][1].color + '"></span>' + esc(tms[t][1].name) + '</p>';
+        for (i = 0; i < m.injuries.length; i++) if (m.injuries[i][0] === tms[t][0]) {
+          var j = m.injuries[i];
+          html += '<div class="mrow"><span class="inj">✚</span><div class="grow"><div class="t">' + esc(j[1]) + ' <em>' + j[2] + '</em></div><div class="s">' + esc(j[3]) + ' · ' + esc(j[4]) + '</div></div></div>';
+        }
+      }
+    }
+    return html;
+  }
+  /* Al pausar el partido, el celular abre sus datos + la repetición en Anytime */
   function openMatchSheet() {
-    var m = C.MATCH, of = C.offerSource('match').offer;
-    openSheet('match', '<p class="eyebrow">Pausaste el partido · minuto ' + matchMinute() + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + m.score[0] + ' – ' + m.score[1] + ' ' + esc(m.away.name) + '</h2>' +
-      matchInfoHtml() +
+    var m = C.MATCH, of = C.offerSource('match').offer, ck = mck();
+    openSheet('match', '<p class="eyebrow">Pausaste el partido · ' + ck.label + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</h2>' +
+      matchInfoHtml(SEG_LIVE) +
       (of ? '<div class="mreplay"><div class="grow"><div class="t">' + esc(of.line) + '</div><div class="s">Disponible en Anytime · desde el inicio</div></div><button class="btn sm ghost" data-act="offerGo" data-ch="match">Ver en la TV</button></div>' : '') +
       '<button class="btn" data-act="play" style="margin-top:14px">▶  Seguir viendo el partido</button>');
+  }
+
+  /* ---------- v7.35 · Partido en tres momentos (bottom sheets) ----------
+     1) al elegirlo: alineaciones, historial, tabla y lesionados
+     2) jugada clave (gol al 27'): repetición desde otro ángulo, dato del goleador y cómo cambia la tabla
+     3) medio tiempo: estadísticas, mapa de calor, mejores jugadas, encuesta y promociones de patrocinadores */
+  function openMoment(k) {
+    S.mAng = 0; S.mPlay = 0;
+    if (k === 'pre') { S.seg = 'lineup'; S.mVote = null; S.mHeat = 'home'; openPre(); }
+    else if (k === 'goal') openGoal();
+    else if (k === 'ht') openHT();
+  }
+  function reSheet(fn) { var st = $('sheet').scrollTop; fn(); $('sheet').scrollTop = st; }
+  function openPre() {
+    var m = C.MATCH;
+    openSheet('mpre', '<p class="eyebrow">Empieza el partido · ' + esc(m.sub) + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' vs. ' + esc(m.away.name) + '</h2>' +
+      '<p class="sub">Todo lo que tienes que saber antes de verlo</p>' + matchInfoHtml(SEG_PRE) +
+      '<button class="btn" data-act="closeSheet" style="margin-top:16px">Ver el partido</button>');
+  }
+  var ANGLES = ['Cámara aérea', 'Detrás de la portería', 'Cámara lateral'];
+  /* repetición simulada: vista aérea animada (SVG) o la toma desde otra cámara con acercamiento */
+  function replayHtml(ang, label) {
+    var h = '<div class="rp">';
+    if (ang === 0) {
+      h += '<svg class="rp-pitch" viewBox="0 0 320 180" aria-label="Repetición vista aérea">' +
+        '<rect width="320" height="180" fill="#2E7D49"/><g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"><rect x="6" y="6" width="308" height="168"/><line x1="160" y1="6" x2="160" y2="174"/><circle cx="160" cy="90" r="22"/><rect x="262" y="48" width="52" height="84"/><rect x="296" y="72" width="18" height="36"/></g>' +
+        '<rect x="314" y="78" width="5" height="24" fill="#fff"/>' +
+        '<g fill="#D9364F"><circle cx="300" cy="92" r="5"/><circle cx="262" cy="70" r="5"/><circle cx="265" cy="112" r="5"/><circle cx="240" cy="90" r="5"/></g>' +
+        '<g fill="#2F6FE0" stroke="#fff" stroke-width="1"><circle r="5.5"><animateMotion dur="5s" repeatCount="indefinite" path="M200,150 L240,150 L240,150"/></circle>' +
+        '<circle r="5.5"><animateMotion dur="5s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.35;.6;1" calcMode="linear" path="M215,70 L276,96"/></circle></g>' +
+        '<text font-size="9" fill="#fff" font-weight="700"><tspan x="196" y="168">Quiroga</tspan></text>' +
+        '<circle r="3.5" fill="#fff" stroke="#111" stroke-width="1"><animateMotion dur="5s" repeatCount="indefinite" keyPoints="0;0.06;0.45;0.55;1;1" keyTimes="0;.2;.45;.6;.75;1" calcMode="linear" path="M200,150 L240,150 L276,96 L281,96 L316,84"/></circle>' +
+        '<path d="M240,150 L276,96 L316,84" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.4" stroke-dasharray="4 4"/></svg>';
+    } else {
+      h += '<div class="rp-cam a' + ang + '" style="background-image:url(' + C.PHOTOS.match + '900)"></div>';
+    }
+    h += '<span class="rp-tag">REPETICIÓN · ' + esc(label || ANGLES[ang]) + '</span><span class="rp-bar"><i></i></span></div>';
+    return h;
+  }
+  function goalTable() {
+    var m = C.MATCH, ck = mck(), d = ck.score[0] - ck.score[1], before = {}, rows = [], i;
+    for (i = 0; i < m.table.length; i++) {
+      var r = m.table[i].slice(); before[r[0]] = i;
+      if (r[0] === m.home.name) { r[1]++; r[2] += 3; r[3] += d; } else if (r[0] === m.away.name) { r[1]++; r[3] -= d; }
+      rows.push(r);
+    }
+    rows.sort(function (a, b) { return b[2] - a[2] || b[3] - a[3] || before[a[0]] - before[b[0]]; });
+    var moves = {};
+    for (i = 0; i < rows.length; i++) moves[rows[i][0]] = before[rows[i][0]] - i;
+    return { rows: rows, moves: moves };
+  }
+  function openGoal() {
+    var m = C.MATCH, gl = m.goal, ck = mck(), gt = goalTable(), pos = 0, i;
+    for (i = 0; i < gt.rows.length; i++) if (gt.rows[i][0] === m.home.name) pos = i + 1;
+    var h = '<p class="eyebrow">Jugada clave · ' + gl.min + '\'</p><h2 style="margin-top:4px">¡Gol de ' + esc(m.home.name) + '!</h2><p class="sub">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</p>';
+    h += '<p class="sec-h">Repetición desde otro ángulo</p>' + replayHtml(S.mAng || 0) + '<div class="chips rp-angs">';
+    for (i = 0; i < ANGLES.length; i++) h += '<button data-act="mAng" data-i="' + i + '"' + ((S.mAng || 0) === i ? ' class="on"' : '') + '>' + ANGLES[i] + '</button>';
+    h += '</div><p class="rp-desc">' + esc(gl.desc) + '</p>';
+    h += '<p class="sec-h" style="margin-top:18px">El goleador</p><div class="scorer"><span class="num" style="background:' + m.home.color + '">' + gl.num + '</span><div class="grow"><div class="t">' + esc(gl.scorer) + '</div><div class="s">' + esc(gl.pos) + ' · ' + esc(m.home.name) + '</div>' +
+      '<div class="nth">⚽ ' + esc(gl.line) + '</div></div></div><div class="tiles">';
+    for (i = 0; i < gl.season.length; i++) h += '<div><b>' + gl.season[i][1] + '</b><span>' + gl.season[i][0] + '</span></div>';
+    h += '</div>';
+    h += '<p class="sec-h" style="margin-top:18px">Así cambia la tabla</p><p class="sub" style="margin-top:-2px">Si el partido terminara así, ' + esc(m.home.name) + ' sube al ' + pos + '.º lugar</p>' + tableHtml(gt.rows, gt.moves);
+    h += '<button class="btn" data-act="closeSheet" style="margin-top:16px">Seguir viendo el partido</button>';
+    send({ t: 'peek', what: 'la repetición del gol' });
+    openSheet('mgoal', h);
+  }
+  function heatSvg(side) {
+    var pts = C.MATCH.halftime.heat[side], col = side === 'home' ? '255,90,60' : '255,170,40', g = '', i;
+    for (i = 0; i < pts.length; i++) g += '<circle cx="' + pts[i][0] * 3.2 + '" cy="' + pts[i][1] * 1.8 + '" r="' + (26 + pts[i][2] * 22) + '" fill="url(#hg' + side + ')" opacity="' + pts[i][2] + '"/>';
+    return '<svg class="heat" viewBox="0 0 320 180" aria-label="Mapa de calor"><defs><radialGradient id="hg' + side + '"><stop offset="0" stop-color="rgb(' + col + ')" stop-opacity=".95"/><stop offset=".5" stop-color="rgb(' + col + ')" stop-opacity=".45"/><stop offset="1" stop-color="rgb(' + col + ')" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="320" height="180" fill="#2E7D49"/>' + g +
+      '<g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"><rect x="6" y="6" width="308" height="168"/><line x1="160" y1="6" x2="160" y2="174"/><circle cx="160" cy="90" r="22"/><rect x="6" y="48" width="52" height="84"/><rect x="262" y="48" width="52" height="84"/></g></svg>';
+  }
+  function openHT() {
+    var m = C.MATCH, H = m.halftime, ck = mck(), side = S.mHeat || 'home', i;
+    var h = '<p class="eyebrow">Medio tiempo</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</h2><p class="sub">Gol: ' + esc(m.goal.scorer) + ' ' + m.goal.min + '\'</p>';
+    h += '<p class="sec-h">Resumen de estadísticas</p>' + statBars(H.stats);
+    h += '<p class="sec-h" style="margin-top:18px">Mapa de calor</p><div class="seg2 mseg2"><button data-act="mHeat" data-t="home"' + (side === 'home' ? ' class="on"' : '') + '>' + esc(m.home.name) + '</button><button data-act="mHeat" data-t="away"' + (side === 'away' ? ' class="on"' : '') + '>' + esc(m.away.name) + '</button></div>' + heatSvg(side) +
+      '<p class="rp-desc">' + (side === 'home' ? esc(m.home.name) + ' atacó sobre todo por la banda derecha →' : esc(m.away.name) + ' se replegó en su campo y buscó el contragolpe por el centro') + '</p>';
+    var pl = H.plays[S.mPlay || 0];
+    h += '<p class="sec-h" style="margin-top:18px">Mejores jugadas</p>' + replayHtml((S.mPlay || 0) === 0 ? 0 : (S.mPlay === 1 ? 1 : 2), pl[0] + ' ' + pl[1]);
+    for (i = 0; i < H.plays.length; i++) h += '<button class="mrow play' + ((S.mPlay || 0) === i ? ' on' : '') + '" data-act="mPlay" data-i="' + i + '"><span class="pm">' + H.plays[i][0] + '</span><div class="grow"><div class="t">' + esc(H.plays[i][1]) + '</div><div class="s">' + esc(H.plays[i][2]) + '</div></div><span class="pi">▶</span></button>';
+    h += '<p class="sec-h" style="margin-top:18px">Encuesta · jugador del primer tiempo</p>';
+    if (S.mVote == null) {
+      for (i = 0; i < H.poll.length; i++) h += '<button class="mrow vote" data-act="mVote" data-i="' + i + '"><div class="grow"><div class="t">' + esc(H.poll[i][0]) + '</div><div class="s">' + esc(H.poll[i][1]) + '</div></div><span class="pi">Votar</span></button>';
+    } else {
+      var tot = 0; for (i = 0; i < H.poll.length; i++) tot += H.poll[i][2] + (S.mVote === i ? 1 : 0);
+      for (i = 0; i < H.poll.length; i++) { var pc = Math.round((H.poll[i][2] + (S.mVote === i ? 1 : 0)) / tot * 100);
+        h += '<div class="pollr' + (S.mVote === i ? ' me' : '') + '"><i style="width:' + pc + '%"></i><span class="grow">' + esc(H.poll[i][0]) + (S.mVote === i ? ' · tu voto' : '') + '</span><b>' + pc + '%</b></div>'; }
+      h += '<p class="rp-desc">Votaron 1,248 aficionados (resultados simulados)</p>';
+    }
+    h += '<p class="sec-h" style="margin-top:18px">Promociones de patrocinadores</p>';
+    for (i = 0; i < H.sponsors.length; i++) { var sp = H.sponsors[i];
+      h += '<div class="promo"><span class="pic" style="background:' + sp[4] + '">' + sp[0] + '</span><div class="grow"><div class="t">' + esc(sp[1]) + '</div><div class="s">' + esc(sp[2]) + '</div></div><button class="btn sm ghost" data-act="mPromo" data-i="' + i + '">' + esc(sp[3]) + '</button></div>'; }
+    h += '<button class="btn" data-act="closeSheet" style="margin-top:16px">Listo</button>';
+    openSheet('mht', h);
   }
   function team(t, list) {
     var h = '<div class="team"><div class="tn"><span class="sw" style="background:' + t.color + '"></span>' + esc(t.name) + '</div>';
@@ -604,7 +739,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (/^(match|unlink)$/.test(name) ? ' dark' : '');
+    $('sheet').className = 'sheet' + (/^(match|unlink|mpre|mgoal|mht)$/.test(name) ? ' dark' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
@@ -835,7 +970,12 @@
     else if (cmd) { send({ t: cmd }); if (cmd === 'menu' && !S.fake) toast(S.room && S.room.menu ? 'Cerrando el menú' : 'Menú abierto en la TV'); }
     else if (open) { send({ t: 'open', id: open, from: g('data-from') || '' }); toast('Abriendo en la TV…'); }
     else if (go) setTab(go);
-    else if (seg) { S.seg = seg; if (S.sheet === 'match') openMatchSheet(); else renderAhora(); }
+    else if (seg) { S.seg = seg; if (S.sheet === 'match') reSheet(openMatchSheet); else if (S.sheet === 'mpre') reSheet(openPre); else renderAhora(); }
+    else if (act === 'mAng') { S.mAng = Number(g('data-i')); reSheet(openGoal); }
+    else if (act === 'mHeat') { S.mHeat = g('data-t'); reSheet(openHT); }
+    else if (act === 'mPlay') { S.mPlay = Number(g('data-i')); reSheet(openHT); }
+    else if (act === 'mVote') { S.mVote = Number(g('data-i')); send({ t: 'vote', who: C.MATCH.halftime.poll[S.mVote][0] }); toast('¡Gracias por votar!'); reSheet(openHT); }
+    else if (act === 'mPromo') { toast(C.MATCH.halftime.sponsors[Number(g('data-i'))][1] + ' · promoción simulada'); }
     else if (act === 'power') { send({ t: 'power' }); if (!S.fake) toast(S.room && S.room.off ? 'Encendiendo la TV' : 'Apagando la TV'); }
     else if (act === 'mute') { send({ t: 'mute' }); if (!S.fake) { S.room.muted = !S.room.muted; renderHeader(); toast(S.room.muted ? 'TV en silencio' : 'Sonido activado'); } }
     else if (act === 'decoders') openDecoders();

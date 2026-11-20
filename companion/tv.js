@@ -55,7 +55,7 @@
     return {
       kind: 'companion', screen: S.screen, content: S.content, playing: S.playing, pos: Math.round(curPos()), posAt: now(),
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
-      matchStart: S.matchStart, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
+      matchStart: S.matchStart, mev: S.mev || null, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
       movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, fin: S.fin, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }
@@ -68,7 +68,7 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep, snap.mev && snap.mev.seq]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -300,12 +300,14 @@
     closeOverlays(); stopVideo(); S.offer = null;
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') { S.saved = curPos(); }
+    /* v7.35 · al elegir el partido el reloj simulado empieza (gol al 27', medio tiempo después) y el celular recibe la previa */
+    var fresh = !(S.screen === 'player' && S.content === 'match');
     S.content = 'match'; S.playing = true;
-    if (!S.matchStart) S.matchStart = now();
+    if (fresh || !S.matchStart) { S.matchStart = now(); S.mFired = {}; S.mShow = null; S.mev = { k: 'pre', seq: now() }; }
    
     if (S.screen !== 'player') show('player'); else pushState();
     paintPlayer();
-    if (connected().length) setTimeout(function () { toast('📱 Alineación y estadísticas en tu celular', 3500); }, 700);
+    if (connected().length && fresh) setTimeout(function () { toast('📱 Alineaciones, historial, tabla y lesionados en tu celular', 3500); }, 700);
   }
   function stepChannel(d) {
     var list = C.CHANNELS, i = 0;
@@ -686,12 +688,44 @@
     setPos(curPos() + delta, S.playing); paintPlayer(); pushState();
     toast((delta > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(delta) + ' s', 1500);
   }
-  function matchMinute() { return C.MATCH.startMinute + Math.floor((now() - S.matchStart) / 10000); }
+  function mClock() { return C.matchClock(now() - S.matchStart); }
+  function matchMinute() { return mClock().min; }
+  /* v7.35 · momentos del partido: la TV avisa en pantalla y manda el momento al celular */
+  function tickMatch() {
+    if (S.content !== 'match' || !S.matchStart) return;
+    var ck = mClock(); S.mFired = S.mFired || {};
+    if (ck.goal && !S.mFired.goal) {
+      S.mFired.goal = true; S.mev = { k: 'goal', seq: now() }; S.mShow = { k: 'goal', until: now() + 8000 }; pushState();
+      if (connected().length) toast('📱 Repetición desde otro ángulo en tu celular', 4000);
+    }
+    if (ck.phase === 'MT' && !S.mFired.ht) {
+      S.mFired.ht = true; S.mev = { k: 'ht', seq: now() }; pushState();
+      if (connected().length) toast('📱 Resumen del primer tiempo en tu celular', 4000);
+    }
+    if (ck.phase === '2T' && !S.mFired.st) { S.mFired.st = true; toast('Arranca el segundo tiempo', 2500); }
+  }
+  function paintMatchEvent(ck) {
+    var el = $('mEvent'), m = C.MATCH, gl = m.goal;
+    if (S.mShow && S.mShow.k === 'goal' && now() < S.mShow.until) {
+      el.className = 'm-event goal';
+      el.innerHTML = '<div class="me-k">¡GOOOL!</div><div class="me-t"><span class="sw" style="background:' + m.home.color + '"></span>' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</div>' +
+        '<div class="me-s">' + esc(gl.scorer) + ' · ' + gl.min + '\' · asistencia de ' + esc(gl.assist) + '</div>' + (connected().length ? '<div class="me-p">📱 Mira la repetición desde otro ángulo en tu celular</div>' : '');
+      el.hidden = false; return;
+    }
+    if (ck.phase === 'MT') {
+      el.className = 'm-event ht';
+      el.innerHTML = '<div class="me-k">MEDIO TIEMPO</div><div class="me-t">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</div>' +
+        '<div class="me-s">Goles: ' + esc(m.goal.scorer) + ' (' + m.goal.min + '\') · el segundo tiempo empieza en unos segundos</div>' + (connected().length ? '<div class="me-p">📱 Estadísticas, mapa de calor, mejores jugadas y encuesta en tu celular</div>' : '');
+      el.hidden = false; return;
+    }
+    el.hidden = true;
+  }
   function paintPlayer() {
     var scene = $('scene');
     $('chLogo').hidden = true;
     $('vid').hidden = S.content !== 'video'; $('vidShade').hidden = S.content !== 'video';
     $('recipeCard').hidden = S.content !== 'recipe';
+    if (S.content !== 'match') $('mEvent').hidden = true;
     if (S.content === 'recipe') {
       var RC = C.RECIPE, rp = curPos(), si = C.recipeStep(rp), step = RC.steps[si];
       scene.className = 'scene';
@@ -737,10 +771,12 @@
       scene.style.background = 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.65) 100%),url(' + C.PHOTOS.match + '1600) center/cover no-repeat,repeating-linear-gradient(90deg,#2E7D49 0 8%,#2A7243 8% 16%)';
       $('pTag').textContent = 'En vivo · ' + m.sub; $('pTitle').textContent = m.title; $('pSub').textContent = '';
       $('scorebug').hidden = false;
-      $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + m.score[0] + ' – ' + m.score[1] +
-        '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + matchMinute() + '\'</span>';
+      var ck = mClock();
+      $('scorebug').innerHTML = '<span class="tm"><span class="sw" style="background:' + m.home.color + '"></span>' + m.home.short + '</span>' + ck.score[0] + ' – ' + ck.score[1] +
+        '<span class="tm">' + m.away.short + '<span class="sw" style="background:' + m.away.color + '"></span></span><span class="min">' + (ck.phase === 'MT' ? 'MT' : ck.label) + '</span>';
       $('pBottom').hidden = true; $('liveStrip').hidden = false;
-      $('liveMin').textContent = S.playing ? 'Minuto ' + matchMinute() : 'Pausado · en vivo en segundo plano';
+      $('liveMin').textContent = !S.playing ? 'Pausado · en vivo en segundo plano' : ck.phase === 'MT' ? 'Medio tiempo' : ck.phase === 'FIN' ? 'Final del partido' : 'Minuto ' + ck.min;
+      paintMatchEvent(ck);
      
       return;
     }
@@ -975,6 +1011,7 @@
       if (S.content === 'series') { setPos(C.SERIES.duration - 8, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
       else if (S.content === 'video') { try { var vv = $('vid'); vv.currentTime = Math.max(0, C.BUNNY.dur - 6); vPlay(); } catch (e) { /* ignore */ } }
     }
+    else if (c.t === 'vote') toast(name + ' votó por ' + (c.who || '') + ' como jugador del primer tiempo', 3500);
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
     else if (c.t === 'save') toast(name + ' guardó «' + c.what + '» en su soundtrack', 3500);
     else if (c.t === 'product') toast(name + ' abrió «' + c.what + '» en su celular', 3500);
@@ -1085,7 +1122,7 @@
   setInterval(function () {
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    if (S.screen === 'player') { paintPlayer(); tickSeries(); tickRecipe(); }
+    if (S.screen === 'player') { tickMatch(); paintPlayer(); tickSeries(); tickRecipe(); }
   }, 1000);
 
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */

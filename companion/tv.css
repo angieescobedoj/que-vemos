@@ -381,3 +381,13 @@ b{font-weight:700}
 .rent-brand img{height:1.6rem;width:auto;margin-right:.8rem}
 
 /* v7.12 · canción de Los Pecadores a un costado (no interrumpe la película) */
+
+/* v7.35 · momentos del partido en la TV (gol y medio tiempo) */
+.m-event{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:34rem;max-width:44rem;text-align:center;background:rgba(14,10,22,.9);border:1px solid var(--line);border-radius:1.6rem;padding:1.6rem 2.2rem;box-shadow:0 1.2rem 3rem rgba(0,0,0,.5);z-index:6}
+.m-event .me-k{font-size:3.2rem;font-weight:900;letter-spacing:.06em;line-height:1}
+.m-event.goal .me-k{color:#FFD24A}
+.m-event.ht .me-k{font-size:2.2rem;color:#E9D5FF}
+.m-event .me-t{display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:1.6rem;font-weight:800;margin-top:.7rem}
+.m-event .me-t .sw{width:.8rem;height:.8rem;border-radius:.2rem}
+.m-event .me-s{font-size:1rem;color:var(--ink-2,#B9AFC8);margin-top:.4rem}
+.m-event .me-p{display:inline-block;margin-top:1rem;background:var(--violet);color:#fff;font-weight:700;font-size:.95rem;padding:.55rem 1rem;border-radius:999px}

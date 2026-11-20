@@ -15,8 +15,37 @@
              ['8', 'N. Esparza', 'MED'], ['6', 'B. Galindo', 'MED'], ['10', 'K. Rosales', 'MED'], ['7', 'I. Solís', 'DEL'], ['9', 'U. Delgado', 'DEL'], ['11', 'Y. Navarro', 'DEL']]
     },
     stats: [['Posesión', 56, 44, '%'], ['Tiros', 7, 3, ''], ['Tiros a gol', 3, 1, ''], ['Faltas', 6, 9, '']],
-    facts: ['Halcones no pierde en casa desde hace 8 partidos.', 'E. Salcedo lleva 6 goles en la temporada.', 'Es el clásico número 41 entre ambos equipos.']
+    facts: ['Halcones no pierde en casa desde hace 8 partidos.', 'E. Salcedo lleva 4 goles en el torneo.', 'Es el clásico número 41 entre ambos equipos.'],
+    /* v7.35 · antes del partido: historial, tabla y lesionados */
+    h2h: { record: [18, 11, 12], last: [['Toros 1 – 2 Halcones', 'Jornada 5 · 2026'], ['Halcones 0 – 0 Toros', 'Final · 2025'], ['Toros 3 – 1 Halcones', 'Jornada 14 · 2025'], ['Halcones 2 – 1 Toros', 'Jornada 3 · 2025'], ['Toros 0 – 2 Halcones', 'Cuartos · 2024']] },
+    table: [['Águilas', 11, 25, 12], ['Pumas', 11, 23, 9], ['Halcones', 11, 22, 8], ['Venados', 11, 19, 4], ['Toros', 11, 18, 3], ['Lobos', 11, 15, 0], ['Coyotes', 11, 12, -4], ['Jaguares', 11, 10, -7]],
+    injuries: [['home', 'R. Ortega', 'DEL', 'Desgarre en el muslo', 'Vuelve en 3 semanas'], ['home', 'S. Luna', 'DEF', 'Esguince de tobillo', 'Duda para la jornada 13'],
+               ['away', 'M. Fuentes', 'MED', 'Lesión de rodilla', 'Fuera el resto del torneo'], ['away', 'E. Vidal', 'POR', 'Conmoción', 'Protocolo · vuelve la próxima semana']],
+    /* v7.35 · jugada clave (gol) y medio tiempo */
+    goal: { min: 27, team: 'home', scorer: 'E. Salcedo', num: '10', pos: 'Mediocampista', assist: 'F. Quiroga', nth: 5, line: 'Su 5.º gol del torneo',
+      season: [['Goles', 5], ['Asistencias', 3], ['Tiros a gol', 14]],
+      desc: 'Pase filtrado de Quiroga por la derecha, Salcedo controla dentro del área y define cruzado al segundo poste.',
+      /* posiciones en vivo: [equipo, pts antes, pts ahora] — Halcones gana y pasa del 3.º al 2.º; Toros cae del 5.º al 6.º */
+      tableLive: [['Águilas', 25, 25], ['Halcones', 22, 25], ['Pumas', 23, 23], ['Venados', 19, 19], ['Lobos', 15, 15], ['Toros', 18, 18]] },
+    halftime: {
+      stats: [['Posesión', 58, 42, '%'], ['Tiros', 9, 4, ''], ['Tiros a gol', 5, 1, ''], ['Tiros de esquina', 4, 2, ''], ['Faltas', 7, 10, ''], ['Pases completos', 212, 151, '']],
+      heat: { home: [[62, 30, 1], [70, 55, .8], [50, 45, .7], [78, 70, .6], [40, 25, .5]], away: [[30, 50, 1], [22, 30, .8], [38, 70, .7], [15, 50, .6], [45, 40, .4]] },
+      plays: [['27\'', 'Gol de E. Salcedo', 'Definición cruzada tras pase de Quiroga'], ['33\'', 'Atajadón de R. Medina', 'Mano firme ante el remate de U. Delgado'], ['41\'', 'Al poste', 'Disparo de H. Villalobos desde fuera del área']],
+      poll: [['E. Salcedo', 'Halcones · 10', 46], ['R. Medina', 'Halcones · 1', 21], ['F. Quiroga', 'Halcones · 7', 19], ['K. Rosales', 'Toros · 10', 14]],
+      sponsors: [['🍕', 'Pizzería La Cancha', '2x1 en pizzas grandes durante el partido', 'Pedir ahora', '#E2552B'], ['🥤', 'Bebidas Brisa', 'Six pack con 20% de descuento · solo en el medio tiempo', 'Ver promo', '#1F8FD6'], ['👟', 'Deportes Meta', 'Jersey oficial de Halcones con envío gratis', 'Comprar', '#2E7D49']]
+    }
   };
+  /* Reloj simulado del partido (TV y celular lo calculan igual a partir de matchStart):
+     primer tiempo acelerado (1 minuto = 1.5 s) desde el minuto 12, gol al 27', medio tiempo 40 s y luego el segundo tiempo. */
+  var M_SPM = 1.5, M_HT_AT = (45 - 12) * 1.5, M_HT_LEN = 40;
+  function matchClock(ms) {
+    var e = Math.max(0, ms / 1000), min, phase;
+    if (e < M_HT_AT) { phase = '1T'; min = 12 + Math.floor(e / M_SPM); }
+    else if (e < M_HT_AT + M_HT_LEN) { phase = 'MT'; min = 45; }
+    else { min = 46 + Math.floor((e - M_HT_AT - M_HT_LEN) / M_SPM); phase = min >= 90 ? 'FIN' : '2T'; if (min > 90) min = 90; }
+    var goal = phase !== '1T' || min >= MATCH.goal.min;
+    return { min: min, phase: phase, goal: goal, score: goal ? [2, 0] : [1, 0], label: phase === 'MT' ? 'Medio tiempo' : phase === 'FIN' ? 'Final' : min + '\'' };
+  }
 
   /* Película real: Los Pecadores (Sinners, 2025). Las imágenes salen del catálogo de TMDB en tiempo real.
      Elenco, lugares y canciones son los de la película; los productos son genéricos (sin marcas). */
@@ -190,5 +219,5 @@
   }
   function all() { return [SERIES, BUNNY, RECIPE, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, PHOTOS: PHOTOS, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, matchClock: matchClock, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, PHOTOS: PHOTOS, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});
