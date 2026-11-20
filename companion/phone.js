@@ -187,9 +187,6 @@
     if (inMatch && !S.wasMatch) { S.wasMatch = true; if (S.tab !== 'ahora' && !S.sheet) { setTimeout(function () { setTab('ahora'); toast('📊 Alineación y estadísticas del partido'); }, 0); buzz(); } }
     else if (!inMatch) S.wasMatch = false;
     if (S.tab === 'ahora') renderAhora();
-    /* A4 · aviso de "Está sonando" */
-    if (S.songSeen === null) S.songSeen = r.songSeq || 0;
-    if ((r.songSeq || 0) > S.songSeen) { S.songSeen = r.songSeq; if (r.content === 'series') showSongBanner(sceneNow().song); }
     /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
     if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
     if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
@@ -309,12 +306,6 @@
   function sinArt(a, wide) {
     var path = wide ? SINP.b : (SINP.p || SINP.b);
     return path ? 'background:#000 url(https://image.tmdb.org/t/p/' + (wide ? 'w780' : 'w154') + path + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ')';
-  }
-  function showSongBanner(song) {
-    var b = $('banner'); b.className = 'banner';
-    b.innerHTML = '<span class="ic">♪</span><div><div class="k">Desde la TV · Los Pecadores</div><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div><div class="x"><a class="lk" href="' + listenUrl(song) + '" target="_blank" rel="noopener">▶ Escuchar</a><button data-act="saveBanner">Guardar</button><button class="g" data-act="closeBanner">Cerrar</button></div>';
-    b.hidden = false; b._song = song; buzz();
-    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 9000);
   }
   function openProduct(prod) {
     $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
