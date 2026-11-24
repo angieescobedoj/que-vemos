@@ -739,7 +739,7 @@
   /* ---------- hojas (modales): no tapan el control, se cierran deslizando al fondo o con ✕ ---------- */
   function openSheet(name, html) {
     S.sheet = name;
-    $('sheet').className = 'sheet' + (/^(match|unlink|mpre|mgoal|mht)$/.test(name) ? ' dark' : '');
+    $('sheet').className = 'sheet' + (name === 'unlink' ? ' dark' : /^(match|mpre|mgoal|mht)$/.test(name) ? ' sport' : '');
     $('sheet').innerHTML = '<button class="x" data-act="closeSheet" aria-label="Cerrar">✕</button>' + html;
     $('sheet').hidden = false; $('scrim').hidden = false; $('sheet').scrollTop = 0;
   }
