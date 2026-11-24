@@ -87,7 +87,7 @@
     recipe: 'https://images.unsplash.com/photo-1556911073-a517e752729c?fm=jpg&q=70&fit=crop&w=',
     match: 'https://images.unsplash.com/photo-1762013315117-1c8005ad2b41?fm=jpg&q=70&fit=crop&w='
   };
-  var RECIPE = { id: 'recipe', kind: 'recipe', title: 'Recetas para ti', dish: 'Enchiladas verdes', sub: 'Hoy: enchiladas verdes', tag: 'Cocina en casa', dur: 150, sendAt: 4,
+  var RECIPE = { id: 'recipe', kind: 'recipe', title: 'Recetas para ti', dish: 'Enchiladas verdes', sub: 'Hoy: enchiladas verdes', tag: 'Cocina en casa', dur: 150, sendAt: 1, portions: '4 personas', time: '25 min', level: 'Fácil',
     steps: [
       { t: 'Cuece los tomates y el chile', d: 'Hierve el tomate verde y los chiles serranos unos 10 minutos.', ic: '🍅' },
       { t: 'Licúa la salsa', d: 'Licúa con cebolla, ajo, cilantro y un poco del agua de cocción.', ic: '🥣' },

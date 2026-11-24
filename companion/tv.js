@@ -473,10 +473,10 @@
     var p = curPos();
     if (!S.recipeSeq && p >= C.RECIPE.sendAt) {
       S.recipeSeq = now(); pushState();
-      toast(connected().length ? '📱 Te mandamos la receta y los ingredientes a tu celular' : '📱 Escanea el QR para recibir la receta en tu celular', 4500);
+      toast(connected().length ? '📱 Ingredientes, porciones y tiempo en tu celular' : '📱 Escanea el QR para recibir la receta en tu celular', 4500);
     }
     var st = C.recipeStep(p); if (st !== S.recipeStepIdx) { S.recipeStepIdx = st; pushState(); }
-    if (p >= C.RECIPE.dur - 0.5) { S.rsaved = 0; toast('¡Buen provecho! 🍽️', 3000); leavePlayer(); }
+    if (p >= C.RECIPE.dur - 0.5) { S.rsaved = 0; finished('recipe'); toast(connected().length ? '📱 La receta completa ya está en tu celular · ¡Buen provecho! 🍽️' : '¡Buen provecho! 🍽️', 4000); leavePlayer(); }
   }
 
   /* ================= Pausa en un canal → sugerencia en el celular (On Demand renta / Anytime) ================= */
@@ -1009,6 +1009,7 @@
     else if (c.t === 'notice') toast(c.text || '', 4500);
     else if (c.t === 'toEnd') {   /* demo: adelantar al final de la película */
       if (S.content === 'series') { setPos(C.SERIES.duration - 8, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
+      else if (S.content === 'recipe') { setPos(C.RECIPE.dur - 5, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
       else if (S.content === 'video') { try { var vv = $('vid'); vv.currentTime = Math.max(0, C.BUNNY.dur - 6); vPlay(); } catch (e) { /* ignore */ } }
     }
     else if (c.t === 'vote') toast(name + ' votó por ' + (c.who || '') + ' como jugador del primer tiempo', 3500);

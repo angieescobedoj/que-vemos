@@ -190,7 +190,7 @@
     if (S.tab === 'ahora') renderAhora();
     /* receta: llega sola a los pocos segundos de empezar el video (la TV no se pausa) */
     if (S.recipeSeen === undefined) S.recipeSeen = r.recipeSeq || 0;
-    if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; showRecipeBanner(); }
+    if (r.recipeSeq && r.recipeSeq !== S.recipeSeen) { S.recipeSeen = r.recipeSeq; openRecipeStart(); buzz(); setTimeout(buzz, 180); }
     if (S.sheet === 'recipe' && S.rcTab === 'pasos' && S.rcStepShown !== (r.recipeStep || 0)) openRecipe();
     if (S.sheet === 'match' && (r.playing || r.screen !== 'player' || r.content !== 'match')) closeSheet();   /* se reanudó o cambió de canal */
     /* pausa en un canal: sugerencia (On Demand renta o Anytime) */
@@ -560,7 +560,7 @@
       if (!nearEnd) mvOpen('extra', k);
     }
     if (S.sheet === 'mv-extra' && r.playing) closeSheet();   /* al reanudar se cierra sola */
-    if (r.fin && r.fin.seq !== S.finSeen) { S.finSeen = r.fin.seq; mvOpen('end', r.fin.id); }
+    if (r.fin && r.fin.seq !== S.finSeen) { S.finSeen = r.fin.seq; if (r.fin.id === 'recipe') { openRecipeEnd(); buzz(); setTimeout(buzz, 180); } else mvOpen('end', r.fin.id); }
     S.mvK = k; S.mvPlay = r.playing;
   }
 
@@ -642,13 +642,30 @@
   }
 
   /* ---------- Recetas: ingredientes y compra en supermercados de Shop Totalplay, sin pausar la TV ---------- */
-  function showRecipeBanner() {
-    var RC = C.RECIPE, b = $('banner');
-    b.className = 'banner offer';
-    b.innerHTML = '<span class="poster" style="background:#3E7A3A url(' + C.PHOTOS.recipe + '200) center/cover"></span><div class="grow"><div class="k">Te llegó la receta</div><div class="t">' + esc(RC.dish) + '</div><div class="s">' + RC.ingredients.length + ' ingredientes · cómpralos en Shop sin pausar la TV</div></div>' +
-      '<div class="row"><button data-act="recipe">Ver receta e ingredientes</button><button class="g" data-act="closeBanner">Luego</button></div>';
-    b.hidden = false; buzz(); setTimeout(buzz, 180);
-    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { b.hidden = true; }, 25000);
+  /* v7.37 · al iniciar el programa: ingredientes, porciones, tiempo y dificultad (sin aviso previo) */
+  function rcHead(eyebrow) {
+    var RC = C.RECIPE;
+    return '<div class="rc-img" style="background-image:url(' + C.PHOTOS.recipe + '800)"></div><p class="eyebrow" style="color:#7A4CC4">' + eyebrow + '</p><h2>' + esc(RC.dish) + '</h2>' +
+      '<div class="rc-facts"><div><span>🍽️</span><b>' + esc(RC.portions) + '</b><small>Porciones</small></div><div><span>⏱️</span><b>' + esc(RC.time) + '</b><small>Tiempo</small></div><div><span>👩‍🍳</span><b>' + esc(RC.level) + '</b><small>Dificultad</small></div></div>';
+  }
+  function rcIngList() {
+    var RC = C.RECIPE, h = '<p class="lf">Ingredientes · ' + RC.ingredients.length + '</p><div class="rc-ings">';
+    for (var i = 0; i < RC.ingredients.length; i++) h += '<div><span class="ic">' + RC.ingredients[i].ic + '</span><span class="grow">' + esc(RC.ingredients[i].n) + '</span><b>' + esc(RC.ingredients[i].q) + '</b></div>';
+    return h + '</div>';
+  }
+  function openRecipeStart() {
+    $('banner').hidden = true;
+    openSheet('rstart', rcHead('Empezó en la TV · Cocina en casa') + rcIngList() +
+      '<button class="btn" data-act="closeSheet" style="margin-top:16px">Seguir viendo</button>' +
+      '<button class="mv-end" data-act="mvToEnd">Ir al final (demo)</button>');
+  }
+  /* v7.37 · al terminar el programa: la receta completa y la opción de guardarla */
+  function rcSaved() { return ls.get('qv-recipe-saved') === '1'; }
+  function openRecipeEnd() {
+    var RC = C.RECIPE, h = rcHead('Terminó en la TV · tu receta completa') + rcIngList() + '<p class="lf">Preparación · ' + RC.steps.length + ' pasos</p>';
+    for (var k = 0; k < RC.steps.length; k++) h += '<div class="rc-step"><span class="n">' + (k + 1) + '</span><div class="grow"><div class="t">' + esc(RC.steps[k].t) + '</div><div class="s">' + esc(RC.steps[k].d) + '</div></div></div>';
+    h += rcSaved() ? '<button class="btn ghost" data-act="rcSave" style="margin-top:16px">✓ Guardada en tus recetas</button>' : '<button class="btn" data-act="rcSave" style="margin-top:16px">♡ Guardar receta</button>';
+    openSheet('rend', h);
   }
   function rcTotal() {
     var RC = C.RECIPE, st = RC.stores[S.rcStore || 0], t = 0, n = 0;
@@ -1000,6 +1017,7 @@
     else if (act === 'closeBanner') $('banner').hidden = true;
     else if (act === 'offerGo') offerGo(g('data-ch') === 'match' ? 'match' : Number(g('data-ch')));
     else if (act === 'factNext' || act === 'factPrev') openFactsList(C.channel(Number(g('data-ch'))), Number(g('data-i')) + (act === 'factNext' ? 1 : -1));
+    else if (act === 'rcSave') { var sv = !rcSaved(); ls.set('qv-recipe-saved', sv ? '1' : '0'); toast(sv ? 'Receta guardada en tu celular' : 'Quitaste la receta de tus guardados'); var kt2 = $('sheet').scrollTop; openRecipeEnd(); $('sheet').scrollTop = kt2; }
     else if (act === 'recipe') { $('banner').hidden = true; S.rcTab = 'ing'; openRecipe(); }
     else if (g('data-rctab')) { S.rcTab = g('data-rctab'); openRecipe(); }
     else if (g('data-ing') !== null && el.hasAttribute('data-ing')) { var ii = Number(g('data-ing')); S.rcSel[ii] = !S.rcSel[ii]; var keepTop = $('sheet').scrollTop; openRecipe(); $('sheet').scrollTop = keepTop; }
