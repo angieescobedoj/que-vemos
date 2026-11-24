@@ -538,13 +538,30 @@
   function mvEndHtml(k, d) {
     var m = MV[k], h = mvHead(k, d, 'Terminó en la TV'), songs = mvSongs(k);
     h += '<p class="lf">Soundtrack</p><div class="mv-list">';
-    for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="btn sm ghost" data-mvsong="' + k + ':' + i + '">Guardar</button></div>';
+    for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="dots" data-mvmore="' + k + ':' + i + '" aria-label="Más opciones">⋯</button></div>';
     h += '</div>' + (k === 'series' ? '<p class="sub" style="margin-top:6px">Música original de Ludwig Göransson.</p>' : '');
     var recs = d && d.recommendations && d.recommendations.results && d.recommendations.results.length ? d.recommendations.results.slice(0, 8).map(function (x) { return [x.title, (x.release_date || '').substring(0, 4), x.poster_path]; }) : m.recs;
     h += '<p class="lf">Películas recomendadas</p><div class="mv-recs">';
     for (var r = 0; r < recs.length; r++) h += '<button class="mv-rec" data-mvrec="' + esc(recs[r][0]) + '">' + (recs[r][2] ? '<img src="' + TP + 'w185' + recs[r][2] + '" alt="" loading="lazy">' : '<span class="ph">🎬</span>') + '<b>' + esc(recs[r][0]) + '</b><small>' + esc(recs[r][1] || '') + '</small></button>';
     return h + '</div><button class="btn" data-act="closeSheet" style="margin-top:16px">Listo</button>';
   }
+  /* v7.38 · tres puntos (como Shazam): abrir la canción en la app de música que elijas */
+  var MUSIC = [
+    ['spotify', 'Spotify', '#1DB954', function (q) { return 'https://open.spotify.com/search/' + encodeURIComponent(q); }],
+    ['apple', 'Apple Music', '#FA2D48', function (q) { return 'https://music.apple.com/mx/search?term=' + encodeURIComponent(q); }],
+    ['ytm', 'YouTube Music', '#FF0000', function (q) { return 'https://music.youtube.com/search?q=' + encodeURIComponent(q); }],
+    ['amazon', 'Amazon Music', '#25D1DA', function (q) { return 'https://music.amazon.com.mx/search/' + encodeURIComponent(q); }],
+    ['deezer', 'Deezer', '#A238FF', function (q) { return 'https://www.deezer.com/search/' + encodeURIComponent(q); }]
+  ];
+  function openMusicMenu(song) {
+    S.mSong = song;
+    var last = ls.get('cp-music-app'), h = '<button class="am-back" data-act="amClose" aria-label="Cerrar"></button><div class="am-panel"><div class="am-song"><span class="ic">♪</span><div class="grow"><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div></div><p class="am-h">Escuchar en</p>';
+    for (var i = 0; i < MUSIC.length; i++) h += '<button class="am-row" data-music="' + i + '"><span class="am-ic" style="background:' + MUSIC[i][2] + '">' + MUSIC[i][1].charAt(0) + '</span><span class="grow">' + MUSIC[i][1] + (MUSIC[i][0] === last ? '<small>La última que usaste</small>' : '') + '</span><span class="am-go">↗</span></button>';
+    h += '<button class="am-row" data-act="amSave"><span class="am-ic sv">♡</span><span class="grow">Guardar en mi soundtrack</span></button><button class="am-cancel" data-act="amClose">Cancelar</button></div>';
+    var el = $('actMenu'); if (!el) { el = document.createElement('div'); el.id = 'actMenu'; document.body.appendChild(el); }
+    el.innerHTML = h; el.hidden = false; buzz();
+  }
+  function closeMusicMenu() { var el = $('actMenu'); if (el) el.hidden = true; }
   function mvOpen(kind, k) {
     var build = kind === 'info' ? mvInfoHtml : kind === 'extra' ? mvExtraHtml : mvEndHtml, name = 'mv-' + kind;
     openSheet(name, build(k, MVD[k] || null)); S.mvK2 = k; buzz();
@@ -1007,6 +1024,10 @@
     else if (act === 'ahoraGo') { closeSheet(); setTab('ahora'); }
     else if (act === 'cfgClose') setTab('control');
     else if (act === 'mvToEnd') { closeSheet(); send({ t: 'toEnd' }); }
+    else if (g('data-mvmore')) { var mm = g('data-mvmore').split(':'); openMusicMenu(mvSongs(mm[0])[Number(mm[1])]); }
+    else if (g('data-music')) { var mu = MUSIC[Number(g('data-music'))], sg = S.mSong; ls.set('cp-music-app', mu[0]); closeMusicMenu(); toast('Abriendo «' + sg.t + '» en ' + mu[1]); window.open(mu[3](sg.t + ' ' + sg.a), '_blank'); }
+    else if (act === 'amSave') { closeMusicMenu(); saveSong(S.mSong); }
+    else if (act === 'amClose') closeMusicMenu();
     else if (g('data-mvsong')) { var ms = g('data-mvsong').split(':'); saveSong(ms[1] === 's' ? sceneNow().song : mvSongs(ms[0])[Number(ms[1])]); }
     else if (g('data-mvrec')) toast('Agregada a tu lista: ' + g('data-mvrec'));
     else if (act === 'pause') { send({ t: 'pause' }); toast('Pausado: mira la TV'); }

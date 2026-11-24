@@ -589,6 +589,24 @@ body.light .mseg2{background:#F1EDF6}
 .rc-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F0EBF6}
 .rc-step .n{width:28px;height:28px;border-radius:50%;background:var(--violet);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
 .rc-step .grow{flex:1}.rc-step .t{font-weight:700;font-size:14px}.rc-step .s{font-size:13px;color:#666;margin-top:2px}
+
+/* v7.38 · menú de tres puntos del soundtrack (apps de música) */
+.opt .dots{flex:none;width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1;color:#4A2E7A;background:#F1EDF6;display:flex;align-items:center;justify-content:center}
+#actMenu{position:fixed;inset:0;z-index:60}
+#actMenu[hidden]{display:none}
+.am-back{position:absolute;inset:0;background:rgba(10,6,20,.5)}
+.am-panel{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:444px;margin:0 auto;background:#fff;color:#1E1A1A;border-radius:24px;padding:16px;animation:amUp .2s ease-out}
+@keyframes amUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.am-song{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #F0EBF6}
+.am-song .ic{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#C792C9,#4A2E7A);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.am-song .grow,.am-row .grow{flex:1;min-width:0}.am-song .t{font-weight:800;font-size:16px}.am-song .s{font-size:13px;color:#777}
+.am-h{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7A4CC4;margin:14px 0 4px}
+.am-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 0;font-size:15px;font-weight:700;color:#1E1A1A}
+.am-row small{display:block;font-size:11.5px;font-weight:600;color:#7A4CC4}
+.am-ic{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+.am-ic.sv{background:#F1EDF6;color:var(--violet);font-size:18px}
+.am-go{color:#999;font-size:16px}
+.am-cancel{display:block;width:100%;margin-top:8px;padding:14px;border-radius:14px;background:#F1EDF6;color:#4A2E7A;font-weight:800;font-size:15px}
 </style>
 </head>
 <body>
@@ -695,11 +713,11 @@ body.light .mseg2{background:#F1EDF6}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.37"></script>
-<script src="../src/services/firestore-rest.js?v=7.37"></script>
-<script src="content.js?v=7.37"></script>
-<script src="logos.js?v=7.37"></script>
-<script src="store.js?v=7.37"></script>
-<script src="phone.js?v=7.37"></script>
+<script src="../src/services/http.js?v=7.38"></script>
+<script src="../src/services/firestore-rest.js?v=7.38"></script>
+<script src="content.js?v=7.38"></script>
+<script src="logos.js?v=7.38"></script>
+<script src="store.js?v=7.38"></script>
+<script src="phone.js?v=7.38"></script>
 </body>
 </html>
