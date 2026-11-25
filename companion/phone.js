@@ -538,7 +538,7 @@
   function mvEndHtml(k, d) {
     var m = MV[k], h = mvHead(k, d, 'Terminó en la TV'), songs = mvSongs(k);
     h += '<p class="lf">Soundtrack</p><div class="mv-list">';
-    for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="dots" data-mvmore="' + k + ':' + i + '" aria-label="Más opciones">⋯</button></div>';
+    for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="dots" data-mvmore="' + k + ':' + i + '" aria-label="Más opciones">⋮</button></div>';
     h += '</div>' + (k === 'series' ? '<p class="sub" style="margin-top:6px">Música original de Ludwig Göransson.</p>' : '');
     var recs = d && d.recommendations && d.recommendations.results && d.recommendations.results.length ? d.recommendations.results.slice(0, 8).map(function (x) { return [x.title, (x.release_date || '').substring(0, 4), x.poster_path]; }) : m.recs;
     h += '<p class="lf">Películas recomendadas</p><div class="mv-recs">';
