@@ -52,19 +52,19 @@
   var SERIES = {
     id: 'series', kind: 'vod', title: 'Los Pecadores', sub: 'Película · 2025 · Ryan Coogler', tag: 'Película',
     tmdbQuery: 'Sinners', tmdbYear: 2025,
-    duration: 8220,
+    duration: 120,   /* demo: 2 minutos para ver todas las interacciones del celular */
     scenes: [
-      { from: 0, to: 2740, place: 'Clarksdale, Mississippi · 1932',
+      { from: 0, to: 40, place: 'Clarksdale, Mississippi · 1932',
         cast: [['Smoke y Stack', 'Michael B. Jordan'], ['Pearline', 'Jayme Lawson']],
         song: { t: 'Pale, Pale Moon', a: 'Jayme Lawson' },
         products: [['Sombrero fedora de fieltro', '$899'], ['Traje de tres piezas', '$3,450']],
         art: ['#B07A4A', '#4A2A1A', '#140A06'] },
-      { from: 2740, to: 5480, place: 'El juke joint, noche de apertura',
+      { from: 40, to: 80, place: 'El juke joint, noche de apertura',
         cast: [['Sammie', 'Miles Caton'], ['Delta Slim', 'Delroy Lindo'], ['Annie', 'Wunmi Mosaku']],
         song: { t: 'I Lied to You', a: 'Miles Caton' },
         products: [['Guitarra acústica de acero', '$4,290'], ['Armónica en Do', '$399']],
         art: ['#C9873A', '#5A2A12', '#1A0A06'] },
-      { from: 5480, to: 8220, place: 'Los visitantes de la noche',
+      { from: 80, to: 120, place: 'Los visitantes de la noche',
         cast: [['Remmick', "Jack O'Connell"], ['Mary', 'Hailee Steinfeld'], ['Smoke y Stack', 'Michael B. Jordan']],
         song: { t: 'Rocky Road to Dublin', a: "Jack O'Connell y elenco" },
         products: [['Chamarra de cuero café', '$2,199'], ['Botas de trabajo', '$1,599']],
