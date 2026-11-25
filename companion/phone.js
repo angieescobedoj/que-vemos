@@ -149,7 +149,7 @@
     $('fakeNote').hidden = !S.fake;
     if (S.fake) $('fakeNote').textContent = S.fake.name + ' es un decodificador simulado: los botones responden aquí, pero no hay una TV real detrás. Toca su nombre arriba para elegir otro.';
   }
-  function appColor(id) { for (var i = 0; i < C.APPS.length; i++) if (C.APPS[i].id === id) return C.APPS[i].color; return '#7A4CC4'; }
+  function appColor(id) { for (var i = 0; i < C.APPS.length; i++) if (C.APPS[i].id === id) return C.APPS[i].color; return '#006ADB'; }
 
   /* ---------- decodificador simulado: responde con feedback, sin TV detrás ---------- */
   function fakeCommand(cmd) {
@@ -443,7 +443,7 @@
     return path ? 'background:#000 url(https://image.tmdb.org/t/p/' + (wide ? 'w780' : 'w154') + path + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ')';
   }
   function openProduct(prod) {
-    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#7A4CC4">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
+    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#006ADB">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
   }
@@ -480,7 +480,7 @@
     var m = MV[k], fb = m.fallback, t = d ? d.title : m.title, ot = d && d.original_title && d.original_title !== d.title ? d.original_title : '';
     var y = d ? (d.release_date || '').substring(0, 4) : fb.year, g = d ? (d.genres || []).map(function (x) { return x.name; }).slice(0, 3).join(', ') : fb.genres;
     var po = d && d.poster_path ? '<img class="mv-po" src="' + TP + 'w185' + d.poster_path + '" alt="">' : '<span class="mv-po ph">🎬</span>';
-    return '<div class="mv-head">' + po + '<div><p class="eyebrow" style="color:#7A4CC4">' + eyebrow + '</p><h2>' + esc(t) + '</h2><p class="sub">' + esc([ot, y, g].filter(Boolean).join(' · ')) + '</p></div></div>';
+    return '<div class="mv-head">' + po + '<div><p class="eyebrow" style="color:#006ADB">' + eyebrow + '</p><h2>' + esc(t) + '</h2><p class="sub">' + esc([ot, y, g].filter(Boolean).join(' · ')) + '</p></div></div>';
   }
   function provChips(list) {
     var h = '<span class="mv-prov">';
@@ -622,7 +622,7 @@
   function openFactsList(ch, i) {
     var f = ch.offer.facts; i = i || 0;
     var d = ''; for (var k = 0; k < f.length; k++) d += '<i class="' + (k === i ? 'on' : '') + '"></i>';
-    openSheet('factsList', '<p class="eyebrow" style="color:#7A4CC4">Mientras está en pausa</p><h2>Datos curiosos de ' + esc(ch.show) + '</h2><p class="sub">Dato ' + (i + 1) + ' de ' + f.length + '</p>' +
+    openSheet('factsList', '<p class="eyebrow" style="color:#006ADB">Mientras está en pausa</p><h2>Datos curiosos de ' + esc(ch.show) + '</h2><p class="sub">Dato ' + (i + 1) + ' de ' + f.length + '</p>' +
       '<div class="fact"><span class="fn">' + (i + 1) + '/' + f.length + '</span>' + esc(f[i]) + '</div><div class="dots">' + d + '</div>' +
       '<div class="pairb" style="margin-top:12px">' + (i > 0 ? '<button class="btn ghost" data-act="factPrev" data-ch="' + ch.n + '" data-i="' + i + '">Anterior</button>' : '<button class="btn ghost" data-act="closeSheet">Cerrar</button>') +
       (i < f.length - 1 ? '<button class="btn" data-act="factNext" data-ch="' + ch.n + '" data-i="' + i + '">Siguiente</button>' : '<button class="btn" data-act="factPlay">Seguir viendo</button>') + '</div>');
@@ -630,7 +630,7 @@
   /* Delivery (pausa en Familia 5) */
   function cartTotal(menu, cart) { var t = 0, n = 0; for (var i = 0; i < menu.length; i++) { var q = cart[menu[i].id] || 0; t += q * menu[i].p; n += q; } return { t: t, n: n }; }
   function openDelivery(ch) {
-    var of = ch.offer, html = '<p class="eyebrow" style="color:#7A4CC4">Delivery · ' + esc(of.place) + '</p><h2>Pide sin pausar la película</h2><p class="sub">Llega en unos ' + of.eta + ' minutos.</p>';
+    var of = ch.offer, html = '<p class="eyebrow" style="color:#006ADB">Delivery · ' + esc(of.place) + '</p><h2>Pide sin pausar la película</h2><p class="sub">Llega en unos ' + of.eta + ' minutos.</p>';
     for (var i = 0; i < of.menu.length; i++) {
       var m = of.menu[i], q = S.cart[m.id] || 0;
       html += '<div class="opt"><span class="ic">' + m.ic + '</span><span class="grow"><span class="t">' + esc(m.n) + '</span><span class="s" style="display:block">' + esc(m.d) + ' · ' + money(m.p) + '</span></span>' +
@@ -642,7 +642,7 @@
   }
   /* Shop (pausa en Estilo 9) */
   function openShop(ch) {
-    var of = ch.offer, html = '<p class="eyebrow" style="color:#7A4CC4">Shop · de la escena</p><h2>El look de ' + esc(of.who) + '</h2><p class="sub">Prendas como las que salen en ' + esc(ch.show) + '.</p>';
+    var of = ch.offer, html = '<p class="eyebrow" style="color:#006ADB">Shop · de la escena</p><h2>El look de ' + esc(of.who) + '</h2><p class="sub">Prendas como las que salen en ' + esc(ch.show) + '.</p>';
     for (var i = 0; i < of.products.length; i++) {
       var pr = of.products[i], inBag = S.bag[i];
       html += '<div class="opt"><span class="ic" style="background:linear-gradient(150deg,' + pr.c[0] + ',' + pr.c[1] + ');font-size:22px">' + pr.ic + '</span><span class="grow"><span class="t">' + esc(pr.n) + '</span><span class="s" style="display:block">' + esc(pr.d) + ' · ' + money(pr.p) + '</span></span>' +
@@ -662,7 +662,7 @@
   /* v7.37 · al iniciar el programa: ingredientes, porciones, tiempo y dificultad (sin aviso previo) */
   function rcHead(eyebrow) {
     var RC = C.RECIPE;
-    return '<div class="rc-img" style="background-image:url(' + C.PHOTOS.recipe + '800)"></div><p class="eyebrow" style="color:#7A4CC4">' + eyebrow + '</p><h2>' + esc(RC.dish) + '</h2>' +
+    return '<div class="rc-img" style="background-image:url(' + C.PHOTOS.recipe + '800)"></div><p class="eyebrow" style="color:#006ADB">' + eyebrow + '</p><h2>' + esc(RC.dish) + '</h2>' +
       '<div class="rc-facts"><div><span>🍽️</span><b>' + esc(RC.portions) + '</b><small>Porciones</small></div><div><span>⏱️</span><b>' + esc(RC.time) + '</b><small>Tiempo</small></div><div><span>👩‍🍳</span><b>' + esc(RC.level) + '</b><small>Dificultad</small></div></div>';
   }
   function rcIngList() {
@@ -692,7 +692,7 @@
   function openRecipe() {
     var RC = C.RECIPE, tab = S.rcTab || 'ing';
     if (!S.rcSel) { S.rcSel = []; for (var i = 0; i < RC.ingredients.length; i++) S.rcSel.push(true); S.rcStore = 0; }
-    var html = '<p class="eyebrow" style="color:#7A4CC4">Receta · se sigue viendo en la TV</p><h2>' + esc(RC.dish) + '</h2><p class="sub">Para 4 personas · 25 min</p>' +
+    var html = '<p class="eyebrow" style="color:#006ADB">Receta · se sigue viendo en la TV</p><h2>' + esc(RC.dish) + '</h2><p class="sub">Para 4 personas · 25 min</p>' +
       '<div class="seg2"><button class="' + (tab === 'ing' ? 'on' : '') + '" data-rctab="ing">Ingredientes</button><button class="' + (tab === 'pasos' ? 'on' : '') + '" data-rctab="pasos">Pasos</button></div>';
     if (tab === 'pasos') {
       var cur = (S.room && S.room.recipeStep) || 0; S.rcStepShown = cur;
@@ -974,7 +974,7 @@
   function applyTheme() {
     var m = themeMode(), light = m === 'light' || (m === 'auto' && mqLight && mqLight.matches);
     document.body.classList.toggle('light', !!light);
-    var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', light ? '#F4F0FA' : '#140F20');
+    var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', light ? '#F3F2F8' : '#000000');
   }
   if (mqLight) { var onMq = function () { if (themeMode() === 'auto') applyTheme(); }; if (mqLight.addEventListener) mqLight.addEventListener('change', onMq); else if (mqLight.addListener) mqLight.addListener(onMq); }
   function openLook() {
