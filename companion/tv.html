@@ -8,7 +8,7 @@
 <link rel="preload" href="../fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="tv.css?v=7.48">
+<link rel="stylesheet" href="tv.css?v=7.49">
 </head>
 <body>
 <div class="net-banner" id="netBanner" hidden>Sin conexión con los celulares. Reintentando…</div>
@@ -19,11 +19,22 @@
   <!-- v7.5 · inicio estilo launcher: fondo grande del contenido enfocado, fila "Populares para ti" y fila "Mis apps" -->
   <section class="screen home" data-screen="home">
     <div class="hero-bg" id="heroBg"></div><div class="hero-shade"></div><div class="hero-art" id="heroArt"></div>
-    <header class="topbar">
-      <div class="brand"><span class="brand-dot"></span><span id="tvName">Sala</span></div>
-      <div class="top-right">
-        <span class="chip" id="phonesChip">Sin celulares vinculados</span>
-        <span class="clock" id="clock"></span>
+    <!-- v7.49 · inicio con el formato Home (julio 2026): menú superior, destacado tipo canal en vivo, Populares para ti y Mis apps -->
+    <header class="tnav">
+      <nav class="tabs">
+        <button class="tn-ic" data-focusable data-action="navSearch" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
+        <button class="tab on" data-focusable data-action="navTab" data-tab="parati">Para ti</button>
+        <button class="tab" data-focusable data-action="navTab" data-tab="canales">Canales</button>
+        <button class="tab" data-focusable data-action="navTab" data-tab="series">Programas y series</button>
+        <button class="tab" data-focusable data-action="navTab" data-tab="peliculas">Películas</button>
+        <button class="tab" data-focusable data-action="navTab" data-tab="explora">Explora</button>
+      </nav>
+      <div class="tn-right">
+        <div class="me-pill">
+          <button class="tn-ic" data-focusable data-action="navCfg" aria-label="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.6 7.6 0 0 0 7 6.5l-2.4-1-2 3.4 2 1.6a7.7 7.7 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4Z"/></svg></button>
+          <button class="me-av" id="meAv" data-focusable data-action="navMe" aria-label="Vincular celular"></button>
+        </div>
+        <div class="tn-time"><span class="tn-brand"><i>▶</i>Totalplay<span>·</span>TV</span><span class="tn-clock"><b id="clock"></b> hrs</span></div>
       </div>
     </header>
 
@@ -37,10 +48,11 @@
       <div class="pair-txt">
         <p class="pair-title">Usa tu celular como control</p>
         <p class="pair-sub">Escanea el código. Se vincula solo.</p>
+        <p class="pair-room"><span id="tvName">Sala</span><span class="chip" id="phonesChip">Sin celulares vinculados</span></p>
         <ul class="pair-list" id="pairList"></ul>
+        <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.49</p>
       </div>
     </aside>
-    <p class="hint">Flechas, OK y Regresar del control o de tu celular · v7.48</p>
   </section>
 
   <!-- BÚSQUEDA (texto escrito desde el celular, R: sin teclado en pantalla) -->
@@ -135,7 +147,7 @@
     <div class="rent-body">
       <div class="rent-poster" id="rentPoster"></div>
       <div class="rent-info">
-        <p class="eyebrow rent-brand"><img src="img/ondemand-wide.png?v=7.48" alt="On Demand"><span>Renta</span></p>
+        <p class="eyebrow rent-brand"><img src="img/ondemand-wide.png?v=7.49" alt="On Demand"><span>Renta</span></p>
         <h1 class="rent-title" id="rentTitle"></h1>
         <p class="rent-meta" id="rentMeta"></p>
         <p class="rent-ov" id="rentOv"></p>
@@ -199,18 +211,18 @@
 <div class="blackout off" id="standby" hidden><p>En reposo</p><small>Enciéndela desde tu celular o con OK</small></div>
 
 <!-- Adaptador de plataforma (lo único que toca sagem.*), servicios y app. ES5, scripts clásicos. -->
-<script src="../src/platform/totalplay/device.js?v=7.48"></script>
-<script src="../src/platform/totalplay/debug.js?v=7.48"></script>
-<script src="../src/platform/totalplay/keys.js?v=7.48"></script>
-<script src="../src/platform/totalplay/lifecycle.js?v=7.48"></script>
-<script src="../src/platform/totalplay/focus.js?v=7.48"></script>
-<script src="../vendor/qrcode.js?v=7.48"></script>
-<script src="../src/services/http.js?v=7.48"></script>
-<script src="../src/services/firestore-rest.js?v=7.48"></script>
-<script src="../src/services/catalog.js?v=7.48"></script>
-<script src="content.js?v=7.48"></script>
-<script src="logos.js?v=7.48"></script>
-<script src="store.js?v=7.48"></script>
-<script src="tv.js?v=7.48"></script>
+<script src="../src/platform/totalplay/device.js?v=7.49"></script>
+<script src="../src/platform/totalplay/debug.js?v=7.49"></script>
+<script src="../src/platform/totalplay/keys.js?v=7.49"></script>
+<script src="../src/platform/totalplay/lifecycle.js?v=7.49"></script>
+<script src="../src/platform/totalplay/focus.js?v=7.49"></script>
+<script src="../vendor/qrcode.js?v=7.49"></script>
+<script src="../src/services/http.js?v=7.49"></script>
+<script src="../src/services/firestore-rest.js?v=7.49"></script>
+<script src="../src/services/catalog.js?v=7.49"></script>
+<script src="content.js?v=7.49"></script>
+<script src="logos.js?v=7.49"></script>
+<script src="store.js?v=7.49"></script>
+<script src="tv.js?v=7.49"></script>
 </body>
 </html>

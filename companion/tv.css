@@ -391,3 +391,62 @@ b{font-weight:700}
 .m-event .me-t .sw{width:.8rem;height:.8rem;border-radius:.2rem}
 .m-event .me-s{font-size:1rem;color:var(--ink-2,#B9AFC8);margin-top:.4rem}
 .m-event .me-p{display:inline-block;margin-top:1rem;background:var(--violet);color:#fff;font-weight:700;font-size:.95rem;padding:.55rem 1rem;border-radius:999px}
+
+/* ---------- v7.49 · Inicio con el formato Home (julio 2026) · medidas tomadas a 1920×1080 (1rem ≈ 28.4 px) ---------- */
+.screen.home{margin:-4vh -4vw;padding:6vh 8.5vw 0;overflow:hidden}
+.home .hero-shade{background:linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.62) 32%,rgba(0,0,0,.12) 62%,rgba(0,0,0,0) 80%),
+  linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 40%,rgba(0,0,0,0) 62%),linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 18%)}
+/* menú superior */
+.tnav{display:flex;justify-content:space-between;align-items:center;height:2.3rem}
+.tabs{display:flex;align-items:center;gap:.35rem;margin-left:.5rem}
+.tn-ic{width:2.1rem;height:2.1rem;border-radius:50%;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.tn-ic svg{width:1.2rem;height:1.2rem}
+.tab{height:2.1rem;padding:0 .85rem;border-radius:999px;border:0;background:transparent;color:#fff;font-family:inherit;font-size:.92rem;font-weight:600;white-space:nowrap}
+.tab.on{background:#0071EB;font-weight:700}
+.tab.is-focused,.tn-ic.is-focused,.me-av.is-focused{box-shadow:0 0 0 .12rem #fff;transform:none}
+.tab.on.is-focused{box-shadow:0 0 0 .12rem #fff}
+.tn-right{display:flex;align-items:center;gap:.8rem}
+.me-pill{display:flex;align-items:center;gap:.3rem;background:rgba(20,20,20,.82);border-radius:999px;padding:.15rem .25rem .15rem .35rem;height:2.2rem}
+.me-av{width:1.6rem;height:1.6rem;border-radius:50%;border:0;padding:0;background:transparent;position:relative;display:flex;align-items:center;justify-content:center}
+.me-av span{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff}
+.me-av span.none{background:#3E4758;color:#BDC0C3}.me-av span.none svg{width:1rem;height:1rem}
+.me-av em{position:absolute;right:-.35rem;bottom:-.2rem;font-style:normal;font-size:.5rem;font-weight:700;background:#0071EB;border-radius:999px;padding:.05rem .2rem}
+.tn-time{display:flex;flex-direction:column;line-height:1.1}
+.tn-brand{font-size:.56rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:.15rem}
+.tn-brand i{font-style:normal;font-size:.45rem}.tn-brand span{opacity:.7}
+.tn-clock{font-size:.92rem;font-weight:500;color:#fff}.tn-clock b{font-weight:700}
+/* destacado */
+.home .home-body{gap:1.2rem;padding-bottom:0}
+.home .hero-info{max-width:none;justify-content:flex-end;padding-bottom:.3rem}
+.h-row{display:flex;align-items:stretch;gap:0}
+.h-ch{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;padding-right:.65rem;margin-right:.6rem;border-right:2px solid rgba(255,255,255,.35);min-width:4.2rem}
+.h-logo{width:4.2rem;height:2.2rem;border-radius:.2rem;background:rgba(255,255,255,.9);color:#1E1E1E;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.05;padding:0 .2rem;text-transform:uppercase}
+.h-logo.od{background:#0E1530;color:#fff}.h-logo.od img{width:88%;height:auto}
+.h-num{font-size:1.55rem;font-weight:700;line-height:1}
+.h-num.sm{font-size:.62rem;font-weight:600;color:#BDC0C3;text-transform:uppercase;letter-spacing:.04em}
+.h-main{max-width:23rem;display:flex;flex-direction:column;justify-content:center}
+.home .h-title{font-size:1.55rem;line-height:1.1;font-weight:700;letter-spacing:-.01em;margin:0;-webkit-line-clamp:2}
+.home .h-meta{display:flex;align-items:center;gap:.35rem;font-size:.92rem;color:#fff;margin-top:.35rem}
+.h-now{display:inline-flex;align-items:center;gap:.2rem;background:#E4002B;color:#fff;font-size:.6rem;font-weight:700;padding:.2rem .4rem;border-radius:.25rem}
+.h-now svg{width:.7rem;height:.7rem}
+.h-prog{width:19.2rem;height:.25rem;border-radius:.2rem;background:rgba(255,255,255,.35);margin-top:.85rem;overflow:hidden}
+.h-prog i{display:block;height:100%;background:#E4002B;border-radius:.2rem}
+.h-btn{align-self:flex-start;display:inline-flex;align-items:center;gap:.45rem;height:2.4rem;padding:0 1.25rem 0 1rem;margin-top:.55rem;border-radius:999px;border:0;background:rgba(40,40,40,.85);color:#fff;font-family:inherit;font-size:.92rem;font-weight:500}
+.h-btn svg{width:.75rem;height:.75rem}
+.h-btn.is-focused{background:#fff;color:#1E1E1E;box-shadow:none;transform:none}
+/* filas */
+.home .rows{gap:.7rem;margin-right:calc(-8.5vw - .5rem)}
+.home .row-h{font-size:.92rem;font-weight:500;color:#fff;margin-bottom:.45rem}
+.home .row-tiles.cards{gap:.88rem}
+.home .card{width:13.4rem;height:7.54rem;border-radius:.42rem}
+.home .card .c-title{font-size:1.05rem}
+.home .row-tiles.apps-row{gap:.85rem}
+.home .tile.app.sq{width:5.5rem;height:5.5rem;border-radius:.42rem}
+.card.is-focused,.home .tile.app.sq.is-focused{box-shadow:0 0 0 .12rem #000,0 0 0 .28rem #fff}
+/* código QR: tarjeta a la derecha del destacado (se ve si no hay celulares o si se abre desde el avatar) */
+.home > .pair{right:8.5vw;top:auto;bottom:calc(14.5rem + 3vh);background:rgba(20,20,20,.86);border:0;border-radius:.6rem}
+.home > .pair[hidden]{display:none}
+.pair-room{font-size:.7rem;color:#BDC0C3;display:flex;flex-direction:column;align-items:flex-start;gap:.25rem}
+.pair-room > :not(.chip):not(#tvName){display:none}
+.pair-room .chip{font-size:.6rem;padding:.15rem .5rem}
+.home .pair .hint{font-size:.5rem;margin-top:.2rem}

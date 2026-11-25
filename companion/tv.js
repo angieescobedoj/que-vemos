@@ -89,7 +89,7 @@
     if (name !== 'app') S.app = null;
     TP.focus.setScope(null);
     TP.focus.setFocus(null);
-    if (name === 'home') TP.focus.ensure('[data-id="series"]');
+    if (name === 'home') TP.focus.ensure('#rows [data-id="match"]');
     if (name === 'search') TP.focus.ensure();
     pushState();
   }
@@ -151,7 +151,7 @@
   /* Inicio (v7.5): como el launcher de la TV. Arriba, el fondo y los datos del contenido enfocado;
      abajo, "Populares para ti" (se desliza de lado) y "Mis apps" (íconos completos). */
   function homeItems() {
-    return [C.SERIES, C.BUNNY, C.RECIPE, C.MATCH].concat(C.CHANNELS).concat([C.GAME, C.SHIP, C.SWIPE]);
+    return [C.MATCH, C.SERIES, C.BUNNY, C.RECIPE].concat(C.CHANNELS).concat([C.GAME, C.SHIP, C.SWIPE]);
   }
   function cardHtml(item) {
     var id = item.n ? 'ch' + item.n : item.id, art, extra = '', badge = '';
@@ -188,20 +188,40 @@
     if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w1280') + ') center/cover no-repeat';
     return artFor(item).replace(/640\)/g, '1600)');
   }
+  /* v7.49 · destacado con el formato Home: canal (logo + número) | título a 2 líneas, "Ahora · Termina a las…",
+     barra de progreso y botón "Ver ahora en [canal]". En contenido bajo demanda: On Demand, detalle y "Ver ahora". */
+  var MATCH_CH = { n: 120, name: 'Deportes' };
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  function liveSlot() {   /* programación simulada en bloques de 1 hora */
+    var d = new Date(now()), start = new Date(d.getTime()); start.setMinutes(0, 0, 0);
+    var end = new Date(start.getTime() + 3600000);
+    return { pct: Math.round((d - start) / 3600000 * 100), end: two(end.getHours()) + ':' + two(end.getMinutes()) };
+  }
   function renderHero(id, force) {
     var item = heroItem(id); if (!item) return;            /* en "Mis apps" se queda el último contenido */
     if (id === heroId && !force) return;
     heroId = id;
-    var tag, title, meta;
-    if (item.n) { tag = '<span class="h-live">● En vivo</span> Canal ' + item.n + ' · ' + esc(item.name.replace(/ \d+$/, '')); title = item.show; meta = 'A continuación: ' + item.next; }
-    else {
-      tag = item.id === 'match' ? '<span class="h-live">● En vivo</span> Deportes' : esc(item.tag);
-      title = item.title;
-      meta = item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub;
+    var live = !!item.n || item.id === 'match', ch = item.n ? { n: item.n, name: item.name.replace(/ \d+$/, '') } : item.id === 'match' ? MATCH_CH : null;
+    var title = item.n ? item.show : item.title, h = '', pct = 0, meta, btn;
+    if (live) {
+      var sl = liveSlot(); pct = sl.pct;
+      meta = '<span class="h-now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M8 8a5.6 5.6 0 0 0 0 8M16 8a5.6 5.6 0 0 1 0 8M5.2 5.2a9.6 9.6 0 0 0 0 13.6M18.8 5.2a9.6 9.6 0 0 1 0 13.6"/></svg>Ahora</span>Termina a las ' + sl.end + ' hrs';
+      btn = 'Ver ahora en ' + esc(ch.name);
+    } else {
+      meta = esc(item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub);
+      if (item.id === 'bunny' && S.vsaved > 1) pct = Math.round(S.vsaved / C.BUNNY.dur * 100);
+      if (item.id === 'recipe' && S.rsaved > 1) pct = Math.round(S.rsaved / C.RECIPE.dur * 100);
+      btn = item.kind === 'game' || item.id === 'swipe' ? 'Jugar ahora' : 'Ver ahora';
     }
+    h += '<div class="h-row">';
+    h += live ? '<div class="h-ch"><span class="h-logo">' + esc(ch.name) + '</span><b class="h-num">' + ch.n + '</b></div>'
+              : '<div class="h-ch"><span class="h-logo od">' + (item.kind === 'game' || item.id === 'swipe' ? 'Juegos' : '<img src="img/ondemand.png?v=7.9" alt="On Demand">') + '</span><b class="h-num sm">' + esc(item.tag) + '</b></div>';
+    h += '<div class="h-main"><h2 class="h-title">' + esc(title) + '</h2><p class="h-meta">' + meta + '</p></div></div>';
+    if (pct > 0) h += '<div class="h-prog"><i style="width:' + pct + '%"></i></div>';
+    h += '<button class="h-btn" data-focusable data-action="heroGo" data-id="' + id + '"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5Z" fill="currentColor"/></svg>' + btn + '</button>';
     $('heroBg').setAttribute('style', heroBg(item));
     $('heroArt').innerHTML = item.id === 'swipe' ? '<span class="qv-box">' + swipeArt() + '</span>' : '';
-    $('heroInfo').innerHTML = '<p class="h-tag">' + tag + '</p><h2 class="h-title">' + esc(title) + '</h2><p class="h-meta">' + esc(meta) + '</p>';
+    $('heroInfo').innerHTML = h;
   }
   /* Desliza la fila para que la tarjeta enfocada siempre se vea completa (sin scroll nativo: STB). */
   function slideRow(el, instant) {
@@ -227,9 +247,9 @@
     homeRendering = true;
     $('rows').innerHTML = '<div><p class="row-h">Populares para ti</p><div class="row-view"><div class="row-tiles cards" data-slide>' + cards + '</div></div></div>' +
       '<div><p class="row-h">Mis apps</p><div class="row-view"><div class="row-tiles apps-row" data-slide>' + apps + '</div></div></div>';
-    if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '[data-id="' + keepId + '"]' : '[data-id="series"]'); }
+    if (S.screen === 'home') { TP.focus.setFocus(null); TP.focus.ensure(keepId ? '#rows [data-id="' + keepId + '"]' : '#rows [data-id="match"]'); }
     homeRendering = false;
-    renderHero(heroId || 'series', true);
+    renderHero(heroId || 'match', true);
   }
   function gameTile(item) {
     return '<button class="tile sm" data-focusable data-action="open" data-id="' + item.id + '"><span class="t-art" style="' + artFor(item) + '">' + artInner(item) + '</span><span class="t-shade"></span>' +
@@ -242,6 +262,10 @@
     var html = '';
     for (var i = 0; i < on.length; i++) html += '<li><span class="av" style="background:' + COLORS[playerIndex(on[i].id) % COLORS.length] + '">' + esc((on[i].name || '?').charAt(0).toUpperCase()) + '</span>' + esc(on[i].name || 'Invitado') + '</li>';
     $('pairList').innerHTML = html;
+    /* avatar del menú: el primer celular vinculado; el QR se muestra si no hay celulares o si lo abres desde el avatar */
+    $('meAv').innerHTML = on.length ? '<span style="background:' + COLORS[playerIndex(on[0].id) % COLORS.length] + '">' + esc((on[0].name || '?').charAt(0).toUpperCase()) + '</span>' + (on.length > 1 ? '<em>+' + (on.length - 1) + '</em>' : '')
+      : '<span class="none"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5Z"/></svg></span>';
+    $('pairPanel').hidden = !(S.pairOpen || !on.length);
   }
 
   /* --- búsqueda (B1) --- */
@@ -964,15 +988,29 @@
     if (S.screen === 'app' && k === 'BACK') { goHome(); return; }
     if (S.screen === 'rent' && k === 'BACK') { if (R.ch) tune(R.ch.n); else goHome(); return; }
     if (S.screen === 'search' && k === 'BACK') { S.query = ''; show('home'); renderHome(); return; }
+    /* v7.49 · inicio: tarjetas ↑ botón "Ver ahora" ↑ menú (Para ti) y de regreso hacia abajo */
+    if (S.screen === 'home' && (k === 'UP' || k === 'DOWN')) {
+      var fc = TP.focus.current(), firstRow = $('rows').querySelector('.cards'), hb = $('heroInfo').querySelector('.h-btn');
+      if (k === 'UP' && fc && firstRow && firstRow.contains(fc) && hb) { TP.focus.setFocus(hb); return; }
+      if (k === 'UP' && fc === hb) { TP.focus.setFocus(document.querySelector('.tab.on')); return; }
+      if (k === 'DOWN' && fc && document.querySelector('.home .tnav').contains(fc) && hb) { TP.focus.setFocus(hb); return; }
+      if (k === 'DOWN' && fc === hb) { var cur = $('rows').querySelector('[data-id="' + heroId + '"]') || firstRow.querySelector('.card'); TP.focus.setFocus(cur); return; }
+    }
     if (k === 'UP' || k === 'DOWN' || k === 'LEFT' || k === 'RIGHT') TP.focus.move(k.toLowerCase());
     else if (k === 'OK') TP.focus.activate();
-    /* BACK en la raíz (inicio): vacío a propósito (R6) */
+    /* BACK en la raíz (inicio): solo cierra el código QR si está abierto (R6) */
+    else if (k === 'BACK' && S.screen === 'home' && S.pairOpen) { S.pairOpen = false; renderPairing(); }
   }
-  function atRoot() { return S.screen === 'home' && !S.dialog && !S.menu && !S.guide && !S.off; }
+  function atRoot() { return S.screen === 'home' && !S.dialog && !S.menu && !S.guide && !S.off && !S.pairOpen; }
 
   TP.focus.onActivate(function (el) {
     var a = el.getAttribute('data-action');
     if (a === 'open') openContent(el.getAttribute('data-id'));
+    else if (a === 'heroGo') { var hid = el.getAttribute('data-id'); if (hid.indexOf('ch') === 0) tune(Number(hid.substring(2))); else openContent(hid); }
+    else if (a === 'navSearch') openSearch('');
+    else if (a === 'navTab') { var tb = el.getAttribute('data-tab'); if (tb === 'canales') openContent('tv'); else if (tb !== 'parati') toast(el.textContent + ' · sección de demostración', 2200); }
+    else if (a === 'navCfg') toast('Configuración de la TV · sección de demostración', 2200);
+    else if (a === 'navMe') { S.pairOpen = !S.pairOpen; renderPairing(); }
     else if (a === 'gameAgain') startGame();
     else if (a === 'shipAgain') startShip();
     else if (a === 'rentGo') rentGo();
