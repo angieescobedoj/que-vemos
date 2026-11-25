@@ -607,6 +607,38 @@ body.light .mseg2{background:#E5F2FF}
 .am-ic.sv{background:#E5F2FF;color:var(--violet);font-size:18px}
 .am-go{color:#BDC0C3;font-size:16px}
 .am-cancel{display:block;width:100%;margin-top:8px;padding:14px;border-radius:14px;background:#E5F2FF;color:#006ADB;font-weight:800;font-size:15px}
+
+/* ---------- v7.41 · Mobile Grid del DS: 4 columnas fluidas (76 px a 360), márgenes 16, gutter 8, header 52 ---------- */
+.wrap{padding-left:16px;padding-right:16px;padding-top:env(safe-area-inset-top)}
+.top,.navrow3,#appsRow,.keypad .keys3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;column-gap:8px;width:100%;max-width:none;margin-left:0;margin-right:0}
+/* header 52 px: nombre del decodificador en las 2 columnas centrales, apagar en la 4.ª */
+.top{height:52px;margin-bottom:8px;align-items:center}
+.top .top-sp{grid-column:1}
+.top .dec{grid-column:2/4;justify-self:center}
+.top .pwr{grid-column:4;justify-self:end;width:48px;height:48px}
+.top .pwr svg{width:24px;height:24px}
+/* Regresar (col 1) · Inicio (cols 2-3) · Configuración (col 4) */
+.navrow3 .navc:nth-child(1){grid-column:1}
+.navrow3 .navc:nth-child(2){grid-column:2/4}
+.navrow3 .navc:nth-child(3){grid-column:4}
+/* apps favoritas: 1 columna cada una, cuadradas */
+#appsRow{gap:8px}
+#appsRow button{width:100%;height:auto;aspect-ratio:1/1;max-width:none}
+/* reproducción: ⏪ col 1 · ▶︎ cols 2-3 · ⏩ col 4 / volumen: – col 1 · silencio cols 2-3 · + col 4 */
+.keypad .keys3{gap:0 8px}
+.keypad .keys3 button{width:100%;grid-row:1}
+.keypad .keys3:not(.vol) button:nth-child(1){grid-column:1}
+.keypad .keys3:not(.vol) button:nth-child(2){grid-column:2/4}
+.keypad .keys3:not(.vol) button:nth-child(3){grid-column:4}
+.keypad .keys3.vol [data-vol="-5"]{grid-column:1}
+.keypad .keys3.vol #muteBtn{grid-column:2/4}
+.keypad .keys3.vol [data-vol="5"]{grid-column:4}
+/* pantallas de Decodificadores / Configuración: barra de 52 px */
+.dv-bar{height:52px}
+/* hojas y avisos con los mismos márgenes de 16 px */
+.sheet{padding-left:16px;padding-right:16px}
+.mv-cast,.mv-recs{margin:0 -16px;padding:0 16px 4px}
+.banner{left:16px;right:16px}
 </style>
 </head>
 <body>
@@ -713,11 +745,11 @@ body.light .mseg2{background:#E5F2FF}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.40"></script>
-<script src="../src/services/firestore-rest.js?v=7.40"></script>
-<script src="content.js?v=7.40"></script>
-<script src="logos.js?v=7.40"></script>
-<script src="store.js?v=7.40"></script>
-<script src="phone.js?v=7.40"></script>
+<script src="../src/services/http.js?v=7.41"></script>
+<script src="../src/services/firestore-rest.js?v=7.41"></script>
+<script src="content.js?v=7.41"></script>
+<script src="logos.js?v=7.41"></script>
+<script src="store.js?v=7.41"></script>
+<script src="phone.js?v=7.41"></script>
 </body>
 </html>
