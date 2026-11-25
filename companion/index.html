@@ -702,6 +702,24 @@ h2,.sheet h2,.mv-head h2{font-size:20px;line-height:28px;font-weight:700;letter-
 .sheet .sub,.opt .s,.mrow .s,.set-row .s,.dinfo .s,.promo .s,.scorer .s,.am-song .s,.rc-step .s,.navc .lbl{font-size:12px;line-height:20px}
 .opt .t,.mrow .t,.promo .t,.rc-step .t,.am-row,.btn{font-size:14px;line-height:20px;font-weight:600}
 .rp-tag{font-size:10px;line-height:15px}
+
+/* ---------- v7.45 · Elevaciones del DS (medidas de los PDF Elevation Light / Dark) ----------
+   100: pertenece al fondo (cards de listas) · 200: contrasta con 100 (botones del control, apps)
+   300: flotante que informa (avisos, toast, barra fija) · 400: encima de todo, interrumpe (bottom sheets, menú de música) */
+:root{--e100:0 1px 3px rgba(0,0,0,.40);--e200:0 2px 8px rgba(0,0,0,.45);--e300:0 4px 14px rgba(0,0,0,.50);--e400:0 8px 24px rgba(0,0,0,.55);--e400-up:0 -8px 24px rgba(0,0,0,.55)}
+body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e300:0 4px 12px rgba(0,0,0,.14);--e400:0 8px 20px rgba(0,0,0,.20);--e400-up:0 -8px 20px rgba(0,0,0,.20)}
+/* las hojas son superficies claras: dentro de ellas se usan las elevaciones light */
+.sheet:not(.dark),.am-panel{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e300:0 4px 12px rgba(0,0,0,.14)}
+/* 100 */
+.dcard,.set-row,.fav-row,.opt,.lineup .team,.mtable,.scorer,.promo,.h2h div,.tiles div,.rc-facts div,.mreplay,.mrow.vote,.pollr,body.light .gl{box-shadow:var(--e100)}
+.dcard.cur{box-shadow:var(--e100),0 0 0 1px #0071EB}
+/* 200 */
+.gl,body.light .gl,.navc .circ,#appsRow button,.keypad .keys3 button,.seg2 button.on{box-shadow:var(--e200)}
+/* 300 */
+.toast,.banner,.fav-foot{box-shadow:var(--e300)}
+/* 400 */
+.sheet{box-shadow:var(--e400-up)}
+.am-panel{box-shadow:var(--e400)}
 </style>
 </head>
 <body>
@@ -808,11 +826,11 @@ h2,.sheet h2,.mv-head h2{font-size:20px;line-height:28px;font-weight:700;letter-
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.44"></script>
-<script src="../src/services/firestore-rest.js?v=7.44"></script>
-<script src="content.js?v=7.44"></script>
-<script src="logos.js?v=7.44"></script>
-<script src="store.js?v=7.44"></script>
-<script src="phone.js?v=7.44"></script>
+<script src="../src/services/http.js?v=7.45"></script>
+<script src="../src/services/firestore-rest.js?v=7.45"></script>
+<script src="content.js?v=7.45"></script>
+<script src="logos.js?v=7.45"></script>
+<script src="store.js?v=7.45"></script>
+<script src="phone.js?v=7.45"></script>
 </body>
 </html>
