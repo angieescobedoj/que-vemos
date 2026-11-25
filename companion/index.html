@@ -639,6 +639,54 @@ body.light .mseg2{background:#E5F2FF}
 .sheet{padding-left:16px;padding-right:16px}
 .mv-cast,.mv-recs{margin:0 -16px;padding:0 16px 4px}
 .banner{left:16px;right:16px}
+
+/* ---------- v7.42 · Espaciados App del DS: space-1 4 · space-2 8 · space-3 16 · space-4 32 ---------- */
+:root{--s1:4px;--s2:8px;--s3:16px;--s4:32px}
+/* pantalla: margen 16, header → body 16, body → bottom 32 */
+.wrap{padding:env(safe-area-inset-top) var(--s3) calc(var(--s4) + env(safe-area-inset-bottom))}
+.top{margin-bottom:var(--s3)}
+#main > [data-tab="control"]:not([hidden]){gap:var(--s3);padding-top:0}
+/* control: filas de teclas a 8, apps → teclas 16 (bloques distintos) */
+.keypad{gap:var(--s2)}
+.keypad #appsRow{margin-bottom:var(--s2)}
+.navc{gap:var(--s2)}
+/* Decodificadores / Configuración: título → texto 16, cards separadas 8, padding 16, textos dentro a 4 */
+.dv-bar{margin-bottom:var(--s3)}
+.dv-hint{margin-bottom:var(--s3)}
+.dcard{margin-top:0;margin-bottom:var(--s2);padding:var(--s3);gap:var(--s2)}
+.dinfo .s{margin-top:var(--s1);gap:var(--s1)}
+.dv-scan{margin-top:var(--s3);padding:var(--s3)}
+.cfg-list{gap:var(--s2)}
+.set-row{padding:var(--s3);gap:var(--s3)}
+.set-row .s{margin-top:var(--s1)}
+#cfgView .set-link,#cfgView .lf{margin-top:var(--s3)}
+.fav-row{padding:var(--s2);gap:var(--s2)}
+.fav-foot{padding:0 var(--s3) env(safe-area-inset-bottom)}
+#cfgView .fav-list{display:flex;flex-direction:column;gap:var(--s2)}
+#cfgView .fav-list .fav-row{margin:0}
+/* hojas: padding 16, 32 hasta abajo; textos del encabezado a 4, título → contenido 16, entre secciones 16, elementos de lista 8 */
+.sheet{padding:var(--s3) var(--s3) calc(var(--s4) + env(safe-area-inset-bottom))}
+.sheet h2{margin-bottom:var(--s1)}
+.sheet .sub{margin-bottom:var(--s3)}
+.mv-head{gap:var(--s3);margin-bottom:var(--s3)}
+.mv-head h2{margin:var(--s1) 0}
+.lf{margin:var(--s3) 0 var(--s2)}
+.sheet .sec-h{margin:var(--s3) 0 var(--s2)}
+.opt{padding:var(--s2) var(--s3);gap:var(--s2);margin-bottom:var(--s2)}
+.opt .s,.mv-list .opt .s{margin-top:var(--s1)}
+.mv-list,.cfg-list{gap:var(--s2)}
+.mrow{padding:var(--s2) 0;gap:var(--s2)}
+.mrow .s{margin-top:var(--s1)}
+.rc-ings>div{padding:var(--s2) 0;gap:var(--s2)}
+.rc-step{padding:var(--s2) 0;gap:var(--s2)}
+.rc-facts{gap:var(--s2);margin:var(--s3) 0 0}
+.scorer,.promo{padding:var(--s3);gap:var(--s2)}
+.promo{margin-bottom:var(--s2)}
+.tiles,.h2h{gap:var(--s2)}
+.sheet .btn{margin-top:var(--s3)}
+.am-panel{left:var(--s2);right:var(--s2);bottom:calc(var(--s2) + env(safe-area-inset-bottom));padding:var(--s3)}
+.am-row{padding:var(--s2) 0;gap:var(--s2)}
+.am-cancel{margin-top:var(--s2)}
 </style>
 </head>
 <body>
@@ -745,11 +793,11 @@ body.light .mseg2{background:#E5F2FF}
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.41"></script>
-<script src="../src/services/firestore-rest.js?v=7.41"></script>
-<script src="content.js?v=7.41"></script>
-<script src="logos.js?v=7.41"></script>
-<script src="store.js?v=7.41"></script>
-<script src="phone.js?v=7.41"></script>
+<script src="../src/services/http.js?v=7.42"></script>
+<script src="../src/services/firestore-rest.js?v=7.42"></script>
+<script src="content.js?v=7.42"></script>
+<script src="logos.js?v=7.42"></script>
+<script src="store.js?v=7.42"></script>
+<script src="phone.js?v=7.42"></script>
 </body>
 </html>

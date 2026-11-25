@@ -210,7 +210,7 @@
     if (r.screen === 'player' && r.content === 'series') {
       var sc = sceneNow();
       html += '<p class="eyebrow">En esta escena · ' + esc(sc.place) + '</p><h2 style="margin-top:4px">Los Pecadores</h2>';
-      html += '<div style="margin-top:12px">' + (r.playing
+      html += '<div style="margin-top:16px">' + (r.playing
         ? '<button class="btn" data-act="pause">❚❚  Pausar y descubrir en la TV</button>'
         : '<button class="btn ghost" data-act="play">▶  Seguir viendo</button>') + '</div>';
       html += '<div class="sec"><p class="sec-h">Personajes</p><div class="card">';
@@ -221,7 +221,7 @@
       html += '</div></div>';
       el.innerHTML = html; return;   /* el soundtrack de Los Pecadores llega al terminar la película */
     }
-    html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:6px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
+    html += '<div class="empty"><p class="eyebrow">Ahora en la TV</p><h2 style="margin-top:8px">Elige algo para ver</h2><p class="muted">Aquí verás información de lo que se está reproduciendo: personajes, canciones, productos o la alineación del partido.</p><div class="stack">' +
       '<button class="btn" data-open="match">Ver el partido en vivo</button><button class="btn ghost" data-open="series" data-from="">Ver Los Pecadores</button><button class="btn ghost" data-cmd="game">Jugar Atrapa estrellas</button></div></div>';
     html += soundtrackHtml();
     el.innerHTML = html;
@@ -285,7 +285,7 @@
     openSheet('match', '<p class="eyebrow">Pausaste el partido · ' + ck.label + '</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</h2>' +
       matchInfoHtml(SEG_LIVE) +
       (of ? '<div class="mreplay"><div class="grow"><div class="t">' + esc(of.line) + '</div><div class="s">Disponible en Anytime · desde el inicio</div></div><button class="btn sm ghost" data-act="offerGo" data-ch="match">Ver en la TV</button></div>' : '') +
-      '<button class="btn" data-act="play" style="margin-top:14px">▶  Seguir viendo el partido</button>');
+      '<button class="btn" data-act="play" style="margin-top:16px">▶  Seguir viendo el partido</button>');
   }
 
   /* ---------- v7.35 · Partido en tres momentos (bottom sheets) ----------
@@ -344,11 +344,11 @@
     h += '<p class="sec-h">Repetición desde otro ángulo</p>' + replayHtml(S.mAng || 0) + '<div class="chips rp-angs">';
     for (i = 0; i < ANGLES.length; i++) h += '<button data-act="mAng" data-i="' + i + '"' + ((S.mAng || 0) === i ? ' class="on"' : '') + '>' + ANGLES[i] + '</button>';
     h += '</div><p class="rp-desc">' + esc(gl.desc) + '</p>';
-    h += '<p class="sec-h" style="margin-top:18px">El goleador</p><div class="scorer"><span class="num" style="background:' + m.home.color + '">' + gl.num + '</span><div class="grow"><div class="t">' + esc(gl.scorer) + '</div><div class="s">' + esc(gl.pos) + ' · ' + esc(m.home.name) + '</div>' +
+    h += '<p class="sec-h" style="margin-top:16px">El goleador</p><div class="scorer"><span class="num" style="background:' + m.home.color + '">' + gl.num + '</span><div class="grow"><div class="t">' + esc(gl.scorer) + '</div><div class="s">' + esc(gl.pos) + ' · ' + esc(m.home.name) + '</div>' +
       '<div class="nth">⚽ ' + esc(gl.line) + '</div></div></div><div class="tiles">';
     for (i = 0; i < gl.season.length; i++) h += '<div><b>' + gl.season[i][1] + '</b><span>' + gl.season[i][0] + '</span></div>';
     h += '</div>';
-    h += '<p class="sec-h" style="margin-top:18px">Así cambia la tabla</p><p class="sub" style="margin-top:-2px">Si el partido terminara así, ' + esc(m.home.name) + ' sube al ' + pos + '.º lugar</p>' + tableHtml(gt.rows, gt.moves);
+    h += '<p class="sec-h" style="margin-top:16px">Así cambia la tabla</p><p class="sub" style="margin-top:-2px">Si el partido terminara así, ' + esc(m.home.name) + ' sube al ' + pos + '.º lugar</p>' + tableHtml(gt.rows, gt.moves);
     h += '<button class="btn" data-act="closeSheet" style="margin-top:16px">Seguir viendo el partido</button>';
     send({ t: 'peek', what: 'la repetición del gol' });
     openSheet('mgoal', h);
@@ -364,12 +364,12 @@
     var m = C.MATCH, H = m.halftime, ck = mck(), side = S.mHeat || 'home', i;
     var h = '<p class="eyebrow">Medio tiempo</p><h2 style="margin-top:4px">' + esc(m.home.name) + ' ' + ck.score[0] + ' – ' + ck.score[1] + ' ' + esc(m.away.name) + '</h2><p class="sub">Gol: ' + esc(m.goal.scorer) + ' ' + m.goal.min + '\'</p>';
     h += '<p class="sec-h">Resumen de estadísticas</p>' + statBars(H.stats);
-    h += '<p class="sec-h" style="margin-top:18px">Mapa de calor</p><div class="seg2 mseg2"><button data-act="mHeat" data-t="home"' + (side === 'home' ? ' class="on"' : '') + '>' + esc(m.home.name) + '</button><button data-act="mHeat" data-t="away"' + (side === 'away' ? ' class="on"' : '') + '>' + esc(m.away.name) + '</button></div>' + heatSvg(side) +
+    h += '<p class="sec-h" style="margin-top:16px">Mapa de calor</p><div class="seg2 mseg2"><button data-act="mHeat" data-t="home"' + (side === 'home' ? ' class="on"' : '') + '>' + esc(m.home.name) + '</button><button data-act="mHeat" data-t="away"' + (side === 'away' ? ' class="on"' : '') + '>' + esc(m.away.name) + '</button></div>' + heatSvg(side) +
       '<p class="rp-desc">' + (side === 'home' ? esc(m.home.name) + ' atacó sobre todo por la banda derecha →' : esc(m.away.name) + ' se replegó en su campo y buscó el contragolpe por el centro') + '</p>';
     var pl = H.plays[S.mPlay || 0];
-    h += '<p class="sec-h" style="margin-top:18px">Mejores jugadas</p>' + replayHtml((S.mPlay || 0) === 0 ? 0 : (S.mPlay === 1 ? 1 : 2), pl[0] + ' ' + pl[1]);
+    h += '<p class="sec-h" style="margin-top:16px">Mejores jugadas</p>' + replayHtml((S.mPlay || 0) === 0 ? 0 : (S.mPlay === 1 ? 1 : 2), pl[0] + ' ' + pl[1]);
     for (i = 0; i < H.plays.length; i++) h += '<button class="mrow play' + ((S.mPlay || 0) === i ? ' on' : '') + '" data-act="mPlay" data-i="' + i + '"><span class="pm">' + H.plays[i][0] + '</span><div class="grow"><div class="t">' + esc(H.plays[i][1]) + '</div><div class="s">' + esc(H.plays[i][2]) + '</div></div><span class="pi">▶</span></button>';
-    h += '<p class="sec-h" style="margin-top:18px">Encuesta · jugador del primer tiempo</p>';
+    h += '<p class="sec-h" style="margin-top:16px">Encuesta · jugador del primer tiempo</p>';
     if (S.mVote == null) {
       for (i = 0; i < H.poll.length; i++) h += '<button class="mrow vote" data-act="mVote" data-i="' + i + '"><div class="grow"><div class="t">' + esc(H.poll[i][0]) + '</div><div class="s">' + esc(H.poll[i][1]) + '</div></div><span class="pi">Votar</span></button>';
     } else {
@@ -378,7 +378,7 @@
         h += '<div class="pollr' + (S.mVote === i ? ' me' : '') + '"><i style="width:' + pc + '%"></i><span class="grow">' + esc(H.poll[i][0]) + (S.mVote === i ? ' · tu voto' : '') + '</span><b>' + pc + '%</b></div>'; }
       h += '<p class="rp-desc">Votaron 1,248 aficionados (resultados simulados)</p>';
     }
-    h += '<p class="sec-h" style="margin-top:18px">Promociones de patrocinadores</p>';
+    h += '<p class="sec-h" style="margin-top:16px">Promociones de patrocinadores</p>';
     for (i = 0; i < H.sponsors.length; i++) { var sp = H.sponsors[i];
       h += '<div class="promo"><span class="pic" style="background:' + sp[4] + '">' + sp[0] + '</span><div class="grow"><div class="t">' + esc(sp[1]) + '</div><div class="s">' + esc(sp[2]) + '</div></div><button class="btn sm ghost" data-act="mPromo" data-i="' + i + '">' + esc(sp[3]) + '</button></div>'; }
     h += '<button class="btn" data-act="closeSheet" style="margin-top:16px">Listo</button>';
@@ -443,7 +443,7 @@
     return path ? 'background:#000 url(https://image.tmdb.org/t/p/' + (wide ? 'w780' : 'w154') + path + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ')';
   }
   function openProduct(prod) {
-    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#006ADB">De la escena · Los Pecadores</p><h2 style="margin:4px 0 2px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
+    $('sheet').innerHTML = '<div class="img"></div><p class="eyebrow" style="color:#006ADB">De la escena · Los Pecadores</p><h2 style="margin:4px 0 4px">' + esc(prod[0]) + '</h2><p style="color:#555;margin-bottom:16px">' + esc(prod[1]) + ' · Demo: compra no disponible en el prototipo</p><button class="btn" data-act="closeSheet">Listo</button>';
     $('sheet').hidden = false; $('scrim').hidden = false; S.sheet = 'product';
     send({ t: 'product', what: prod[0] });
   }
@@ -539,7 +539,7 @@
     var m = MV[k], h = mvHead(k, d, 'Terminó en la TV'), songs = mvSongs(k);
     h += '<p class="lf">Soundtrack</p><div class="mv-list">';
     for (var i = 0; i < songs.length; i++) h += '<div class="opt"><span class="ic">♪</span><span class="grow"><span class="t">' + esc(songs[i].t) + '</span><span class="s">' + esc(songs[i].a) + '</span></span><button class="dots" data-mvmore="' + k + ':' + i + '" aria-label="Más opciones">⋮</button></div>';
-    h += '</div>' + (k === 'series' ? '<p class="sub" style="margin-top:6px">Música original de Ludwig Göransson.</p>' : '');
+    h += '</div>' + (k === 'series' ? '<p class="sub" style="margin-top:8px">Música original de Ludwig Göransson.</p>' : '');
     var recs = d && d.recommendations && d.recommendations.results && d.recommendations.results.length ? d.recommendations.results.slice(0, 8).map(function (x) { return [x.title, (x.release_date || '').substring(0, 4), x.poster_path]; }) : m.recs;
     h += '<p class="lf">Películas recomendadas</p><div class="mv-recs">';
     for (var r = 0; r < recs.length; r++) h += '<button class="mv-rec" data-mvrec="' + esc(recs[r][0]) + '">' + (recs[r][2] ? '<img src="' + TP + 'w185' + recs[r][2] + '" alt="" loading="lazy">' : '<span class="ph">🎬</span>') + '<b>' + esc(recs[r][0]) + '</b><small>' + esc(recs[r][1] || '') + '</small></button>';
@@ -624,7 +624,7 @@
     var d = ''; for (var k = 0; k < f.length; k++) d += '<i class="' + (k === i ? 'on' : '') + '"></i>';
     openSheet('factsList', '<p class="eyebrow" style="color:#006ADB">Mientras está en pausa</p><h2>Datos curiosos de ' + esc(ch.show) + '</h2><p class="sub">Dato ' + (i + 1) + ' de ' + f.length + '</p>' +
       '<div class="fact"><span class="fn">' + (i + 1) + '/' + f.length + '</span>' + esc(f[i]) + '</div><div class="dots">' + d + '</div>' +
-      '<div class="pairb" style="margin-top:12px">' + (i > 0 ? '<button class="btn ghost" data-act="factPrev" data-ch="' + ch.n + '" data-i="' + i + '">Anterior</button>' : '<button class="btn ghost" data-act="closeSheet">Cerrar</button>') +
+      '<div class="pairb" style="margin-top:16px">' + (i > 0 ? '<button class="btn ghost" data-act="factPrev" data-ch="' + ch.n + '" data-i="' + i + '">Anterior</button>' : '<button class="btn ghost" data-act="closeSheet">Cerrar</button>') +
       (i < f.length - 1 ? '<button class="btn" data-act="factNext" data-ch="' + ch.n + '" data-i="' + i + '">Siguiente</button>' : '<button class="btn" data-act="factPlay">Seguir viendo</button>') + '</div>');
   }
   /* Delivery (pausa en Familia 5) */
@@ -653,7 +653,7 @@
     openSheet('shop', html);
   }
   function doneSheet(icon, title, sub) {
-    openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">' + icon + '</div><h2 style="margin-top:6px">' + esc(title) + '</h2><p class="sub">' + esc(sub) + '</p></div>' +
+    openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">' + icon + '</div><h2 style="margin-top:8px">' + esc(title) + '</h2><p class="sub">' + esc(sub) + '</p></div>' +
       '<button class="btn" data-act="factPlay">Seguir viendo</button>');
     buzz(); setTimeout(buzz, 160);
   }
@@ -707,7 +707,7 @@
     html += '<p class="lf">Surtir en un supermercado de Shop Totalplay</p><div class="stores">';
     for (var s2 = 0; s2 < RC.stores.length; s2++) html += '<button class="' + (s2 === (S.rcStore || 0) ? 'on' : '') + '" data-store="' + s2 + '"><b>' + esc(RC.stores[s2].n) + '</b><small>Llega en ' + esc(RC.stores[s2].eta) + '</small></button>';
     var tot = rcTotal();
-    html += '</div><p class="sub" style="margin:10px 0 8px">¿Ya tienes algo? Quítale la palomita.</p>' +
+    html += '</div><p class="sub" style="margin:16px 0 8px">¿Ya tienes algo? Quítale la palomita.</p>' +
       '<button class="btn" data-act="rcBuy"' + (tot.n ? '' : ' disabled style="opacity:.45"') + '>' + (tot.n ? 'Comprar ' + tot.n + ' ingredientes · ' + money(tot.t + RC.ship) : 'Elige al menos un ingrediente') + '</button>' +
       '<p class="sub" style="text-align:center;margin-top:8px">Incluye envío de $' + RC.ship + ' · Demo: no se hace ningún cargo.</p>';
     openSheet('recipe', html);
@@ -1045,7 +1045,7 @@
     else if (g('data-store') !== null && el.hasAttribute('data-store')) { S.rcStore = Number(g('data-store')); var kt = $('sheet').scrollTop; openRecipe(); $('sheet').scrollTop = kt; }
     else if (act === 'rcBuy') {
       var rt = rcTotal(); if (!rt.n) return;
-      openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">🛒</div><h2 style="margin-top:6px">¡Pedido en camino!</h2><p class="sub">' + rt.n + ' ingredientes de ' + esc(rt.st.n) + ' · ' + money(rt.t + C.RECIPE.ship) + ' · llegan en ' + esc(rt.st.eta) + '. Demo: no se hace ningún cargo.</p></div>' +
+      openSheet('done', '<div style="text-align:center;padding:10px 0"><div style="font-size:54px">🛒</div><h2 style="margin-top:8px">¡Pedido en camino!</h2><p class="sub">' + rt.n + ' ingredientes de ' + esc(rt.st.n) + ' · ' + money(rt.t + C.RECIPE.ship) + ' · llegan en ' + esc(rt.st.eta) + '. Demo: no se hace ningún cargo.</p></div>' +
         '<button class="btn" data-act="closeSheet">Listo</button>');
       buzz(); setTimeout(buzz, 160);
       send({ t: 'notice', text: '🛒 ' + S.name + ' pidió los ingredientes en Shop · llegan en ' + rt.st.eta });
