@@ -12,9 +12,9 @@
     universal: { re: /^universal\+$/i, alt: /universal\+|universal plus/i } };   /* On Demand es de Totalplay: logo local (LOCAL) */
   var paths = {}, waiting = [];
   /* Logos propios de Totalplay (no están en TMDB): se sirven desde el repo */
-  /* v7.50 · los mosaicos de "Mis apps" del Home (julio 2026) de Totalplay; Universal+ sigue saliendo de TMDB */
+  /* v7.50 · los mosaicos de "Mis apps" del Home (julio 2026) de Totalplay */
   var LOCAL = { tv: 'img/apps/tvenvivo.png?v=7.50', netflix: 'img/apps/netflix.png?v=7.50', ondemand: 'img/apps/ondemand.png?v=7.50', disney: 'img/apps/disney.png?v=7.50',
-    youtube: 'img/apps/youtube.png?v=7.50', prime: 'img/apps/prime.png?v=7.50', max: 'img/apps/max.png?v=7.50', appletv: 'img/apps/appletv.png?v=7.50', paramount: 'img/apps/paramount.png?v=7.50' };
+    youtube: 'img/apps/youtube.png?v=7.50', prime: 'img/apps/prime.png?v=7.50', max: 'img/apps/max.png?v=7.50', appletv: 'img/apps/appletv.png?v=7.50', paramount: 'img/apps/paramount.png?v=7.50', universal: 'img/apps/universal.png?v=7.51' };
 
   function load() { try { var o = JSON.parse(localStorage.getItem(LS) || 'null'); if (o && new Date().getTime() - o.at < WEEK) return o.paths; } catch (e) { /* sin localStorage */ } return null; }
   function save(p) { try { localStorage.setItem(LS, JSON.stringify({ at: new Date().getTime(), paths: p })); } catch (e) { /* ignore */ } }

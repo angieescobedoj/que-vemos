@@ -437,11 +437,11 @@ b{font-weight:700}
 /* filas */
 .home .rows{gap:.7rem;margin-right:calc(-8.5vw - .5rem)}
 .home .row-h{font-size:.92rem;font-weight:500;color:#fff;margin-bottom:.45rem}
-.home .row-tiles.cards{gap:.88rem}
-.home .card{width:13.4rem;height:7.54rem;border-radius:.42rem}
+.home .row-tiles.cards{gap:.89rem}
+.home .card{width:13.53rem;height:7.62rem;border-radius:.42rem}
 .home .card .c-title{font-size:1.05rem}
-.home .row-tiles.apps-row{gap:.85rem}
-.home .tile.app.sq{width:5.5rem;height:5.5rem;border-radius:.42rem}
+.home .row-tiles.apps-row{gap:.855rem}
+.home .tile.app.sq{width:5.556rem;height:5.556rem;border-radius:.42rem}
 .card.is-focused,.home .tile.app.sq.is-focused{box-shadow:0 0 0 .12rem #000,0 0 0 .28rem #fff}
 /* código QR: tarjeta a la derecha del destacado (se ve si no hay celulares o si se abre desde el avatar) */
 .home > .pair{right:8.5vw;top:auto;bottom:calc(14.5rem + 3vh);background:rgba(20,20,20,.86);border:0;border-radius:.6rem}
