@@ -155,16 +155,17 @@
   function channel(n) { for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].n === n) return CHANNELS[i]; return null; }
 
   /* Apps de streaming instaladas en el decodificador. Abrirlas se simula (la API de Totalplay para lanzar apps está pendiente). */
+  /* orden de "Mis apps" como en el Home de Totalplay (julio 2026), después de TV en vivo */
   var APPS = [
     { id: 'netflix', kind: 'app', title: 'Netflix', sub: 'App', tag: 'App', color: '#E50914' },
-    { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
-    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' },
+    { id: 'ondemand', kind: 'app', title: 'On Demand', sub: 'App', tag: 'App', color: '#6B2BD9' },
     { id: 'disney', kind: 'app', title: 'Disney+', sub: 'App', tag: 'App', color: '#113CCF' },
-    { id: 'max', kind: 'app', title: 'Max', sub: 'App', tag: 'App', color: '#002BE7' },
+    { id: 'youtube', kind: 'app', title: 'YouTube', sub: 'App', tag: 'App', color: '#FF0033' },
+    { id: 'prime', kind: 'app', title: 'Prime Video', sub: 'App', tag: 'App', color: '#1A98FF' },
+    { id: 'max', kind: 'app', title: 'HBO Max', sub: 'App', tag: 'App', color: '#002BE7' },
     { id: 'appletv', kind: 'app', title: 'Apple TV+', sub: 'App', tag: 'App', color: '#1C1C1E' },
     { id: 'paramount', kind: 'app', title: 'Paramount+', sub: 'App', tag: 'App', color: '#0064FF' },
-    { id: 'universal', kind: 'app', title: 'Universal+', sub: 'App', tag: 'App', color: '#2A2A2A' },
-    { id: 'ondemand', kind: 'app', title: 'On Demand', sub: 'App', tag: 'App', color: '#6B2BD9' }
+    { id: 'universal', kind: 'app', title: 'Universal+', sub: 'App', tag: 'App', color: '#2A2A2A' }
   ];
   var LIVE = { id: 'tv', kind: 'live', title: 'TV en vivo', sub: 'Canales 2 · 5 · 7 · 9', tag: 'Canales' };
 

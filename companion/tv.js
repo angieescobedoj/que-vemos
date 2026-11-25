@@ -170,7 +170,7 @@
       '<span class="c-title">' + esc(item.n ? item.show : item.title) + '</span>' + extra + '</button>';
   }
   function appTileHtml(item) {
-    if (item.kind === 'live') return '<button class="tile app sq live-app" data-focusable data-action="open" data-id="tv" aria-label="TV en vivo"><span class="t-name"><small>TV</small>en vivo</span></button>';
+    if (item.kind === 'live') { var lg = CP.logos.img('tv', 'w185', 't-cover'); return '<button class="tile app sq live-app' + (lg ? ' has-logo' : '') + '" data-focusable data-action="open" data-id="tv" aria-label="TV en vivo"><span class="t-name"><small>TV</small>en vivo</span>' + lg + '</button>'; }
     return tileHtml(item);
   }
   /* Datos grandes del contenido enfocado (fondo + etiqueta + título + detalle) */
@@ -215,7 +215,7 @@
     }
     h += '<div class="h-row">';
     h += live ? '<div class="h-ch"><span class="h-logo">' + esc(ch.name) + '</span><b class="h-num">' + ch.n + '</b></div>'
-              : '<div class="h-ch"><span class="h-logo od">' + (item.kind === 'game' || item.id === 'swipe' ? 'Juegos' : '<img src="img/ondemand.png?v=7.9" alt="On Demand">') + '</span><b class="h-num sm">' + esc(item.tag) + '</b></div>';
+              : '<div class="h-ch"><span class="h-logo od">' + (item.kind === 'game' || item.id === 'swipe' ? 'Juegos' : '<img src="img/ondemand-wide.png?v=7.9" alt="On Demand">') + '</span><b class="h-num sm">' + esc(item.tag) + '</b></div>';
     h += '<div class="h-main"><h2 class="h-title">' + esc(title) + '</h2><p class="h-meta">' + meta + '</p></div></div>';
     if (pct > 0) h += '<div class="h-prog"><i style="width:' + pct + '%"></i></div>';
     h += '<button class="h-btn" data-focusable data-action="heroGo" data-id="' + id + '"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5Z" fill="currentColor"/></svg>' + btn + '</button>';
