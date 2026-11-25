@@ -547,16 +547,18 @@
   }
   /* v7.38 · tres puntos (como Shazam): abrir la canción en la app de música que elijas */
   var MUSIC = [
-    ['spotify', 'Spotify', '#1DB954', function (q) { return 'https://open.spotify.com/search/' + encodeURIComponent(q); }],
-    ['apple', 'Apple Music', '#FA2D48', function (q) { return 'https://music.apple.com/mx/search?term=' + encodeURIComponent(q); }],
-    ['ytm', 'YouTube Music', '#FF0000', function (q) { return 'https://music.youtube.com/search?q=' + encodeURIComponent(q); }],
-    ['amazon', 'Amazon Music', '#25D1DA', function (q) { return 'https://music.amazon.com.mx/search/' + encodeURIComponent(q); }],
-    ['deezer', 'Deezer', '#A238FF', function (q) { return 'https://www.deezer.com/search/' + encodeURIComponent(q); }]
+    ['spotify', 'Spotify', '#1DB954', function (q) { return 'https://open.spotify.com/search/' + encodeURIComponent(q); }, 'open.spotify.com'],
+    ['apple', 'Apple Music', '#FA2D48', function (q) { return 'https://music.apple.com/mx/search?term=' + encodeURIComponent(q); }, 'music.apple.com'],
+    ['ytm', 'YouTube Music', '#FF0000', function (q) { return 'https://music.youtube.com/search?q=' + encodeURIComponent(q); }, 'music.youtube.com'],
+    ['amazon', 'Amazon Music', '#25D1DA', function (q) { return 'https://music.amazon.com.mx/search/' + encodeURIComponent(q); }, 'music.amazon.com'],
+    ['deezer', 'Deezer', '#A238FF', function (q) { return 'https://www.deezer.com/search/' + encodeURIComponent(q); }, 'www.deezer.com']
   ];
+  /* logo oficial de cada servicio: se pide en tiempo real a su propio sitio (ícono del sitio, 128 px); sin red se queda la inicial */
+  function musicLogo(domain) { return 'https://www.google.com/s2/favicons?sz=128&domain=' + domain; }
   function openMusicMenu(song) {
     S.mSong = song;
     var last = ls.get('cp-music-app'), h = '<button class="am-back" data-act="amClose" aria-label="Cerrar"></button><div class="am-panel"><div class="am-song"><span class="ic">♪</span><div class="grow"><div class="t">' + esc(song.t) + '</div><div class="s">' + esc(song.a) + '</div></div></div><p class="am-h">Escuchar en</p>';
-    for (var i = 0; i < MUSIC.length; i++) h += '<button class="am-row" data-music="' + i + '"><span class="am-ic" style="background:' + MUSIC[i][2] + '">' + MUSIC[i][1].charAt(0) + '</span><span class="grow">' + MUSIC[i][1] + (MUSIC[i][0] === last ? '<small>La última que usaste</small>' : '') + '</span><span class="am-go">↗</span></button>';
+    for (var i = 0; i < MUSIC.length; i++) h += '<button class="am-row" data-music="' + i + '"><span class="am-ic" style="background:' + MUSIC[i][2] + '"><b>' + MUSIC[i][1].charAt(0) + '</b><img alt="" src="' + musicLogo(MUSIC[i][4]) + '" onload="this.parentNode.className+=\' has\'" onerror="this.parentNode.removeChild(this)"></span><span class="grow">' + MUSIC[i][1] + (MUSIC[i][0] === last ? '<small>La última que usaste</small>' : '') + '</span><span class="am-go">↗</span></button>';
     h += '<button class="am-row" data-act="amSave"><span class="am-ic sv">♡</span><span class="grow">Guardar en mi soundtrack</span></button><button class="am-cancel" data-act="amClose">Cancelar</button></div>';
     var el = $('actMenu'); if (!el) { el = document.createElement('div'); el.id = 'actMenu'; document.body.appendChild(el); }
     el.innerHTML = h; el.hidden = false; buzz();
