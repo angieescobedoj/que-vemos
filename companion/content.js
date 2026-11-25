@@ -53,6 +53,8 @@
     id: 'series', kind: 'vod', title: 'Los Pecadores', sub: 'Película · 2025 · Ryan Coogler', tag: 'Película',
     tmdbQuery: 'Sinners', tmdbYear: 2025,
     duration: 120,   /* demo: 2 minutos para ver todas las interacciones del celular */
+    /* v7.47 · a media película suena una canción (la de la escena del juke joint) y la ficha del celular la muestra en vivo */
+    liveSong: { from: 45, to: 80, i: 1 },
     scenes: [
       { from: 0, to: 40, place: 'Clarksdale, Mississippi · 1932',
         cast: [['Smoke y Stack', 'Michael B. Jordan'], ['Pearline', 'Jayme Lawson']],

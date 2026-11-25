@@ -490,6 +490,7 @@
   /* 1) al elegir la película: la ficha del juego ¿Qué vemos? */
   function mvInfoHtml(k, d) {
     var m = MV[k], fb = m.fallback, h = mvHead(k, d, 'Estás viendo en la TV');
+    if (k === 'series') h += '<div id="mvNow">' + nowSongHtml() + '</div>';
     h += '<p class="mv-syn">' + esc(d && d.overview ? d.overview : fb.overview) + '</p>';
     var rt = d ? d.runtime : fb.runtime, dir = d ? ((d.credits && d.credits.crew) || []).filter(function (c) { return c.job === 'Director'; }).map(function (c) { return c.name; }).slice(0, 2).join(', ') : fb.director;
     var mx = d && d['watch/providers'] && d['watch/providers'].results && d['watch/providers'].results.MX || {}, flat = mx.flatrate || [];
@@ -569,6 +570,28 @@
     openSheet(name, build(k, MVD[k] || null)); S.mvK2 = k; buzz();
     if (!MVD[k]) mvLoad(k, function (d) { if (d && S.sheet === name) { var t = $('sheet').scrollTop; openSheet(name, build(k, d)); $('sheet').scrollTop = t; } });
   }
+  /* v7.47 · "Está sonando" en vivo dentro de la ficha: cuando suena la canción en la TV aparece arriba de la sinopsis,
+     con los tres puntos para abrirla en tu app de música; al terminar queda como "Sonó hace un momento". */
+  function nowSongState() {
+    var L = C.SERIES.liveSong, r = S.room; if (!L || !r || r.screen !== 'player' || r.content !== 'series') return '';
+    var p = pos(); return p < L.from ? '' : p < L.to ? (r.playing ? 'on' : 'paused') : 'after';
+  }
+  function nowSongHtml() {
+    var st = nowSongState(); if (!st) return '';
+    var L = C.SERIES.liveSong, song = C.SERIES.scenes[L.i].song;
+    return '<div class="mv-now ' + st + '"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="grow"><span class="k">' +
+      (st === 'after' ? 'Sonó hace un momento' : 'Está sonando en la película') + '</span><span class="t">' + esc(song.t) + '</span><span class="s">' + esc(song.a) + '</span></span>' +
+      '<button class="dots" data-mvmore="series:' + L.i + '" aria-label="Abrir en otras apps">⋮</button></div>';
+  }
+  setInterval(function () {
+    var st = nowSongState();
+    if (st === 'on' && S.nowSt !== 'on' && S.nowSt !== 'paused') {
+      buzz();
+      if (!S.sheet) mvOpen('info', 'series');   /* si la ficha estaba cerrada, vuelve a abrirse para mostrar la canción */
+    }
+    S.nowSt = st;
+    var el = $('mvNow'); if (el && S.sheet === 'mv-info') { var h = nowSongHtml(); if (el._h !== h) { el.innerHTML = h; el._h = h; } }
+  }, 1000);
   /* cuándo sale cada hoja: al empezar la película, al pausarla y cuando la TV avisa que terminó */
   function mvWatch(r) {
     var k = r.screen === 'player' && r.content === 'series' ? 'series' : r.screen === 'player' && r.content === 'video' ? 'bunny' : '';
