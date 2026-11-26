@@ -475,3 +475,51 @@ b{font-weight:700}
 .me-pill{background:var(--container)}
 .home > .pair{background:var(--container)}
 .brand-dot{background:var(--brand);box-shadow:0 0 0 .3rem rgba(240,108,0,.3)}
+
+/* ---------- v7.55 · Espaciados STB del DS (px a 1920×1080; 1rem ≈ 28.08 px)
+   space-1 4 · space-2 8 · space-3 16 · space-4 24 · space-5 32 · space-6 40 ---------- */
+:root{--s1:.142rem;--s2:.285rem;--s3:.57rem;--s4:.855rem;--s5:1.14rem;--s6:1.425rem}
+/* entre secciones: 40 */
+.home .home-body{gap:var(--s6)}
+.home .rows{gap:var(--s6)}
+.topbar{margin-bottom:var(--s6)}
+/* texto + card: 16 */
+.row-h,.home .row-h{margin-bottom:var(--s3)}
+/* elementos dentro de una sección (horizontal y vertical): 24 */
+.row-tiles,.home .row-tiles,.home .row-tiles.cards,.home .row-tiles.apps-row,.search-results{gap:var(--s4)}
+.search-results{row-gap:var(--s4)}
+/* menú superior: botones con padding lateral 24; lupa a 24 del primer botón */
+.tab{padding:0 var(--s4)}
+.tabs{gap:0}
+.tabs .tn-ic{margin-right:var(--s3)}
+.tn-right{gap:var(--s3)}
+.me-pill{gap:var(--s2);padding:var(--s1) var(--s1) var(--s1) var(--s2)}
+.tn-time{gap:var(--s1)}
+/* destacado: textos dentro del recuadro del canal a 8, texto + texto a 16, elementos a 24 */
+.h-ch{gap:var(--s2);padding-right:var(--s3);margin-right:var(--s3)}
+.home .h-meta{margin-top:var(--s3);gap:var(--s2)}
+.h-prog{margin-top:var(--s4)}
+.h-btn{margin-top:var(--s3);padding:0 var(--s4);gap:var(--s3)}
+/* textos dentro de cards: 4 */
+.card .c-title{left:var(--s3);right:var(--s3);bottom:var(--s3)}
+.card .c-num{left:var(--s3);top:var(--s2)}
+.card .c-live{right:var(--s2);top:var(--s2)}
+.tile .t-body > * + *{margin-top:var(--s1)}
+/* tarjeta del QR: padding 24, elementos a 16, textos a 4 */
+.home > .pair{padding:var(--s4);gap:var(--s3)}
+.pair-txt{gap:var(--s1)}
+.pair-room{gap:var(--s1);margin-top:var(--s2)}
+/* botones generales: padding lateral 24 */
+.btn{padding:.6rem var(--s4)}
+/* guía de canales: padding 24, filas a 8, textos a 4 */
+.guide{padding:var(--s4)}
+.g-row{gap:var(--s3);padding:var(--s2) var(--s3);margin-top:var(--s2)}
+.g-row .sh{margin-top:var(--s1)}
+/* reproductor: título + subtítulo a 16, elementos de la franja en vivo a 16 */
+.live-strip{gap:var(--s3)}
+/* búsqueda: caja → resultados 40 */
+.search-box{margin-bottom:var(--s6)}
+/* renta */
+.rent-body{gap:var(--s6)}
+.rent-ov,.rent-note{margin-top:var(--s3)}
+.rent-price{margin:var(--s4) 0 var(--s1)}
