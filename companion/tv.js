@@ -36,7 +36,10 @@
   function vod() { return S.content === 'series' || S.content === 'movie' || S.content === 'recipe'; }
   function playerName(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return S.players[i].name || 'Alguien'; return 'Alguien'; }
   function playerIndex(pid) { for (var i = 0; i < S.players.length; i++) if (S.players[i].id === pid) return i; return 0; }
-  function connected() { var out = [], t = now(); for (var i = 0; i < S.players.length; i++) if (t - (S.players[i].seen || 0) < SEEN_MS) out.push(S.players[i]); return out; }
+  /* la app iOS de Totalplay se registra aparte como "App Totalplay" (para su cápsula); no es un celular más en la sala */
+  function isNativeApp(p) { return p.name === 'App Totalplay'; }
+  function connected() { var out = [], t = now(); for (var i = 0; i < S.players.length; i++) if (t - (S.players[i].seen || 0) < SEEN_MS && !isNativeApp(S.players[i])) out.push(S.players[i]); return out; }
+  function anyLinked() { var t = now(); for (var i = 0; i < S.players.length; i++) if (t - (S.players[i].seen || 0) < SEEN_MS) return true; return false; }
 
   /* ---------------- toasts ---------------- */
   function toast(text, ms) {
@@ -49,6 +52,41 @@
   /* ---------------- publicar estado a los celulares (con coalescencia) ---------------- */
   var pushTimer = null, pushing = false, pushAgain = false, lastPushed = '';
   function gameColors() { var out = {}; for (var i = 0; i < S.players.length; i++) out[S.players[i].id] = COLORS[i % COLORS.length]; return out; }
+  /* v7.64 · "now": lo que se está viendo, ya resuelto, para la cápsula "Estás viendo" de la app iOS (y lo que venga).
+     { title, subtitle, channel, image (URL https completa, 16:9), pos y dur en segundos (dur 0 en vivo), playing }. null si no hay nada. */
+  var absA = document.createElement('a');
+  function absUrl(u) { if (!u) return ''; absA.href = u; return absA.href; }
+  function tmdbWide(path) { return path ? QV.catalog.img(path, 'w780') : ''; }
+  function nowInfo() {
+    var n = null, p = Math.round(curPos());
+    if (S.off) return null;
+    if (S.screen === 'player') {
+      if (S.content === 'live') {
+        var ch = C.channel(S.channel), tm = ch && ch.tmdb && TMDB[ch.tmdb];
+        if (ch && ch.tmdb && !tm) tmdbMovie(ch.tmdb, function () { pushState(); });
+        if (ch) n = { title: ch.show, subtitle: 'Canal ' + ch.n + ' · ' + ch.name.replace(/\s*\d+$/, ''), channel: ch.n, image: tm && tm.backdrop ? tmdbWide(tm.backdrop) : '', pos: 0, dur: 0 };
+      } else if (S.content === 'match') {
+        var ck = mClock();
+        n = { title: C.MATCH.title, subtitle: 'En vivo · ' + (ck.phase === 'MT' ? 'Medio tiempo' : ck.phase === 'FIN' ? 'Final' : 'Min ' + ck.min) + ' · ' + ck.score[0] + '–' + ck.score[1], channel: null,
+          image: C.PHOTOS.match + '640&h=360', pos: 0, dur: 0 };
+      } else if (S.content === 'series') {
+        var sb = SIN.backdrops.length ? SIN.backdrops[C.sceneAt(p) % SIN.backdrops.length] : '';
+        n = { title: C.SERIES.title, subtitle: C.SERIES.sub, channel: null, image: tmdbWide(sb), pos: p, dur: C.SERIES.duration };
+      } else if (S.content === 'video') {
+        n = { title: C.BUNNY.title, subtitle: C.BUNNY.sub, channel: null, image: absUrl(C.BUNNY.poster), pos: p, dur: C.BUNNY.dur };
+      } else if (S.content === 'recipe') {
+        n = { title: C.RECIPE.title, subtitle: C.RECIPE.dish, channel: null, image: C.PHOTOS.recipe + '640&h=360', pos: p, dur: C.RECIPE.dur };
+      } else if (S.content === 'movie' && S.movie) {
+        n = { title: S.movie.title, subtitle: S.movie.label || ('En ' + appTitle(S.movie.app)), channel: null, image: (S.movie.bg || '').replace('/w1280/', '/w780/'), pos: p, dur: S.movie.min * 60 };
+      }
+      if (n) n.playing = !!S.playing;
+    } else if (S.screen === 'game' || S.screen === 'ship') {
+      n = { title: S.screen === 'ship' ? 'Nave espacial' : 'Atrapa estrellas', subtitle: 'Juego · Sala TV', channel: null, image: absUrl(S.screen === 'ship' ? 'img/nave.jpg' : 'img/atrapa.jpg'), pos: 0, dur: 0, playing: true };
+    } else if (S.screen === 'app' && S.app) {
+      n = { title: appTitle(S.app), subtitle: 'App', channel: null, image: '', pos: 0, dur: 0, playing: true };
+    }
+    return n;
+  }
   function snapshot() {
     var g = S.game, scores = {};
     for (var k in g.scores) if (g.scores.hasOwnProperty(k)) scores[k] = g.scores[k];
@@ -58,7 +96,8 @@
       matchStart: S.matchStart, mev: S.mev || null, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
       tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
       movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, fin: S.fin, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
-      ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() }
+      ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() },
+      now: nowInfo()
     };
   }
   function pushState() {
@@ -68,7 +107,8 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
-        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep, snap.mev && snap.mev.seq]);
+        snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep, snap.mev && snap.mev.seq,
+        snap.now && [snap.now.title, snap.now.subtitle, snap.now.image]]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -1123,7 +1163,7 @@
   function pollInterval() {
     if (S.screen === 'game' && S.game.state === 'running') return POLL_GAME;
     if (S.screen === 'ship' && SH.state === 'running') return POLL_GAME;
-    if (!connected().length && now() - S.lastCmdAt > 60000) return POLL_IDLE;
+    if (!anyLinked() && now() - S.lastCmdAt > 60000) return POLL_IDLE;
     return POLL_ACTIVE;
   }
   function startPolling() { stopPolling(); S.timer = setTimeout(function loop() { poll(); S.timer = setTimeout(loop, pollInterval()); }, pollInterval()); }

@@ -16,6 +16,8 @@
   var idStore = CP.DEMO ? { get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } } } : ls;
 
   var params = new URLSearchParams(location.search);
+  /* dentro de la app iOS de Totalplay (?app=1): la app ya muestra arriba lo que se está viendo; clase para ocultar lo que se repita */
+  if (params.get('app')) document.documentElement.className += ' in-app';
   var S = { code: (params.get('sala') || ls.get('cp-last-sala' + (CP.DEMO ? '-demo' : '')) || '').toUpperCase(), pid: null, name: '', room: null, tab: 'control', cmds: [], lastSeq: 0,
             writing: false, dirty: false, songSeen: null, seg: 'lineup', peeked: {}, offline: false, myIndex: 0, padDir: 0,
             fake: null, sheet: null, polling: false, hb: null };
