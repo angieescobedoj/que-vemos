@@ -752,6 +752,31 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
 .navrow3{display:flex!important;justify-content:center;gap:24px}
 .navrow3 .navc{flex:none;width:64px}
 .navc .lbl{white-space:nowrap}
+
+/* ---------- v7.62 · nuevo acomodo del control: volumen vertical · flechas · canales / reproducción en cápsulas / apps abajo ---------- */
+.midrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vpill,.chpill{flex:none;width:56px;height:216px;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0}
+.vp-btn{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
+.vp-btn svg{width:24px;height:24px}
+.vp-btn:active,.vp-btn.pressed{background:rgba(0,113,235,.3)}
+#muteBtn.on{color:#F35C5C}
+.vslider{position:relative;flex:1;width:48px;margin:4px 0;touch-action:none;cursor:pointer;display:flex;justify-content:center}
+.vtrack{position:relative;width:8px;height:100%;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+.vfill{position:absolute;left:0;right:0;bottom:0;height:30%;border-radius:999px;background:linear-gradient(180deg,#3D8FF0,#0071EB)}
+.vthumb{position:absolute;left:50%;bottom:30%;width:24px;height:24px;margin:0 0 -12px -12px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.vslider.muted .vfill{background:#68686A}
+.ch-lbl{font-size:16px;line-height:24px;font-weight:700;color:#fff}
+.midrow .padwrap{flex:none;width:200px;height:200px;margin:0;position:relative}
+.midrow .pad{position:absolute;left:0;top:0;transform:scale(.8065);transform-origin:0 0}
+@media (min-width:380px){.midrow .padwrap{width:224px;height:224px}.midrow .pad{transform:scale(.9032)}.vpill,.chpill{height:236px}}
+.keypad .keys3.trans{display:grid!important;grid-template-columns:1fr 2fr 1fr!important;column-gap:8px}
+.keypad .keys3.trans button{grid-column:auto!important;height:64px;border-radius:999px}
+.keypad{gap:var(--s3)}
+.keypad #appsRow{margin:0}
+body.light .vtrack{background:#E8E8F2}
+body.light .vp-btn,body.light .ch-lbl{color:#333333}
+body.light #muteBtn.on{color:#B14F4E}
+.keypad,.keypad #appsRow,.navrow3{width:100%;max-width:none}
 </style>
 </head>
 <body>
@@ -782,7 +807,14 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
         <button class="navc" data-cmd="home" aria-label="Inicio"><span class="circ gl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Inicio</span></button>
         <button class="navc" data-act="settings" aria-label="Configuración"><span class="circ gl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><span class="lbl">Configuración</span></button>
       </div>
-      <div class="padwrap">
+      <!-- v7.62 · volumen vertical | flechas | canales -->
+      <div class="midrow">
+        <div class="vpill gl" aria-label="Volumen">
+          <button class="vp-btn" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="vslider" id="vSlider" role="slider" aria-label="Volumen" aria-valuemin="0" aria-valuemax="100"><span class="vtrack"><i class="vfill" id="vFill"></i></span><b class="vthumb" id="vThumb"></b></div>
+          <button class="vp-btn" data-act="mute" id="muteBtn" aria-label="Silenciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="padwrap">
         <div class="pad">
           <button class="u" data-key="UP" aria-label="Arriba"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button class="l" data-key="LEFT" aria-label="Izquierda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5L9 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -791,18 +823,19 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
           <button class="d" data-key="DOWN" aria-label="Abajo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5L12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>
+        <div class="chpill gl" aria-label="Canales">
+          <button class="vp-btn" data-ch="1" aria-label="Canal siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5L12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <span class="ch-lbl">CH</span>
+          <button class="vp-btn" data-ch="-1" aria-label="Canal anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5L12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
       <div class="keypad">
-        <div class="apps" id="appsRow"></div>   <!-- favoritas (Configuración → Aplicaciones favoritas), justo arriba de reproducción y volumen -->
-      <div class="keys3">
+      <div class="keys3 trans">
         <button class="gl" data-key="REW" aria-label="Retroceder 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6.5v11L3.8 12zM20.5 6.5v11L12.8 12z" fill="currentColor"/></svg></button>
         <button class="gl" data-key="PLAY" id="playBtn" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/><path class="i-pause" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z" fill="currentColor"/></svg></button>
         <button class="gl" data-key="FF" aria-label="Adelantar 30 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5v11l7.7-5.5zM12.5 6.5v11l7.7-5.5z" fill="currentColor"/></svg></button>
       </div>
-      <div class="keys3 vol">
-        <button class="gl" data-act="mute" id="muteBtn" aria-label="Silenciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button class="gl" data-vol="-5" aria-label="Bajar volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button class="gl" data-vol="5" aria-label="Subir volumen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z" fill="currentColor"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5M18.3 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
+        <div class="apps" id="appsRow"></div>   <!-- favoritas, abajo de todo -->
       </div>
     </div>
 
@@ -858,11 +891,11 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.61"></script>
-<script src="../src/services/firestore-rest.js?v=7.61"></script>
-<script src="content.js?v=7.61"></script>
-<script src="logos.js?v=7.61"></script>
-<script src="store.js?v=7.61"></script>
-<script src="phone.js?v=7.61"></script>
+<script src="../src/services/http.js?v=7.62"></script>
+<script src="../src/services/firestore-rest.js?v=7.62"></script>
+<script src="content.js?v=7.62"></script>
+<script src="logos.js?v=7.62"></script>
+<script src="store.js?v=7.62"></script>
+<script src="phone.js?v=7.62"></script>
 </body>
 </html>

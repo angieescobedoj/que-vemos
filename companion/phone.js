@@ -144,6 +144,7 @@
     $('pwr').className = 'pwr' + (st === 'sleep' ? ' sleep' : '');
     var vol = S.fake ? S.fake.vol : (S.room.vol == null ? 30 : S.room.vol), muted = S.fake ? S.fake.muted : S.room.muted;
     $('muteBtn').classList.toggle('on', !!muted);
+    if (!S.vDrag) paintVol(vol, muted);
     var playing = !S.fake && !!S.room.playing;
     $('playBtn').classList.toggle('playing', playing); $('miniPlay').classList.toggle('playing', playing);
     $('fakeNote').hidden = !S.fake;
@@ -152,6 +153,26 @@
   function appColor(id) { for (var i = 0; i < C.APPS.length; i++) if (C.APPS[i].id === id) return C.APPS[i].color; return '#006ADB'; }
 
   /* ---------- decodificador simulado: responde con feedback, sin TV detrás ---------- */
+  /* v7.62 · barra vertical de volumen: muestra el volumen de la TV y se arrastra para cambiarlo */
+  function paintVol(v, muted) {
+    var p = Math.max(0, Math.min(100, v)) + '%';
+    $('vFill').style.height = p; $('vThumb').style.bottom = p;
+    $('vSlider').className = 'vslider' + (muted ? ' muted' : ''); $('vSlider').setAttribute('aria-valuenow', v);
+  }
+  (function () {
+    var sl = $('vSlider'), last = 0, pend = null, tmr = null;
+    function valAt(y) { var r = sl.getBoundingClientRect(); return Math.round(Math.max(0, Math.min(1, (r.bottom - 12 - y) / (r.height - 24))) * 100); }
+    function push(v) {
+      pend = v; if (tmr) return;
+      var go = function () { tmr = null; if (pend === null) return; send({ t: 'vol', v: pend }); if (!S.fake) { S.room.vol = pend; S.room.muted = false; } pend = null; };
+      var wait = Math.max(0, 120 - (Date.now() - last)); last = Date.now() + wait; tmr = setTimeout(go, wait);
+    }
+    function move(e) { var v = valAt(e.clientY); paintVol(v, false); push(v); }
+    sl.addEventListener('pointerdown', function (e) { S.vDrag = true; try { sl.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } buzz(); move(e); });
+    sl.addEventListener('pointermove', function (e) { if (S.vDrag) move(e); });
+    var end = function () { if (!S.vDrag) return; S.vDrag = false; if (!S.fake) toast('Volumen ' + (S.room.vol == null ? 30 : S.room.vol)); renderHeader(); };
+    sl.addEventListener('pointerup', end); sl.addEventListener('pointercancel', end);
+  })();
   function fakeCommand(cmd) {
     var f = S.fake, n = f.name;
     if (cmd.t === 'peek' || cmd.t === 'vote') return;
@@ -160,6 +181,7 @@
     if (cmd.t === 'vol') { f.vol = Math.max(0, Math.min(100, typeof cmd.v === 'number' ? cmd.v : f.vol + cmd.d)); f.muted = false; toast(n + ' · volumen ' + f.vol + ' (simulado)'); renderHeader(); return; }
     if (cmd.t === 'mute') { f.muted = !f.muted; toast(n + (f.muted ? ' en silencio' : ' con sonido') + ' (simulado)'); renderHeader(); return; }
     if (cmd.t === 'app') { toast('Abriendo ' + APP_NAMES[cmd.id] + ' en ' + n + ' (simulado)'); return; }
+    if (cmd.t === 'chstep') { toast(n + ' · canal ' + (cmd.d > 0 ? '▲' : '▼') + ' (simulado)'); return; }
     if (cmd.t === 'key') { toast(n + ' · ' + ({ UP: '▲', DOWN: '▼', LEFT: '◀', RIGHT: '▶', OK: 'OK', BACK: 'Regresar', PLAY: '⏯', REW: '⏪', FF: '⏩' }[cmd.k] || cmd.k) + ' (simulado)'); return; }
     toast('Enviado a ' + n + ' (simulado)');
   }
@@ -1015,6 +1037,7 @@
     var k = g('data-key'), cmd = g('data-cmd'), go = g('data-go'), open = g('data-open'), act = g('data-act'), seg = g('data-seg');
     if (k) send({ t: 'key', k: k });
     else if (g('data-vol')) { var d = Number(g('data-vol')); send({ t: 'vol', d: d }); if (!S.fake) { var nv = Math.max(0, Math.min(100, (S.room.vol == null ? 30 : S.room.vol) + d)); S.room.vol = nv; S.room.muted = false; renderHeader(); toast('Volumen ' + nv); } }
+    else if (g('data-ch')) { send({ t: 'chstep', d: Number(g('data-ch')) }); if (S.fake) { /* fakeCommand avisa */ } }
     else if (g('data-app')) { send({ t: 'app', id: g('data-app') }); if (!S.fake) toast('Abriendo ' + APP_NAMES[g('data-app')] + ' en la TV'); }
     else if (g('data-dpick')) pickDec(g('data-dpick'));
     else if (g('data-dmain')) setMain(g('data-dmain'));
