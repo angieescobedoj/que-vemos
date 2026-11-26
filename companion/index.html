@@ -746,6 +746,19 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
 .navc .circ{width:64px;height:64px}
 .navc .circ svg{width:28px;height:28px}
 .wrap{padding-top:calc(env(safe-area-inset-top) + 8px)}
+
+/* v7.58 · apagar 96 px y botones circulares 80 px, centrados con 16 px entre cada uno */
+.top{height:96px;grid-template-columns:96px 1fr 96px!important}
+.top .top-sp{grid-column:1}
+.top .dec{grid-column:2}
+.top .pwr{grid-column:3;width:96px;height:96px}
+.top .pwr svg{width:40px;height:40px}
+.navrow3{display:flex!important;justify-content:center;gap:16px}
+.navrow3 .navc{flex:none;width:80px}
+.navc .circ{width:80px;height:80px}
+.navc .circ svg{width:32px;height:32px}
+.navc .lbl{white-space:nowrap}
+@media (max-height:780px){.wrap{padding-bottom:calc(var(--s3) + env(safe-area-inset-bottom))}}
 </style>
 </head>
 <body>
@@ -852,11 +865,11 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.57"></script>
-<script src="../src/services/firestore-rest.js?v=7.57"></script>
-<script src="content.js?v=7.57"></script>
-<script src="logos.js?v=7.57"></script>
-<script src="store.js?v=7.57"></script>
-<script src="phone.js?v=7.57"></script>
+<script src="../src/services/http.js?v=7.58"></script>
+<script src="../src/services/firestore-rest.js?v=7.58"></script>
+<script src="content.js?v=7.58"></script>
+<script src="logos.js?v=7.58"></script>
+<script src="store.js?v=7.58"></script>
+<script src="phone.js?v=7.58"></script>
 </body>
 </html>
