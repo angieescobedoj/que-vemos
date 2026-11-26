@@ -205,6 +205,13 @@
     if (S.fake) { renderHeader(); return; }
     renderHeader(); renderGame(); renderPad2();
     /* v7.35 · momentos del partido: al elegirlo (previa), jugada clave (gol) y medio tiempo llegan como hojas */
+    /* v7.63 · un solo QR: la TV abrió ¿Qué vemos? y anunció su sala → este celular entra solo al juego */
+    if (S.skipSwipe === undefined) S.skipSwipe = params.get('stay') && r.swipe ? r.swipe.seq : 0;   /* volvió del juego con "Volver al control": no lo regreses a esa misma partida */
+    if (r.screen === 'swipe' && r.swipe && r.swipe.code && r.swipe.seq !== S.skipSwipe && Date.now() - (r.swipe.at || 0) < 45000 && !S.toSwipe && !CP.DEMO) {
+      S.toSwipe = true; toast('Entrando a ¿Qué vemos?…');
+      setTimeout(function () { location.href = '../?sala=' + r.swipe.code + '&auto=1&cp=' + S.code + '&name=' + encodeURIComponent(S.name || ''); }, 700);
+      return;
+    }
     var inMatch = r.screen === 'player' && r.content === 'match';
     if (S.mevSeen === undefined) S.mevSeen = r.mev ? r.mev.seq : 0;
     if (r.mev && r.mev.seq !== S.mevSeen) { S.mevSeen = r.mev.seq; if (inMatch) { openMoment(r.mev.k); buzz(); setTimeout(buzz, 180); } }

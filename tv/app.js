@@ -68,13 +68,25 @@
       });
     })();
   }
+  /* Un solo QR: abierto desde la Sala TV, el juego anuncia su sala en la del Companion (rooms/{CP}.swipe) y los
+     celulares ya conectados entran solos; el QR del lobby es el mismo de la Sala TV. */
+  var LINKED = FROM_COMPANION && CP_CODE && !DEMO, cpBeat = null;
+  function announceToCompanion(code) {
+    if (!LINKED) return;
+    var seq = Date.now();
+    function beat() { store.updateRoom(CP_CODE, { screen: 'swipe', swipe: { code: code, seq: seq, at: Date.now() } }, function () {}); }
+    beat(); if (cpBeat) clearInterval(cpBeat); cpBeat = setInterval(beat, 15000);
+  }
+  function companionPhoneUrl() {
+    return location.href.replace(/tv\.html.*$/, '').replace(/[?#].*$/, '') + 'companion/?sala=' + CP_CODE;
+  }
   function startRoom() {
     stopPolling(); S.code = null; S.room = null; S.players = []; S.resKey = null;
     show('boot'); $('bootText').textContent = 'Creando la sala…';
     createRoom(function (err, code) {
       if (err) { $('bootText').innerHTML = 'No se pudo crear la sala.<small class="boot-why">' + esc(err.message || 'error desconocido') + ' · reintentando…</small>'; TP.debug.log('createRoom failed: ' + err.message); setTimeout(startRoom, 4000); return; }
       S.code = code; TP.debug.log('room ' + code + ' created');
-      renderQR(code);
+      renderQR(code); announceToCompanion(code);
       startPolling(); poll();
     });
   }
@@ -108,7 +120,7 @@
 
   /* ---------- lobby ---------- */
   function renderQR(code) {
-    var url = phoneUrl(code), q = qrcode(0, 'M'); q.addData(url); q.make();
+    var url = LINKED ? companionPhoneUrl() : phoneUrl(code), q = qrcode(0, 'M'); q.addData(url); q.make();
     var n = q.getModuleCount(), remPx = parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 28;
     var m = Math.max(3, Math.floor(remPx * 12.5 / n)), html = '', quiet = 2;
     for (var r = -quiet; r < n + quiet; r++) {
@@ -120,8 +132,15 @@
       html += '</span>';
     }
     $('qr').innerHTML = html;
-    $('qrUrl').textContent = url.replace(/^https?:\/\//, '');
-    $('lobbyCode').textContent = code; $('playCode').textContent = code; $('resCode').textContent = code;
+    $('qrUrl').textContent = LINKED ? 'El mismo código de la Sala TV' : url.replace(/^https?:\/\//, '');
+    var shown = LINKED ? CP_CODE : code;
+    $('lobbyCode').textContent = shown; $('playCode').textContent = shown; $('resCode').textContent = shown;
+    if (LINKED) {
+      var steps = document.querySelectorAll('.lobby .steps li');
+      if (steps[0]) steps[0].innerHTML = '<span class="n">1</span>Si ya estás en Sala TV, entras solo';
+      if (steps[1]) steps[1].innerHTML = '<span class="n">2</span>¿Alguien más? Que escanee este código';
+      $('lobbyEmpty').textContent = 'Conectando a los celulares de la Sala TV…';
+    }
   }
   function renderLobby() {
     if (S.screen !== 'lobby') { show('lobby'); S.resKey = null; }

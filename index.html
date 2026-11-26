@@ -1048,12 +1048,27 @@ function seenSoFar(){
 $('#againBtn').onclick = () => store.resetRound(S.code, S.players.map(p => p.id), { status: 'lobby', deck: null, building: null, seen: seenSoFar(), round: (S.room.round || 1) + 1 });
 $('#leaveBtn').onclick = leave;
 
+function watchCompanion(cp){
+  const back = stay => { location.href = `companion/?sala=${cp}${stay ? '&stay=1' : ''}`; };
+  const lb = $('#leaveBtn'); if (lb){ lb.textContent = 'Volver al control'; lb.onclick = () => { leave(); back(true); }; }
+  setInterval(async () => {
+    try { const r = await store.getRoom(cp); if (r && r.screen && r.screen !== 'swipe') back(); } catch {}
+  }, 3000);
+}
 /* ---------- boot ---------- */
 (async () => {
   try {
     store = DEMO ? demoStore() : await firestoreStore();
     catalog = DEMO ? demoCatalog() : realCatalog;
   } catch (e){ console.error(e); toast('No se pudo cargar el juego. Revisa tu internet y recarga.'); return; }
+  /* Abierto desde el control del Companion: entra solo (sin pedir nombre) y vuelve al control cuando la TV regresa a la Sala TV */
+  const cp = (params.get('cp') || '').toUpperCase().slice(0, 4);
+  if (params.get('auto') && invited && !DEMO){
+    const name = ls.get('qv-name') || ls.get('cp-name') || params.get('name') || 'Invitado';
+    nameInput.value = name;
+    try { if (await store.getRoom(invited)) { await enter(invited, name); if (cp) watchCompanion(cp); return; } } catch (e){ console.error(e); }
+  }
+  if (cp && !DEMO) watchCompanion(cp);
   const saved = ss.get('qv-room');
   if (saved && (!invited || invited === saved)){
     try { const p = await store.getPlayer(saved, S.pid); if (p && await store.getRoom(saved)) await enter(saved, p.name); } catch {}
