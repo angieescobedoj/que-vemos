@@ -738,6 +738,14 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
 .mv-now.after{background:#F4F4F8}.mv-now.after .k{color:#68686A}.mv-now.after .eq i{background:#68686A}
 @keyframes mvEq{0%,100%{height:25%}50%{height:100%}}
 @keyframes mvNowIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+/* v7.57 · apagar 72 px y botones circulares (Regresar · Inicio · Configuración) 64 px */
+.top{height:72px}
+.top .pwr{width:72px;height:72px}
+.top .pwr svg{width:32px;height:32px}
+.navc .circ{width:64px;height:64px}
+.navc .circ svg{width:28px;height:28px}
+.wrap{padding-top:calc(env(safe-area-inset-top) + 8px)}
 </style>
 </head>
 <body>
@@ -844,11 +852,11 @@ body.light{--e100:0 1px 3px rgba(0,0,0,.06);--e200:0 2px 6px rgba(0,0,0,.08);--e
   </div>
 </section>
 
-<script src="../src/services/http.js?v=7.56"></script>
-<script src="../src/services/firestore-rest.js?v=7.56"></script>
-<script src="content.js?v=7.56"></script>
-<script src="logos.js?v=7.56"></script>
-<script src="store.js?v=7.56"></script>
-<script src="phone.js?v=7.56"></script>
+<script src="../src/services/http.js?v=7.57"></script>
+<script src="../src/services/firestore-rest.js?v=7.57"></script>
+<script src="content.js?v=7.57"></script>
+<script src="logos.js?v=7.57"></script>
+<script src="store.js?v=7.57"></script>
+<script src="phone.js?v=7.57"></script>
 </body>
 </html>
