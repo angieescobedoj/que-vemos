@@ -128,6 +128,10 @@
   var BUNNY = { id: 'bunny', kind: 'video', title: 'Big Buck Bunny', sub: 'Corto animado · 2008', tag: 'Seguir viendo', src: 'video/big-buck-bunny.mp4?v=1',
     poster: 'video/bbb-poster.jpg', dur: 60, credit: '© Blender Foundation · bigbuckbunny.org · CC BY 3.0' };
 
+  /* v7.65 · Avengers: Doomsday · el video es el tráiler oficial (lo pasó el equipo); portada de TMDB o un cuadro del tráiler */
+  var AVENGERS = { id: 'avengers', kind: 'video', title: 'Avengers: Doomsday', sub: 'Película · 2026', tag: 'Estreno', src: 'video/avengers.mp4?v=1',
+    poster: 'video/avengers-poster.jpg', dur: 195, credit: 'Tráiler oficial · Marvel Studios', tmdbQuery: 'Avengers: Doomsday', tmdbYear: 2026 };
+
   var SWIPE = { id: 'swipe', kind: 'game', title: '¿Qué vemos?', sub: 'Match de películas · 2 o más', tag: 'Juego' };
 
   /* Canales en vivo (ficticios). Se llega a ellos con el control de la TV (arriba/abajo) o por voz, nunca con una lista en el celular.
@@ -225,12 +229,13 @@
     if (id === 'match') return MATCH; if (id === 'series') return SERIES; if (id === 'game') return GAME; if (id === 'swipe') return SWIPE;
     if (id === 'tv') return LIVE;
     if (id === 'bunny') return BUNNY;
+    if (id === 'avengers') return AVENGERS;
     if (id === 'recipe') return RECIPE;
     if (id === 'ship') return SHIP;
     for (var i = 0; i < APPS.length; i++) if (APPS[i].id === id) return APPS[i];
     return null;
   }
-  function all() { return [SERIES, BUNNY, RECIPE, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
+  function all() { return [SERIES, BUNNY, RECIPE, AVENGERS, MATCH, LIVE].concat(APPS).concat([GAME, SHIP, SWIPE]); }
 
-  CP.content = { MATCH: MATCH, matchClock: matchClock, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, RECIPE: RECIPE, PHOTOS: PHOTOS, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
+  CP.content = { MATCH: MATCH, matchClock: matchClock, SERIES: SERIES, GAME: GAME, SWIPE: SWIPE, SHIP: SHIP, offerSource: offerSource, BUNNY: BUNNY, AVENGERS: AVENGERS, RECIPE: RECIPE, PHOTOS: PHOTOS, recipeStep: recipeStep, MOVIES: MOVIES, recommend: recommend, movieById: movieById, GENRE_NAMES: GENRE_NAMES, CHANNELS: CHANNELS, channel: channel, APPS: APPS, LIVE: LIVE, sceneAt: sceneAt, fmt: fmt, byId: byId, all: all };
 })(window.CP = window.CP || {});

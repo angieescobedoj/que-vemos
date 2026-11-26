@@ -494,7 +494,14 @@
       facts: ['Lo hizo en 2008 el Blender Institute, en Ámsterdam, como proyecto de la Blender Foundation.', 'Se creó completo con software libre: el programa de animación es Blender.', 'Su nombre clave durante la producción fue «Proyecto Peach».',
         'Tiene licencia Creative Commons: cualquiera puede usarlo y compartirlo, como en esta demo.', 'Los tres roedores que molestan al conejo se llaman Frank, Rinky y Gimera.'],
       songs: [{ t: 'Big Buck Bunny (música original)', a: 'Jan Morgenstern' }],
-      recs: [['Sintel', '2010'], ['Elephants Dream', '2006'], ['Spring', '2019']] }
+      recs: [['Sintel', '2010'], ['Elephants Dream', '2006'], ['Spring', '2019']] },
+    avengers: { title: 'Avengers: Doomsday', search: [C.AVENGERS.tmdbQuery, C.AVENGERS.tmdbYear],
+      fallback: { overview: 'Los Vengadores y otros héroes del universo Marvel tendrán que unirse contra su enemigo más poderoso: Victor von Doom.', year: '2026', genres: 'Acción, Aventura, Ciencia ficción', runtime: 0, director: 'Anthony Russo, Joe Russo',
+        cast: [['Robert Downey Jr.', 'Victor von Doom'], ['Chris Hemsworth', 'Thor'], ['Anthony Mackie', 'Sam Wilson / Capitán América'], ['Florence Pugh', 'Yelena Belova'], ['Pedro Pascal', 'Reed Richards'], ['Vanessa Kirby', 'Sue Storm']] },
+      facts: ['Robert Downey Jr., que fue Iron Man, regresa al universo Marvel, ahora como el villano Doctor Doom.', 'La dirigen Anthony y Joe Russo, los mismos de Avengers: Infinity War y Avengers: Endgame.',
+        'Es la quinta película de los Avengers.', 'Según el tráiler, llega a los cines el 16 de diciembre.'],
+      songs: [{ t: 'The Avengers (tema principal)', a: 'Alan Silvestri' }, { t: 'Portals', a: 'Alan Silvestri' }],
+      recs: [['Avengers: Endgame', '2019'], ['Avengers: Infinity War', '2018'], ['Los 4 Fantásticos: Primeros pasos', '2025']] }
   };
   var MVD = {};   /* detalles de TMDB por película */
   function mvLoad(k, cb) {
@@ -566,7 +573,7 @@
     return h + '<button class="btn" data-act="play" style="margin-top:16px">▶  Seguir viendo</button><button class="mv-end" data-act="mvToEnd">Ir al final (demo)</button>';
   }
   /* 3) al terminar: soundtrack y recomendadas */
-  function mvSongs(k) { if (k === 'bunny') return MV.bunny.songs; var l = [], sc = C.SERIES.scenes; for (var i = 0; i < sc.length; i++) l.push(sc[i].song); return l; }
+  function mvSongs(k) { if (MV[k] && MV[k].songs) return MV[k].songs; var l = [], sc = C.SERIES.scenes; for (var i = 0; i < sc.length; i++) l.push(sc[i].song); return l; }
   function mvEndHtml(k, d) {
     var m = MV[k], h = mvHead(k, d, 'Terminó en la TV'), songs = mvSongs(k);
     h += '<p class="lf">Soundtrack</p><div class="mv-list">';
@@ -625,11 +632,11 @@
   }, 1000);
   /* cuándo sale cada hoja: al empezar la película, al pausarla y cuando la TV avisa que terminó */
   function mvWatch(r) {
-    var k = r.screen === 'player' && r.content === 'series' ? 'series' : r.screen === 'player' && r.content === 'video' ? 'bunny' : '';
+    var k = r.screen === 'player' && r.content === 'series' ? 'series' : r.screen === 'player' && r.content === 'video' ? (r.vid === 'avengers' ? 'avengers' : 'bunny') : '';
     if (S.mvK === undefined) { S.mvK = k; S.mvPlay = r.playing; S.finSeen = r.fin ? r.fin.seq : 0; return; }
     if (k && k !== S.mvK) mvOpen('info', k);
     else if (k && S.mvPlay && !r.playing) {
-      var nearEnd = k === 'bunny' ? pos() >= C.BUNNY.dur - 1.5 : pos() >= C.SERIES.duration - 2;
+      var nearEnd = k === 'bunny' ? pos() >= C.BUNNY.dur - 1.5 : k === 'avengers' ? pos() >= C.AVENGERS.dur - 1.5 : pos() >= C.SERIES.duration - 2;
       if (!nearEnd) mvOpen('extra', k);
     }
     if (S.sheet === 'mv-extra' && r.playing) closeSheet();   /* al reanudar se cierra sola */

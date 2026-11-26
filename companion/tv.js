@@ -73,7 +73,8 @@
         var sb = SIN.backdrops.length ? SIN.backdrops[C.sceneAt(p) % SIN.backdrops.length] : '';
         n = { title: C.SERIES.title, subtitle: C.SERIES.sub, channel: null, image: tmdbWide(sb), pos: p, dur: C.SERIES.duration };
       } else if (S.content === 'video') {
-        n = { title: C.BUNNY.title, subtitle: C.BUNNY.sub, channel: null, image: absUrl(C.BUNNY.poster), pos: p, dur: C.BUNNY.dur };
+        var VI = vItem();
+        n = { title: VI.title, subtitle: VI.sub, channel: null, image: S.vid === 'avengers' && AVG.backdrop ? tmdbWide(AVG.backdrop) : absUrl(VI.poster), pos: p, dur: VI.dur };
       } else if (S.content === 'recipe') {
         n = { title: C.RECIPE.title, subtitle: C.RECIPE.dish, channel: null, image: C.PHOTOS.recipe + '640&h=360', pos: p, dur: C.RECIPE.dur };
       } else if (S.content === 'movie' && S.movie) {
@@ -94,7 +95,7 @@
       kind: 'companion', screen: S.screen, content: S.content, playing: S.playing, pos: Math.round(curPos()), posAt: now(),
       saved: Math.round(S.saved), sceneIdx: S.sceneIdx, songSeq: S.songSeq, query: S.query, dialog: S.dialog || '',
       matchStart: S.matchStart, mev: S.mev || null, game: { state: g.state, endsAt: g.endsAt, scores: scores, colors: gameColors() },
-      tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
+      vid: S.vid || 'bunny', tvName: S.tvName, vol: S.vol, muted: S.muted, off: S.off, app: S.app || '', channel: S.channel,
       movie: S.content === 'movie' && S.movie ? { t: S.movie.title, app: S.movie.app || '', label: S.movie.label || '', dur: S.movie.min * 60, art: S.movie.art } : null, fin: S.fin, menu: S.menu, tvLat: S.lat, aliveAt: now(), offer: S.offer, vsaved: Math.round(S.vsaved), recipeSeq: S.recipeSeq || 0, recipeStep: S.recipeStepIdx || 0,
       ship: { state: SH.state, endsAt: SH.endsAt, left: SH.left, scores: shipScores(), colors: gameColors() },
       now: nowInfo()
@@ -108,7 +109,7 @@
       pushTimer = null;
       var snap = snapshot(), cmp = JSON.stringify([snap.screen, snap.content, snap.playing, Math.round(snap.pos / 5), snap.saved, snap.sceneIdx, snap.songSeq, snap.query, snap.dialog, snap.game,
         snap.vol, snap.muted, snap.movie && snap.movie.t, snap.off, snap.app, snap.channel, snap.menu, snap.offer && snap.offer.seq, snap.fin && snap.fin.seq, snap.ship, snap.recipeSeq, snap.recipeStep, snap.mev && snap.mev.seq,
-        snap.now && [snap.now.title, snap.now.subtitle, snap.now.image]]);
+        snap.now && [snap.now.title, snap.now.subtitle, snap.now.image], snap.vid]);
       if (cmp === lastPushed) return;
       pushing = true;
       store.updateRoom(S.code, snap, function (err) {
@@ -141,6 +142,7 @@
     if (item.id === 'series' || item.id === 'bunny') { if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat'; var a = C.SERIES.scenes[0].art; return 'background:linear-gradient(150deg,' + a[0] + ',' + a[1] + ' 60%,' + a[2] + ')'; }
     if (item.id === 'swipe') return 'background:radial-gradient(30% 55% at 50% 35%,rgba(243,139,201,.5) 0%,rgba(243,139,201,0) 100%),linear-gradient(135deg,#2A1450 0%,#5A2A78 55%,#1A2A6A 100%)';
     if (item.id === 'bunny') return 'background:#000 url(' + C.BUNNY.poster + ') center/cover no-repeat';
+    if (item.id === 'avengers') return 'background:url(' + (AVG.backdrop ? QV.catalog.img(AVG.backdrop, 'w780') : C.AVENGERS.poster) + ') center/cover no-repeat,#000 url(' + C.AVENGERS.poster + ') center/cover no-repeat';
     if (item.id === 'ship') return 'background:url(img/nave.jpg?v=7.8) center/cover no-repeat,radial-gradient(1.5px 1.5px at 25% 30%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(1.5px 1.5px at 70% 25%,#fff 50%,rgba(255,255,255,0) 51%),radial-gradient(35% 35% at 70% 75%,rgba(127,214,255,.45) 0%,rgba(127,214,255,0) 70%),linear-gradient(180deg,#070512,#2A1E60)';
     if (item.id === 'recipe') return 'background:url(' + C.PHOTOS.recipe + '640) center/cover no-repeat,radial-gradient(40% 45% at 72% 40%,rgba(255,196,92,.55) 0%,rgba(255,196,92,0) 70%),linear-gradient(150deg,#3E7A3A 0%,#1E3A1C 100%)';
     if (item.id === 'tv') return 'background:linear-gradient(150deg,#3D7BE8,#2E7D49 55%,#3A2160)';
@@ -191,7 +193,7 @@
   /* Inicio (v7.5): como el launcher de la TV. Arriba, el fondo y los datos del contenido enfocado;
      abajo, "Populares para ti" (se desliza de lado) y "Mis apps" (íconos completos). */
   function homeItems() {
-    return [C.MATCH, C.SERIES, C.BUNNY, C.RECIPE].concat(C.CHANNELS).concat([C.GAME, C.SHIP, C.SWIPE]);
+    return [C.MATCH, C.SERIES, C.BUNNY, C.RECIPE, C.AVENGERS].concat(C.CHANNELS).concat([C.GAME, C.SHIP, C.SWIPE]);
   }
   function cardHtml(item) {
     var id = item.n ? 'ch' + item.n : item.id, art, extra = '', badge = '';
@@ -203,6 +205,7 @@
       art = artFor(item);
       if (item.id === 'match') badge = '<span class="c-live">EN VIVO</span>';
       if (item.id === 'bunny' && S.vsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.vsaved / C.BUNNY.dur * 100) + '%"></i></span>';
+      if (item.id === 'avengers' && S.avsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.avsaved / C.AVENGERS.dur * 100) + '%"></i></span>';
       if (item.id === 'recipe' && S.rsaved > 1) extra = '<span class="c-prog"><i style="width:' + Math.round(S.rsaved / C.RECIPE.dur * 100) + '%"></i></span>';
     }
     return '<button class="card" data-focusable data-action="' + (item.n ? 'channel' : 'open') + '" data-id="' + id + '"' + (item.n ? ' data-n="' + item.n + '"' : '') + '>' +
@@ -226,6 +229,7 @@
       return cb ? 'background:#000 url(' + QV.catalog.img(cb, 'w1280') + ') center/cover no-repeat' : 'background:linear-gradient(150deg,' + item.art[0] + ',' + item.art[1] + ')';
     }
     if (item.id === 'series' && SIN.backdrops.length) return 'background:#000 url(' + QV.catalog.img(SIN.backdrops[0], 'w1280') + ') center/cover no-repeat';
+    if (item.id === 'avengers' && AVG.backdrop) return 'background:#000 url(' + QV.catalog.img(AVG.backdrop, 'w1280') + ') center/cover no-repeat';
     return artFor(item).replace(/640\)/g, '1600)');
   }
   /* v7.49 · destacado con el formato Home: canal (logo + número) | título a 2 líneas, "Ahora · Termina a las…",
@@ -250,6 +254,7 @@
     } else {
       meta = esc(item.id === 'bunny' && S.vsaved > 1 ? 'Corto animado · quedan ' + C.fmt(C.BUNNY.dur - S.vsaved) : item.sub);
       if (item.id === 'bunny' && S.vsaved > 1) pct = Math.round(S.vsaved / C.BUNNY.dur * 100);
+      if (item.id === 'avengers' && S.avsaved > 1) pct = Math.round(S.avsaved / C.AVENGERS.dur * 100);
       if (item.id === 'recipe' && S.rsaved > 1) pct = Math.round(S.rsaved / C.RECIPE.dur * 100);
       btn = item.kind === 'game' || item.id === 'swipe' ? 'Jugar ahora' : 'Ver ahora';
     }
@@ -333,6 +338,7 @@
     if (id === 'swipe') { launchSwipe(); return; }
     if (id === 'ship') { startShip(); return; }
     if (id === 'bunny') { playBunny(from === 'start'); return; }
+    if (id === 'avengers') { playVideo('avengers', from === 'start'); return; }
     if (id === 'recipe') { playRecipe(); return; }
     if (item.kind === 'app') { openApp(id); return; }
     if (id === 'tv') { tune(S.channel); return; }
@@ -473,17 +479,33 @@
       });
     } catch (e) { /* ignore */ }
   }
-  function playBunny(fromStart) {
-    var B = C.BUNNY, v = $('vid');
+  /* video que se está reproduciendo: Big Buck Bunny o el tráiler de Avengers */
+  function vItem() { return S.vid === 'avengers' ? C.AVENGERS : C.BUNNY; }
+  function vSaved(id) { return id === 'avengers' ? (S.avsaved || 0) : (S.vsaved || 0); }
+  /* portada de Avengers: fondo de TMDB (si hay red) o un cuadro del tráiler */
+  var AVG = { backdrop: '', loading: false };
+  function loadAvengers(cb) {
+    if (AVG.backdrop || AVG.loading) return; AVG.loading = true;
+    QV.http.get('https://api.themoviedb.org/3/search/movie?api_key=' + KEY + '&language=es-MX&query=' + encodeURIComponent(C.AVENGERS.tmdbQuery) + '&year=' + C.AVENGERS.tmdbYear, function (err, d) {
+      var m = !err && d && d.results && d.results[0];
+      if (m && m.backdrop_path) { AVG.backdrop = m.backdrop_path; if (cb) cb(); }
+    });
+  }
+  function playBunny(fromStart) { playVideo('bunny', fromStart); }
+  function playVideo(id, fromStart) {
+    var v = $('vid');
+    if (S.screen === 'player' && S.content === 'video' && S.vid !== id) stopVideo();
+    S.vid = id;
+    var B = vItem();
     closeOverlays();
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
     if (S.screen === 'player' && S.content === 'movie') S.movie = null;
-    var start = fromStart ? 0 : (S.vsaved || 0); if (start > B.dur - 3) start = 0;
+    var start = fromStart ? 0 : vSaved(id); if (start > B.dur - 3) start = 0;
     S.content = 'video'; S.playing = true; S.posAt = now(); S.pos = start;
    
     show('player');
-    if (!v.getAttribute('src')) v.setAttribute('src', B.src);
+    if (v.getAttribute('src') !== B.src) { v.setAttribute('src', B.src); v.setAttribute('poster', B.poster); try { v.load(); } catch (e) { /* ignore */ } }
     var seekTo = function () { try { v.currentTime = start; } catch (e) { /* ignore */ } };
     if (v.readyState >= 1) seekTo(); else v.addEventListener('loadedmetadata', function once() { v.removeEventListener('loadedmetadata', once); seekTo(); });
     v.hidden = false; $('vidShade').hidden = false; vidVol(); vPlay();
@@ -492,14 +514,14 @@
   }
   function stopVideo() {
     var v = $('vid'); if (!v) return;
-    if (S.content === 'video') S.vsaved = v.currentTime || 0;
+    if (S.content === 'video') { if (S.vid === 'avengers') S.avsaved = v.currentTime || 0; else S.vsaved = v.currentTime || 0; }
     if (!v.paused) { try { v.pause(); } catch (e) { /* ignore */ } }
     v.hidden = true; $('vidShade').hidden = true;
     clearTimeout(V.endTimer);
     var el = playerEl(); el.className = el.className.replace(/ ?ui-off/g, '');
   }
   function vSeek(d) {
-    var v = $('vid'), B = C.BUNNY;
+    var v = $('vid'), B = vItem();
     try { v.currentTime = Math.max(0, Math.min(B.dur - 1, (v.currentTime || 0) + d)); } catch (e) { /* ignore */ }
     toast((d > 0 ? 'Adelantar ' : 'Regresar ') + Math.abs(d) + ' s', 1200); pokeUI();
   }
@@ -513,8 +535,8 @@
     });
     v.addEventListener('ended', function () {
       if (S.content !== 'video') return;
-      S.vsaved = 0; finished('bunny');
-      toast('Fin del fragmento · 📱 música y más cortos en tu celular', 3500);
+      if (S.vid === 'avengers') { S.avsaved = 0; finished('avengers'); toast('Fin del tráiler · 📱 música y más películas en tu celular', 3500); }
+      else { S.vsaved = 0; finished('bunny'); toast('Fin del fragmento · 📱 música y más cortos en tu celular', 3500); }
       clearTimeout(V.endTimer); V.endTimer = setTimeout(function () { if (S.content === 'video' && S.screen === 'player') leavePlayer(); }, 2600);
     });
     v.addEventListener('error', function () { if (S.content === 'video') toast('No se pudo reproducir el video en este equipo', 3500); });
@@ -619,6 +641,7 @@
     var redraw = function () { if (S.screen === 'home') renderHome(); };
     loadSinners(redraw);
     loadSwipe(redraw);
+    loadAvengers(redraw);
     for (var i = 0; i < C.CHANNELS.length; i++) if (C.CHANNELS[i].tmdb) tmdbMovie(C.CHANNELS[i].tmdb, redraw);
   }
   function sendOffer() {
@@ -849,9 +872,9 @@
       return;
     }
     if (S.content === 'video') {
-      var B = C.BUNNY, vt = $('vid').currentTime || 0, vp = $('vid').paused;
+      var B = vItem(), vt = $('vid').currentTime || 0, vp = $('vid').paused;
       scene.className = 'scene'; scene.style.background = '#000';
-      $('pTag').textContent = 'Seguir viendo · corto animado'; $('pTitle').textContent = B.title;
+      $('pTag').textContent = S.vid === 'avengers' ? 'Estreno · tráiler oficial' : 'Seguir viendo · corto animado'; $('pTitle').textContent = B.title;
       $('pSub').textContent = V.needSound ? '🔇 Pulsa OK para activar el sonido' : B.credit;
       $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
       $('pState').textContent = vp ? '❚❚  Pausado' : '▶  Reproduciendo';
@@ -1132,7 +1155,7 @@
     else if (c.t === 'toEnd') {   /* demo: adelantar al final de la película */
       if (S.content === 'series') { setPos(C.SERIES.duration - 8, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
       else if (S.content === 'recipe') { setPos(C.RECIPE.dur - 5, true); paintPlayer(); pushState(); toast('Adelantando al final', 1500); }
-      else if (S.content === 'video') { try { var vv = $('vid'); vv.currentTime = Math.max(0, C.BUNNY.dur - 6); vPlay(); } catch (e) { /* ignore */ } }
+      else if (S.content === 'video') { try { var vv = $('vid'); vv.currentTime = Math.max(0, vItem().dur - 6); vPlay(); } catch (e) { /* ignore */ } }
     }
     else if (c.t === 'vote') toast(name + ' votó por ' + (c.who || '') + ' como jugador del primer tiempo', 3500);
     else if (c.t === 'peek') toast(name + ' está viendo ' + (c.what || 'más información') + ' en su celular', 3500);
