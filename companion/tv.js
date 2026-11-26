@@ -265,7 +265,7 @@
     /* avatar del menú: el primer celular vinculado; el QR se muestra si no hay celulares o si lo abres desde el avatar */
     $('meAv').innerHTML = on.length ? '<span style="background:' + COLORS[playerIndex(on[0].id) % COLORS.length] + '">' + esc((on[0].name || '?').charAt(0).toUpperCase()) + '</span>' + (on.length > 1 ? '<em>+' + (on.length - 1) + '</em>' : '')
       : '<span class="none"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5Z"/></svg></span>';
-    $('pairPanel').hidden = !(S.pairOpen || !on.length);
+    $('pairPanel').hidden = false;   /* v7.59 · el QR se queda visible en el inicio durante toda la experiencia */
   }
 
   /* --- búsqueda (B1) --- */
@@ -1054,7 +1054,7 @@
     else if (a === 'navSearch') openSearch('');
     else if (a === 'navTab') { var tb = el.getAttribute('data-tab'); if (tb === 'canales') openContent('tv'); else if (tb !== 'parati') toast(el.textContent + ' · sección de demostración', 2200); }
     else if (a === 'navCfg') toast('Configuración de la TV · sección de demostración', 2200);
-    else if (a === 'navMe') { S.pairOpen = !S.pairOpen; renderPairing(); }
+    else if (a === 'navMe') toast(connected().length ? 'Escanea el código para vincular otro celular' : 'Escanea el código para vincular tu celular', 2500);
     else if (a === 'gameAgain') startGame();
     else if (a === 'shipAgain') startShip();
     else if (a === 'rentGo') rentGo();
