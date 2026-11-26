@@ -523,3 +523,36 @@ b{font-weight:700}
 .rent-body{gap:var(--s6)}
 .rent-ov,.rent-note{margin-top:var(--s3)}
 .rent-price{margin:var(--s4) 0 var(--s1)}
+
+/* ---------- v7.56 · Tipografía STB del DS (Montserrat · px a 1920×1080, 1rem ≈ 28.08 px) ----------
+   display 56/66 bold · heading-1 44/66 bold · heading-2 28/32 medium|semibold · heading-hover 32/32 bold
+   body 24/30 medium|semibold · caption 20/30 medium · espaciado 0 */
+:root{
+  --t-display:700 1.994rem/2.35rem var(--sans);
+  --t-h1:700 1.567rem/2.35rem var(--sans);
+  --t-h2:500 .997rem/1.14rem var(--sans);   --t-h2s:600 .997rem/1.14rem var(--sans);
+  --t-hover:700 1.14rem/1.14rem var(--sans);
+  --t-body:500 .855rem/1.068rem var(--sans); --t-bodys:600 .855rem/1.068rem var(--sans);
+  --t-caption:500 .712rem/1.068rem var(--sans);
+}
+body{font:var(--t-body)}
+/* display: textos destacados del home y títulos de programación */
+.home .h-title,.p-title,.rent-title,.m-event .me-k{font:var(--t-display);letter-spacing:0}
+/* heading-1: títulos de 1.ª jerarquía */
+.h-num,.search-box,.dlg-title,.ch-banner .n,.m-event .me-t{font:var(--t-h1);letter-spacing:0}
+/* heading-2: títulos de 2.ª jerarquía (medium) y con más peso (semibold) */
+.tab,.row-h,.home .row-h{font:var(--t-h2);letter-spacing:0}
+.tab.on,.card .c-title,.tile .t-title,.pair-title,.home .pair-title,.g-row .nm,.ch-banner .nm,.scorebug,.app-name{font:var(--t-h2s);letter-spacing:0}
+/* heading-hover: título de la tarjeta enfocada */
+.card.is-focused .c-title,.tile.is-focused .t-title{font:var(--t-hover)}
+/* body: contenido principal y texto de los CTA */
+.home .h-meta,.p-sub,.rent-meta,.rent-ov,.dlg-sub,.pair-sub,.home .pair-sub,.g-row .sh,.ch-banner .sh,.m-event .me-s,.tn-clock,.empty,.app-note{font:var(--t-body);letter-spacing:0}
+.h-btn,.btn,.toast,.p-state,.live-strip,.rent-price,.m-event .me-p{font:var(--t-bodys);letter-spacing:0}
+.tn-clock b{font-weight:700}
+/* caption: texto secundario */
+.eyebrow,.tile .t-tag,.tile .t-sub,.h-num.sm,.h-logo,.h-now,.card .c-live,.c-live,.live,.chip,.pair-room,.home .hint,.hint,.rent-note,.scorebug .min,.tn-brand,.g-help,.guide .eyebrow,.p-times,.vol-n{font:var(--t-caption);letter-spacing:0}
+.eyebrow,.tile .t-tag,.h-num.sm,.h-logo{text-transform:uppercase;letter-spacing:.06em}
+.h-now,.card .c-live,.c-live,.live,.h-logo{font-weight:600}
+.card .c-num{font:var(--t-h1)}
+.h-logo{text-transform:none;letter-spacing:0;font-size:.62rem;line-height:1.1}
+.home > .pair{bottom:18.9rem}
