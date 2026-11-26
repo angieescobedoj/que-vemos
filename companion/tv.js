@@ -486,7 +486,7 @@
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
     var start = S.rsaved > 1 && S.rsaved < C.RECIPE.dur - 5 ? S.rsaved : 0;
-    S.content = 'recipe'; S.movie = null; S.rsShot = -1; setPos(start, true);
+    S.content = 'recipe'; S.movie = null; S.rsShot = -1; S.rsSaid = -1; setPos(start, true);
     if (start < C.RECIPE.sendAt) S.recipeSeq = 0;
    
     show('player'); paintPlayer();
@@ -503,15 +503,48 @@
     on.className = 'rs-l'; void on.offsetWidth; on.className = 'rs-l on kb' + (n % 3);
     off.className = off.className.replace(' on', '');
   }
+  /* v7.53 · narración: al empezar cada paso la TV lo dice en voz alta (voz en español del navegador).
+     En pausa se calla; al reanudar repite el paso actual. Respeta silencio y volumen de la TV. */
+  var NUM = ['uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho'], esVoice = null;
+  function pickVoice() {
+    if (esVoice || !window.speechSynthesis) return esVoice;
+    var vs = speechSynthesis.getVoices() || [], i;
+    for (i = 0; i < vs.length && !esVoice; i++) if (/^es[-_]MX/i.test(vs[i].lang)) esVoice = vs[i];
+    for (i = 0; i < vs.length && !esVoice; i++) if (/^es[-_]US/i.test(vs[i].lang)) esVoice = vs[i];
+    for (i = 0; i < vs.length && !esVoice; i++) if (/^es/i.test(vs[i].lang)) esVoice = vs[i];
+    return esVoice;
+  }
+  if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', function () { esVoice = null; pickVoice(); });
+  function say(text) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text), v = pickVoice();
+      u.lang = v ? v.lang : 'es-MX'; if (v) u.voice = v;
+      u.rate = 0.95; u.volume = S.muted ? 0 : Math.min(1, 0.5 + (S.vol || 30) / 200);
+      speechSynthesis.speak(u);
+    } catch (e) { /* sin voz en este equipo */ }
+  }
+  function hush() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
+  function narrateRecipe(p) {
+    var RC = C.RECIPE, si = C.recipeStep(p);
+    if (!S.playing) { if (S.rsSaid !== -1) { hush(); S.rsSaid = -1; } return; }
+    if (si === S.rsSaid) return;
+    S.rsSaid = si;
+    var st = RC.steps[si], txt = 'Paso ' + NUM[si] + '. ' + st.t + '. ' + st.d;
+    if (si === 0 && p < 3) txt = 'Hoy preparamos ' + RC.dish.toLowerCase() + '. ' + txt;
+    say(txt);
+  }
   function tickRecipe() {
-    if (S.content !== 'recipe') return;
+    if (S.content !== 'recipe' || S.screen !== 'player' || S.off) { if (S.rsSaid >= 0) { hush(); S.rsSaid = -1; } return; }
     var p = curPos();
     if (!S.recipeSeq && p >= C.RECIPE.sendAt) {
       S.recipeSeq = now(); pushState();
       toast(connected().length ? '📱 Ingredientes, porciones y tiempo en tu celular' : '📱 Escanea el QR para recibir la receta en tu celular', 4500);
     }
     var st = C.recipeStep(p); if (st !== S.recipeStepIdx) { S.recipeStepIdx = st; pushState(); }
-    if (p >= C.RECIPE.dur - 0.5) { S.rsaved = 0; finished('recipe'); toast(connected().length ? '📱 La receta completa ya está en tu celular · ¡Buen provecho! 🍽️' : '¡Buen provecho! 🍽️', 4000); leavePlayer(); }
+    narrateRecipe(p);
+    if (p >= C.RECIPE.dur - 0.5) { S.rsaved = 0; say('¡Listo! Tus enchiladas verdes están servidas. ¡Buen provecho!'); S.rsSaid = -1; finished('recipe'); toast(connected().length ? '📱 La receta completa ya está en tu celular · ¡Buen provecho! 🍽️' : '¡Buen provecho! 🍽️', 4000); leavePlayer(); }
   }
 
   /* ================= Pausa en un canal → sugerencia en el celular (On Demand renta / Anytime) ================= */
@@ -697,13 +730,13 @@
   function setOff(off) {
     if (off === S.off) return;
     S.off = off;
-    if (off) { closeOverlays(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
+    if (off) { hush(); closeOverlays(); if (S.screen === 'player') { if (S.content === 'series') setPos(curPos(), false); else S.playing = false; paintPlayer(); } }
     $('standby').hidden = !off;
     pushState();
   }
 
   function leavePlayer() {
-    if (S.content === 'recipe') { S.rsaved = curPos() >= C.RECIPE.dur - 1 ? 0 : curPos(); S.playing = false; }
+    if (S.content === 'recipe') { if (curPos() < C.RECIPE.dur - 1) hush(); S.rsaved = curPos() >= C.RECIPE.dur - 1 ? 0 : curPos(); S.playing = false; }
     if (S.content === 'video') stopVideo();
     if (S.content === 'series') { S.saved = curPos(); S.playing = false; }
     if (S.content === 'movie') S.movie = null;
@@ -1172,7 +1205,8 @@
   setInterval(function () {
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    if (S.screen === 'player') { tickMatch(); paintPlayer(); tickSeries(); tickRecipe(); }
+    if (S.screen === 'player') { tickMatch(); paintPlayer(); tickSeries(); }
+    tickRecipe();   /* también fuera del reproductor: así se calla la narración al salir */
   }, 1000);
 
   /* ---------------- teclado (control remoto real o del escritorio) ---------------- */
