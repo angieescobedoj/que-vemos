@@ -486,11 +486,22 @@
     if (S.screen === 'game') stopGame();
     if (S.screen === 'player' && S.content === 'series') S.saved = curPos();
     var start = S.rsaved > 1 && S.rsaved < C.RECIPE.dur - 5 ? S.rsaved : 0;
-    S.content = 'recipe'; S.movie = null; setPos(start, true);
+    S.content = 'recipe'; S.movie = null; S.rsShot = -1; setPos(start, true);
     if (start < C.RECIPE.sendAt) S.recipeSeq = 0;
    
     show('player'); paintPlayer();
-    if (start) toast('Continuando la receta · paso ' + (C.recipeStep(start) + 1) + ' de ' + C.RECIPE.steps.length);
+    if (start) toast('Continuando el programa donde lo dejaste');
+  }
+  /* v7.52 · toma actual del programa: fundido entre dos capas y acercamiento lento (se congela en pausa) */
+  function recipeShot(p) {
+    var sh = C.RECIPE.shots, n = Math.min(sh.length - 1, Math.floor(p / (C.RECIPE.dur / sh.length)));
+    $('rShow').className = 'rshow' + (S.playing ? '' : ' paused');
+    if (n === S.rsShot) return;
+    S.rsShot = n; S.rsFlip = !S.rsFlip;
+    var on = $(S.rsFlip ? 'rsA' : 'rsB'), off = $(S.rsFlip ? 'rsB' : 'rsA');
+    on.style.backgroundImage = 'url(' + sh[n] + (sh[n].indexOf('unsplash') >= 0 ? '?fm=jpg&q=70&fit=crop&w=1600' : '') + ')';
+    on.className = 'rs-l'; void on.offsetWidth; on.className = 'rs-l on kb' + (n % 3);
+    off.className = off.className.replace(' on', '');
   }
   function tickRecipe() {
     if (S.content !== 'recipe') return;
@@ -748,17 +759,17 @@
     var scene = $('scene');
     $('chLogo').hidden = true;
     $('vid').hidden = S.content !== 'video'; $('vidShade').hidden = S.content !== 'video';
-    $('recipeCard').hidden = S.content !== 'recipe';
+    $('rShow').hidden = S.content !== 'recipe';
     if (S.content !== 'match') $('mEvent').hidden = true;
     if (S.content === 'recipe') {
-      var RC = C.RECIPE, rp = curPos(), si = C.recipeStep(rp), step = RC.steps[si];
+      var RC = C.RECIPE, rp = curPos();
       scene.className = 'scene';
       scene.className = 'scene img';
       scene.style.background = 'linear-gradient(180deg,rgba(10,7,16,.55) 0%,rgba(10,7,16,.25) 40%,rgba(10,7,16,.6) 100%),url(' + C.PHOTOS.recipe + '1600) center/cover no-repeat,linear-gradient(160deg,#3E6A36 0%,#1A2E18 100%)';
       $('pTag').textContent = RC.title + ' · cocina en casa'; $('pTitle').textContent = RC.dish;
       $('pSub').textContent = S.recipeSeq ? '📱 La receta y los ingredientes ya están en tu celular' : 'Receta para 4 personas · 25 min';
       $('scorebug').hidden = true; $('liveStrip').hidden = true; $('pBottom').hidden = false;
-      $('rcNum').textContent = 'Paso ' + (si + 1) + ' de ' + RC.steps.length; $('rcIc').textContent = step.ic; $('rcT').textContent = step.t; $('rcD').textContent = step.d;
+      recipeShot(rp);
       $('pState').textContent = S.playing ? '▶  Reproduciendo' : '❚❚  Pausado';
       $('pBar').style.width = (rp / RC.dur * 100) + '%';
       $('pPos').textContent = C.fmt(rp); $('pDur').textContent = '-' + C.fmt(RC.dur - rp);

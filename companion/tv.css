@@ -297,7 +297,7 @@ b{font-weight:700}
 /* recetas */
 .tile.wide{width:11rem}
 .tile .t-emoji{position:absolute;right:.7rem;top:.5rem;font-size:2.2rem}
-.recipe-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:1.6rem;width:40rem;background:rgba(14,10,22,.78);border:1px solid var(--line);border-radius:1.6rem;padding:1.6rem 2rem}
+.recipe-card-old{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:1.6rem;width:40rem;background:rgba(14,10,22,.78);border:1px solid var(--line);border-radius:1.6rem;padding:1.6rem 2rem}
 .rc-ic{font-size:5rem;line-height:1;flex:none}
 .rc-t{font-size:2rem;font-weight:700;letter-spacing:-.02em;margin:.3rem 0 .4rem}
 .rc-d{font-size:1.15rem;color:var(--ink-2);line-height:1.4}
@@ -450,3 +450,17 @@ b{font-weight:700}
 .pair-room > :not(.chip):not(#tvName){display:none}
 .pair-room .chip{font-size:.6rem;padding:.15rem .5rem}
 .home .pair .hint{font-size:.5rem;margin-top:.2rem}
+
+/* ---------- v7.52 · programa de cocina: secuencia de tomas (sin pasos en pantalla) ---------- */
+.rshow{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;background:#14110D}
+.rshow[hidden]{display:none}
+.rs-l{position:absolute;left:0;top:0;right:0;bottom:0;background:#14110D center/cover no-repeat;opacity:0;transition:opacity 1.2s ease}
+.rs-l.on{opacity:1}
+.rs-l.on.kb0{animation:rsKb0 13s linear forwards}
+.rs-l.on.kb1{animation:rsKb1 13s linear forwards}
+.rs-l.on.kb2{animation:rsKb2 13s linear forwards}
+.rshow.paused .rs-l{animation-play-state:paused}
+@keyframes rsKb0{from{transform:scale(1.04)}to{transform:scale(1.14) translate(-1.5%,-1%)}}
+@keyframes rsKb1{from{transform:scale(1.14) translate(1.5%,0)}to{transform:scale(1.04)}}
+@keyframes rsKb2{from{transform:scale(1.06) translate(0,1.5%)}to{transform:scale(1.15) translate(1%,-1%)}}
+.rshow:after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.6) 100%)}

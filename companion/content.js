@@ -98,6 +98,16 @@
       { t: 'Rellena y enrolla', d: 'Rellena con queso fresco desmoronado y báñalas con la salsa.', ic: '🧀' },
       { t: 'Sirve', d: 'Decora con crema, cebolla en aros y cilantro. ¡Buen provecho!', ic: '🍽️' }
     ],
+    /* v7.52 · el programa se ve como un video de cocina: 12 tomas en orden (2 por paso), sin textos en pantalla.
+       Fotos libres: Unsplash (Unsplash License) y el platillo final de Pixabay (Pixabay License). */
+    shots: [
+      'https://images.unsplash.com/photo-1786317205533-035605b303d5', 'https://images.unsplash.com/photo-1771013151504-10519ebdb8cd',
+      'https://images.unsplash.com/photo-1567306181708-17c7a7457192', 'https://images.unsplash.com/photo-1512203864638-f6cbb3cca374',
+      'https://images.unsplash.com/photo-1758524151953-d87150127c63', 'https://images.unsplash.com/photo-1750677637369-7fae4d9e361b',
+      'https://images.unsplash.com/photo-1693193433392-da83457dff20', 'https://images.unsplash.com/photo-1621494547944-5ddbc84514b2',
+      'https://images.unsplash.com/photo-1722239312666-84328fce4c6f', 'https://images.unsplash.com/photo-1512058533999-106ee01bf777',
+      'https://images.unsplash.com/photo-1556911073-a517e752729c', 'https://cdn.pixabay.com/photo/2014/01/14/22/08/enchilada-245236_1280.jpg'
+    ],
     ingredients: [
       { n: 'Tortillas de maíz', q: '1 kg', p: 28, ic: '🌽' },
       { n: 'Tomate verde', q: '1 kg', p: 32, ic: '🍅' },
